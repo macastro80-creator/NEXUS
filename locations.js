@@ -1,3 +1,9 @@
+// ==========================================
+// NEXUS: Dynamic Locations Fetching (Lazy Load)
+// ==========================================
+// This replaces the old static array with dynamic calls to Supabase.
+// It uses localStorage to cache data so the app remains lightning fast.
+
 // Helper to ignore accents in search
 function normalizeStr(str) {
     if (!str) return "";
@@ -18,377 +24,84 @@ function highlightMatch(text, query) {
            text.substring(index + query.length);
 }
 
-const LOCATION_DB = [
-    "Pérez Zeledón (Entire Canton)",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Higuerones",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Esperanzas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Suiza",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Tronconales",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Morete",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Ocho de Diciembre",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > San Rafael Norte",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Hoy\u00f3n",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Alto Tumbas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Bajo Ceibo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Angostura",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Quebrada Vueltas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > I Griega",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Bonita",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Roble",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Jilguero Sur",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Pavones",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > La Lucha",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Bocana",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Pacuarito",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > San Juan de Miramar",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Palma",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Quebrada Honda",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Boruca",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Luis Monge",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Lomas de Cocor\u00ed",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > San Agust\u00edn",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > San Jorge",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Gonz\u00e1lez",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Ceibo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Aeropuerto",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Moraz\u00e1n",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Prado",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Alto Ceibo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Bijaguales",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Las Am\u00e9ricas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Santa Marta",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Doce de Marzo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Miravalles",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Villanueva",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Quebradas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Dorado",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > San Andr\u00e9s",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Alto Alonso",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > San Vicente",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Tuis",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Valverde",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Paso Lagarto",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > San Rafael Sur",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Bajo Mora",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Romero",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Tierra Prometida",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Cristo Rey",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Tormenta",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Boston",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Evans Gordon Wilson",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > San Lorenzo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Alto Sajaral",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Mar\u00eda Auxiliadora",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Ojo de Agua",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Jilguero",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Hospital",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Cementerio",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Alto San Juan",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Santa Cecilia",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Pocito",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Unesco",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Sina\u00ed",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Rosario",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Sagrada Familia",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Paso Beita",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Estadio",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Alto Huacas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Espa\u00f1a",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Cooperativa",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Toledo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Dur\u00e1n Picado",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > San Luis",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Santa Fe",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Pedregoso",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Guaria",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Los Guayabos",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Guadalupe",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Tajo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Bajo Esperanzas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Dorotea",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Isidro de El General > Ceniza",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > La Arepa",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > La Linda",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > Barrio Nuevo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > Montecarlo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > Venecia",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > Playa Verde",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > Carmen",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > Calle Hidalgo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > El Ingenio",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > San Mart\u00edn",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > Bajo Los Arias",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > Santa Cruz",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > General Viejo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > San Luis",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > Para\u00edso",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > San Blas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > Miraflores",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > Pinar del R\u00edo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > La Paz",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > Calle Guzm\u00e1n",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > Las Nubes",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > Nuevo General",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > Trinidad",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > Santa Elena",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > El Chumpul\u00fan",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > Pe\u00f1as Blancas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > La Hermosa",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > El Carril",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > Quizarr\u00e1",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > El General > Linda Arriba",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Villa Ligia",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Coraz\u00f3n de Jes\u00fas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Alto Brisas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Palmares",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > La Ribera",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Quebrada Honda",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Rosa Iris",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Aurora",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > La Suiza",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Peje",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Los Chiles",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Daniel Flores Zavaleta",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Los Pinos",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Patio de Agua",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Aguas Buenas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Los Reyes",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Pinar del R\u00edo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Santa Margarita",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Bajos de Pacuar",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Repunta",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Percal",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Crematorio",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Barrio Laboratorio",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Juntas de Pacuar",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > La Trocha",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > San Francisco",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Paso Bote",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Rosas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Lourdes",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Loma Verde",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > San Juan Bosco",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Los \u00c1ngeles",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Daniel Flores > Concepci\u00f3n",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Cana\u00e1n",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > San Gerardo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Linda Vista",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Zapotal",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Chimirol",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Rivas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Divisi\u00f3n",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > San Cayetano",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Talari",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > La Bamb\u00fa",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Alto Jaular",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Buena Vista",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Monterrey",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Herradura",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > La Bonita",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > San Juan Norte",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Chispa",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > San Antonio",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Tirr\u00e1",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Piedra Alta",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Macho Mora",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Alaska",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Chuma",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Villa Mills",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Palmital",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > R\u00edo Blanco",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Santa Marta",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > El Jard\u00edn",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > San Francisco",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Miravalles",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Guadalupe",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Las Playas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > San Jos\u00e9",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Lourdes",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Siberia",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Los \u00c1ngeles",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > El Nivel",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > La Piedra",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Calle Los Mora",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Rivas > Pueblo Nuevo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > San Jer\u00f3nimo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > San Rafael",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Santiago",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Alto Calder\u00f3n",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Zapotal",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Nueva Hortensia",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Cristo Rey",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > San Juancito",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Tambor",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Esperanza",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Rinconada Vega",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Cruz Roja",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Santo Domingo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Nueva Santa Ana",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > San Juan",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Santa Ana",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Cedral",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Junta",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Colonia",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > F\u00e1tima",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Fortuna",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Guaria",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > San Pedro",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Uni\u00f3n",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Laguna",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Santa Cecilia",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Los \u00c1ngeles",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > San Pedro > Arenilla",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > Socorro",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > San Gerardo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > San Rafael",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > Buenos Aires",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > Bonitas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > Mastatal",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > Mollejones",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > Cristo Rey",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > Villa Flor",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > Aguas Buenas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > San Pablo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > Mollejoncito",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > Villa Argentina",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > Vista de Mar",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > Bajo Bonitas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > San Pablito",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > Lourdes",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > Bolivia",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > Naranjos",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > Bajo Espinoza",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > La Sierra",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > Concepci\u00f3n",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Platanares > Surtubal",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > Zapote",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > San Miguel",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > Pu\u00f1al",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > Bajo Caliente",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > Gibre",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > San Mart\u00edn",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > Achiotal",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > Veracruz",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > Para\u00edso",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > Bellavista",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > Bajo Minas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > Santa Fe",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > Mesas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > \u00c1guila",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > Minas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > Calientillo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > Desamparados",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > Alto Trinidad",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > Trinidad",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > Guadalupe",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > El Progreso",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > Delicias",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > San Marcos",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > Las Cruces",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > Barrionuevo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Pejibaye > Surtubal",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Caj\u00f3n",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Caj\u00f3n > Gloria",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Caj\u00f3n > El Quemado",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Caj\u00f3n > Los Vega",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Caj\u00f3n > San Pedrito",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Caj\u00f3n > Cedral",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Caj\u00f3n > Para\u00edso",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Caj\u00f3n > Santa Teresa",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Caj\u00f3n > Las Brisas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Caj\u00f3n > San Francisco",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Caj\u00f3n > Nubes",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Caj\u00f3n > Santa Mar\u00eda",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Caj\u00f3n > Pilar",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Caj\u00f3n > Navajuelar",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Caj\u00f3n > Salitrales",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Caj\u00f3n > Mercedes",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Caj\u00f3n > Quizarr\u00e1",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Caj\u00f3n > San Ignacio",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Caj\u00f3n > Montecarlo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Caj\u00f3n > Pueblo Nuevo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Reina",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > San Salvador",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Magnolia",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Bajos",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Santa Juana",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Chontales",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Camarones",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Torito",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Bajos de Zapotal",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Ca\u00f1ablanca",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Bar\u00fa",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > L\u00edbano",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Tumbas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Ceiba",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Alto Perla",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Guabo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Farallas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Barucito",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Santo Cristo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Tinamaste",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > San Juan de Dios",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Cacao",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Alfombra",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Tres Piedras",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Villabonita",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Florida",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > San Marcos",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Vista Mar",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > Pozos",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > Bar\u00fa > San Crist\u00f3bal",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > R\u00edo Nuevo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > R\u00edo Nuevo > Santa Marta",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > R\u00edo Nuevo > Savegre",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > R\u00edo Nuevo > El Llano",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > R\u00edo Nuevo > California",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > R\u00edo Nuevo > La Purruja",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > R\u00edo Nuevo > Zaragoza",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > R\u00edo Nuevo > Alto los Mena",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > R\u00edo Nuevo > Piedras Blancas",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > R\u00edo Nuevo > Chirricano",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > R\u00edo Nuevo > Calle Mora",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > R\u00edo Nuevo > Santa Rosa",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > R\u00edo Nuevo > San Juan de la Cruz",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > R\u00edo Nuevo > San Antonio",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > R\u00edo Nuevo > San Cayetano",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > R\u00edo Nuevo > El Brujo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > R\u00edo Nuevo > Santa Luc\u00eda",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > P\u00e1ramo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > P\u00e1ramo > Santo Tom\u00e1s",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > P\u00e1ramo > \u00c1ngeles",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > P\u00e1ramo > Jard\u00edn",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > P\u00e1ramo > Alto Macho Mora",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > P\u00e1ramo > San Miguel",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > P\u00e1ramo > Matazanos",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > P\u00e1ramo > San Ram\u00f3n Norte",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > P\u00e1ramo > La Hortensia",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > P\u00e1ramo > La Ese",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > P\u00e1ramo > Berl\u00edn",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > P\u00e1ramo > Santa Eduviges",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > P\u00e1ramo > San Ram\u00f3n Sur",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > P\u00e1ramo > Miramar",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > P\u00e1ramo > Siberia",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > P\u00e1ramo > Divisi\u00f3n",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > P\u00e1ramo > Pedregosito",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > P\u00e1ramo > Valencia",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > La Amistad",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > La Amistad > San Carlos",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > La Amistad > Oratorio",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > La Amistad > Montezuma",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > La Amistad > San Roque",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > La Amistad > Santa Luisa",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > La Amistad > Santa Cecilia",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > La Amistad > San Antonio",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > La Amistad > San Gabriel",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > La Amistad > Corralillo",
-    "San Jos\u00e9 > P\u00e9rez Zeled\u00f3n > La Amistad > China Kicha"
-];
+const LocationService = {
+    // Force refresh cache if needed (e.g. if you add new locations in DB)
+    clearCache() {
+        localStorage.removeItem('nexus_locations');
+    },
+
+    // 1. Fetch Provinces
+    async getProvinces() {
+        return this.fetchFromSupabase('provinces', () => 
+            supabase.from('locations').select('province').eq('is_active', true)
+        );
+    },
+
+    // 2. Fetch Cantons based on a chosen Province
+    async getCantons(province) {
+        return this.fetchFromSupabase(`cantons_${province}`, () => 
+            supabase.from('locations').select('canton').eq('province', province).eq('is_active', true)
+        );
+    },
+
+    // 3. Fetch Districts based on Canton
+    async getDistricts(canton) {
+        return this.fetchFromSupabase(`districts_${canton}`, () => 
+            supabase.from('locations').select('district').eq('canton', canton).eq('is_active', true)
+        );
+    },
+
+    // 4. Fetch the entire flattened list (Only use if necessary for legacy UI compatibility)
+    // This will format data the old way: "San José > Pérez Zeledón > San Isidro de El General"
+    async getAllAsStrings() {
+        return this.fetchFromSupabase('all_locations_formatted', async () => {
+            const { data, error } = await supabase.from('locations').select('province, canton, district').eq('is_active', true);
+            if (error) throw error;
+            
+            // Format to match your old array style
+            return data.map(row => `${row.province} > ${row.canton} > ${row.district}`);
+        });
+    },
+
+    // Internal Helper: Handles fetching and Caching logic
+    async fetchFromSupabase(cacheKey, queryFn) {
+        // Check cache first
+        const cached = localStorage.getItem(`nexus_cache_${cacheKey}`);
+        if (cached) {
+            console.log(`Loaded ${cacheKey} from incredibly fast browser cache! ⚡`);
+            return JSON.parse(cached);
+        }
+
+        // If not in cache, fetch from Supabase
+        console.log(`Fetching ${cacheKey} from Database... 🔄`);
+        const { data, error } = await queryFn();
+        
+        if (error) {
+            console.error('Error fetching locations:', error);
+            return [];
+        }
+
+        // Extract unique values if it's a specific column request (like just provinces)
+        let results = data;
+        if (data.length > 0 && typeof data[0] === 'object' && Object.keys(data[0]).length === 1) {
+            const key = Object.keys(data[0])[0];
+            results = [...new Set(data.map(item => item[key]))];
+        }
+
+        // Save to cache for next time
+        localStorage.setItem(`nexus_cache_${cacheKey}`, JSON.stringify(results));
+        return results;
+    }
+};
+
+// Exposing backwards compatibility temporarily
+// Previously this was a static file. Now, components need to await the data.
+let LOCATION_DB = [];
+// Automatically fetch on file load to populate global variable if older scripts rely on it
+setTimeout(async () => {
+    try {
+        if (typeof supabase !== 'undefined') {
+            LOCATION_DB = await LocationService.getAllAsStrings();
+        }
+    } catch(e) { console.error(e); }
+}, 100);

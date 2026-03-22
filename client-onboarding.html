@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEXUS - Find My Dream Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Use local libraries/scripts to sync formatting/styles -->
+    <script src="global-theme.js"></script>
+    <script src="supabase-client.js"></script>
+    <script src="locations.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { font-family: 'Montserrat', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .spec-card { transition: 0.2s; border: 2px solid #f1f5f9; background: #f8fafc; cursor: pointer; text-align: center; }
+        .dark .spec-card { border-color: #334155; background: #1e293b; color: #cbd5e1; }
+        .spec-card.active { border-color: #003DA5; background-color: #eff6ff; color: #003DA5; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .dark .spec-card.active { border-color: #60a5fa; background-color: #1e3a8a; color: #93c5fd; }
+        .animate-fade { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 font-sans pb-24 text-slate-800 dark:text-slate-200">
+
+    <!-- Premium Header -->
+    <nav class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 py-6 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-[60] flex flex-col items-center shadow-sm">
+        <h1 class="font-black text-2xl text-[#003DA5] tracking-tighter uppercase italic leading-none mb-1">NEXUS Match</h1>
+        <p class="text-[9px] uppercase font-bold text-slate-500 tracking-widest bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">Powered by REMAX Altitud</p>
+    </nav>
+
+    <!-- Client Form -->
+    <form class="p-4 space-y-6 max-w-lg mx-auto mt-4" onsubmit="event.preventDefault(); handleSubmitClient();">
+        
+        <div class="text-center mb-6 px-4">
+            <h2 class="text-2xl font-black text-slate-900 dark:text-white leading-tight mb-2">Let us find your dream property.</h2>
+            <p class="text-xs font-bold text-slate-500 leading-relaxed">Tell us exactly what you're looking for, and our agents will instantly begin matching you with properties in the network.</p>
+        </div>
+
+        <!-- Section 1: Contact Information -->
+        <section class="bg-white dark:bg-slate-800 p-6 rounded-[32px] border border-slate-100 dark:border-slate-700 shadow-sm space-y-4">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-700 pb-2 mb-4"><i class="fa-solid fa-user-circle text-[#003DA5] mr-1"></i> Your Contact Info</h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2">Full Name</label>
+                    <input type="text" id="clientName" required placeholder="e.g. Roberto Martinez" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                </div>
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2">Email Address</label>
+                    <input type="email" id="clientEmail" required placeholder="roberto@example.com" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                </div>
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2">WhatsApp Number (Include Country Code)</label>
+                    <div class="relative">
+                        <i class="fa-brands fa-whatsapp absolute left-4 top-1/2 -translate-y-1/2 text-green-500 text-lg"></i>
+                        <input type="tel" id="clientWhatsApp" required placeholder="e.g. +1 555-0123" class="w-full p-4 pl-12 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Privacy Note -->
+            <div class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded-xl mt-4">
+                <p class="text-[9px] font-bold text-amber-700 dark:text-amber-400 leading-relaxed"><i class="fa-solid fa-shield-halved mr-1"></i> Your contact info is kept private and will only be shared with your assigned real estate agent.</p>
+            </div>
+        </section>
+
+        <!-- Section 1.5: Co-Buyer Information -->
+        <section class="bg-white dark:bg-slate-800 p-6 rounded-[32px] border border-slate-100 dark:border-slate-700 shadow-sm space-y-4">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-700 pb-2 mb-4"><i class="fa-solid fa-user-plus text-[#003DA5] mr-1"></i> Partner / Co-Buyer (Optional)</h3>
+            
+            <p class="text-xs font-bold text-slate-500 mb-4">Want to search together with your partner? Add their details below and they'll get access to the same Match Board.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2">Partner's Full Name</label>
+                    <input type="text" id="partnerName" placeholder="e.g. Maria Gonzalez" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                </div>
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2">Partner's Email Address</label>
+                    <input type="email" id="partnerEmail" placeholder="maria@example.com" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Property Criteria -->
+        <section class="bg-white dark:bg-slate-800 p-6 rounded-[32px] border border-slate-100 dark:border-slate-700 shadow-sm space-y-4">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-700 pb-2 mb-4"><i class="fa-solid fa-house-chimney text-[#003DA5] mr-1"></i> What Are You Looking For?</h3>
+            
+            <!-- Preferred Locations (Autocomplete) -->
+            <div class="mb-4">
+                <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2">Preferred Location(s)</label>
+                <div class="relative w-full">
+                    <input type="text" id="locationSearch" oninput="showSuggestions(this.value)" autocomplete="off" placeholder="Search area (e.g. Uvita)" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs pl-12 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                    <i class="fa-solid fa-map-location-dot absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                    <div id="suggestionsBox" class="absolute z-[100] w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 mt-2 max-h-56 overflow-y-auto rounded-xl shadow-lg hidden hidden-scrollbar text-[12px] font-bold text-slate-700 dark:text-slate-300"></div>
+                </div>
+                <div id="selectedLocationsContainer" class="flex flex-wrap gap-2 pt-3 empty:hidden relative z-0"></div>
+            </div>
+
+            <!-- Budget -->
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="col-span-2">
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2">Maximum Budget ($ USD)</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black">$</span>
+                        <input type="number" id="clientBudget" required placeholder="500,000" class="w-full p-4 pl-8 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-black outline-none text-sm text-[#003DA5] dark:text-blue-400 focus:ring-2 focus:ring-[#003DA5]">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Property Type grid -->
+            <div class="mb-4">
+                <label class="block text-[9px] font-black text-slate-400 uppercase mb-3 ml-2">Property Type</label>
+                <div class="grid grid-cols-2 gap-3" id="propertyTypeGrid">
+                    <div onclick="this.classList.toggle('active')" data-type="house" class="spec-card p-4 rounded-2xl active">
+                        <i class="fa-solid fa-house text-2xl mb-2 block mx-auto text-slate-400 drop-shadow-sm transition-colors group-hover:text-[#003DA5]"></i>
+                        <span class="text-[10px] font-black uppercase tracking-widest">House</span>
+                    </div>
+                    <div onclick="this.classList.toggle('active')" data-type="condo" class="spec-card p-4 rounded-2xl">
+                        <i class="fa-solid fa-building text-2xl mb-2 block mx-auto text-slate-400 drop-shadow-sm transition-colors group-hover:text-[#003DA5]"></i>
+                        <span class="text-[10px] font-black uppercase tracking-widest">Condo</span>
+                    </div>
+                    <div onclick="this.classList.toggle('active')" data-type="land" class="spec-card p-4 rounded-2xl">
+                        <i class="fa-solid fa-mountain-sun text-2xl mb-2 block mx-auto text-slate-400 drop-shadow-sm transition-colors group-hover:text-[#003DA5]"></i>
+                        <span class="text-[10px] font-black uppercase tracking-widest">Land/Lot</span>
+                    </div>
+                    <div onclick="this.classList.toggle('active')" data-type="commercial" class="spec-card p-4 rounded-2xl">
+                        <i class="fa-solid fa-store text-2xl mb-2 block mx-auto text-slate-400 drop-shadow-sm transition-colors group-hover:text-[#003DA5]"></i>
+                        <span class="text-[10px] font-black uppercase tracking-widest">Commercial</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Must Haves & Notes -->
+            <div class="pt-2">
+                <label class="block text-[9px] font-black text-slate-400 uppercase mb-3 ml-2">Must Haves & Essential Requirements</label>
+                <div class="flex gap-2 mb-3">
+                    <input type="text" id="mustHaveInput" placeholder="e.g. Ocean View" class="flex-1 p-3 border border-slate-100 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-[10px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]" onkeydown="if(event.key === 'Enter') { event.preventDefault(); addMustHave(); }">
+                    <button type="button" onclick="addMustHave()" class="bg-[#003DA5] text-white px-4 rounded-xl font-black text-[10px] uppercase shadow-sm active:scale-95 transition-transform">Add</button>
+                </div>
+                <div id="mustHavesContainer" class="flex flex-wrap gap-2 mb-4 empty:hidden"></div>
+                
+                <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2 mt-4">Additional Notes</label>
+                <textarea id="clientNotes" rows="2" placeholder="Any other details..." class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5] resize-none"></textarea>
+            </div>
+        </section>
+
+        <!-- Section 3: Timeline & Readiness -->
+        <section class="bg-white dark:bg-slate-800 p-6 rounded-[32px] border border-slate-100 dark:border-slate-700 shadow-sm space-y-4">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-700 pb-2 mb-4"><i class="fa-solid fa-calendar-check text-[#003DA5] mr-1"></i> Timeline & Status</h3>
+            
+            <div class="space-y-4">
+                <!-- Searching Duration -->
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2">How long have you been looking?</label>
+                    <select id="clientDuration" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                        <option value="Just Started">I just started my search</option>
+                        <option value="1-3 Months">1 to 3 Months</option>
+                        <option value="3-6 Months">3 to 6 Months</option>
+                        <option value="6+ Months">More than 6 months</option>
+                    </select>
+                </div>
+
+                <!-- Timeline to buy -->
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2">Desired Timeframe to Purchase</label>
+                    <select id="clientTimeline" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                        <option value="ASAP">ASAP (Immediate Action)</option>
+                        <option value="1-3 Months">1 to 3 Months</option>
+                        <option value="3-6 Months">3 to 6 Months</option>
+                        <option value="Just Browsing">Just Exploring the Market</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Submit -->
+        <div class="pt-4 pb-10 shadow-[0_-20px_30px_rgba(255,255,255,0.8)] dark:shadow-[0_-20px_30px_rgba(15,23,42,0.8)] sticky bottom-0 z-50">
+            <button type="submit" class="w-full bg-[#003DA5] hover:bg-blue-800 text-white py-5 rounded-3xl font-black text-sm uppercase shadow-2xl shadow-blue-500/30 transition-all active:scale-95 flex items-center justify-center gap-2">
+                Submit & Find Matches
+                <i class="fa-solid fa-radar ml-1 animate-pulse"></i>
+            </button>
+        </div>
+
+    </form>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 z-[100] bg-slate-900/80 hidden flex-col items-center justify-center p-6 backdrop-blur-md animate-fade">
+        <div class="bg-white dark:bg-slate-800 rounded-[35px] shadow-2xl max-w-sm w-full relative overflow-hidden flex flex-col items-center p-8 text-center text-slate-800 dark:text-slate-200 border border-slate-100 dark:border-slate-700">
+            
+            <div class="w-24 h-24 bg-green-50 dark:bg-green-900/30 text-emerald-500 rounded-full flex items-center justify-center mb-6 shadow-inner ring-4 ring-green-100 dark:ring-green-900 z-10 transition-transform scale-110">
+                <i class="fa-solid fa-check text-4xl"></i>
+            </div>
+            
+            <h2 class="text-3xl font-black text-[#003DA5] mb-2 leading-tight tracking-tighter italic z-10">Search Active!</h2>
+            
+            <p class="text-[11px] font-bold text-slate-500 mb-8 leading-relaxed max-w-[280px] z-10">
+                Your profile has been securely sent to our agents. You will be redirected to your private Match Board to review properties immediately.
+            </p>
+
+            <button onclick="window.location.href='buyer-matches.html'" class="w-full bg-[#003DA5] hover:bg-blue-800 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg transition-transform active:scale-95 z-10">
+                Go to My Matches
+            </button>
+            
+            <!-- Confetti background shapes -->
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-blue-100/50 dark:bg-blue-900/20 rounded-full blur-2xl z-0"></div>
+            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-emerald-100/50 dark:bg-emerald-900/20 rounded-full blur-2xl z-0"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectedLocations = [];
+        
+        function renderLocations() {
+            const container = document.getElementById('selectedLocationsContainer');
+            container.innerHTML = '';
+            selectedLocations.forEach((loc, index) => {
+                container.innerHTML += `<div class="bg-blue-50 dark:bg-blue-900/30 text-[#003DA5] dark:text-blue-400 px-3 py-1.5 rounded-lg text-[10px] font-black flex items-center justify-between gap-2 border border-blue-100 dark:border-blue-800 shadow-sm z-10">${loc} <i class="fa-solid fa-xmark cursor-pointer hover:text-red-500" onclick="selectedLocations.splice(${index}, 1); renderLocations();"></i></div>`;
+            });
+        }
+        
+        function showSuggestions(val) {
+            const sugBox = document.getElementById('suggestionsBox');
+            sugBox.innerHTML = '';
+            if (!val || typeof LOCATION_DB === 'undefined') {
+                sugBox.classList.add('hidden');
+                return;
+            }
+            
+            const normalize = (str) => String(str).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+            const normVal = normalize(val);
+            const matches = LOCATION_DB.filter(loc => normalize(loc).includes(normVal)).slice(0, 15);
+            
+            if (matches.length === 0) {
+                sugBox.classList.add('hidden');
+                return;
+            }
+
+            matches.forEach(match => {
+                const div = document.createElement('div');
+                div.className = "p-3 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer border-b border-slate-100 dark:border-slate-700 text-sm";
+                
+                const regex = new RegExp(`(${val})`, 'gi');
+                div.innerHTML = match.replace(regex, '<span class="text-[#003DA5] dark:text-blue-400 font-black">$1</span>');
+                
+                div.onpointerdown = function(e) {
+                    e.preventDefault();
+                    if (!selectedLocations.includes(match)) {
+                        selectedLocations.push(match);
+                        renderLocations();
+                    }
+                    document.getElementById('locationSearch').value = '';
+                    sugBox.classList.add('hidden');
+                };
+                sugBox.appendChild(div);
+            });
+            sugBox.classList.remove('hidden');
+        }
+
+        document.addEventListener('pointerdown', function(e) {
+            const sugBox = document.getElementById('suggestionsBox');
+            const search = document.getElementById('locationSearch');
+            if (sugBox && e.target !== search && !sugBox.contains(e.target)) {
+                sugBox.classList.add('hidden');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const clientId = urlParams.get('client_id');
+            if (clientId && typeof isSupabaseConfigured === 'function' && isSupabaseConfigured() && typeof supabase !== 'undefined') {
+                try {
+                    const { data: profile } = await supabase.from('profiles').select('*').eq('id', clientId).single();
+                    if (profile) {
+                        const nameField = document.getElementById('clientName');
+                        const emailField = document.getElementById('clientEmail');
+                        const phoneField = document.getElementById('clientWhatsApp');
+                        
+                        nameField.value = profile.full_name || '';
+                        emailField.value = profile.email || '';
+                        phoneField.value = profile.phone || '';
+
+                        [nameField, emailField, phoneField].forEach(f => {
+                            if(f) {
+                                f.readOnly = true;
+                                f.classList.add('opacity-70', 'bg-slate-200', 'cursor-not-allowed', 'dark:bg-slate-700');
+                                f.classList.remove('bg-slate-50', 'dark:bg-slate-900', 'focus:ring-2');
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.error("Error fetching pre-registered client:", e);
+                }
+            }
+        });
+
+        let customMustHaves = [];
+
+        function addMustHave() {
+            const input = document.getElementById('mustHaveInput');
+            const val = input.value.trim();
+            if (val && !customMustHaves.includes(val)) {
+                customMustHaves.push(val);
+                renderMustHaves();
+            }
+            input.value = '';
+        }
+
+        function removeMustHave(index) {
+            customMustHaves.splice(index, 1);
+            renderMustHaves();
+        }
+
+        function renderMustHaves() {
+            const container = document.getElementById('mustHavesContainer');
+            container.innerHTML = '';
+            customMustHaves.forEach((item, index) => {
+                const colors = ['amber', 'blue', 'green', 'purple', 'rose'];
+                const color = colors[index % colors.length];
+                const bgClass = `bg-${color}-100`;
+                const textClass = `text-${color}-700`;
+                
+                const chip = document.createElement('div');
+                chip.className = `px-3 py-2 rounded-xl text-[9px] font-black uppercase flex items-center gap-2 ${bgClass} ${textClass}`;
+                chip.innerHTML = `
+                    ${item}
+                    <i class="fa-solid fa-xmark cursor-pointer opacity-70 hover:opacity-100" onclick="removeMustHave(${index})"></i>
+                `;
+                container.appendChild(chip);
+            });
+        }
+
+        async function handleSubmitClient() {
+            try {
+                // Gather form data
+                const clientName = document.getElementById('clientName').value.trim();
+                const clientEmail = document.getElementById('clientEmail').value.trim();
+                const clientWhatsApp = document.getElementById('clientWhatsApp').value.trim();
+                const locationStr = selectedLocations.join(', ');
+                const budgetMax = parseInt(document.getElementById('clientBudget').value) || 0;
+                
+                const activeTypes = Array.from(document.querySelectorAll('#propertyTypeGrid .spec-card.active')).map(el => el.dataset.type);
+                const propertyType = activeTypes.join(', ') || 'house';
+                
+                const notes = document.getElementById('clientNotes').value.trim();
+                const timing = document.getElementById('clientTimeline').value;
+                const searchDuration = document.getElementById('clientDuration').value;
+
+                if (!clientName || !clientEmail || !locationStr || !budgetMax) {
+                    alert('Please fill out all required fields.');
+                    return;
+                }
+
+                const btn = document.querySelector('button[type="submit"]');
+                const origText = btn.innerHTML;
+                btn.innerHTML = 'Connecting to Supabase... <i class="fa-solid fa-spinner fa-spin ml-1"></i>';
+                btn.disabled = true;
+
+                // For the sake of the connection, we check URL for the agent ID
+                const urlParams = new URLSearchParams(window.location.search);
+                const assignedAgentId = urlParams.get('agent') || '';
+                const preRegClientId = urlParams.get('client_id');
+
+                if (typeof isSupabaseConfigured === 'function' && isSupabaseConfigured() && typeof supabase !== 'undefined') {
+                    let finalUserId = null;
+                    
+                    if (preRegClientId) {
+                        // They are pre-registered! Sign them in with the generic token so they get their RLS permissions!
+                        const { data, error } = await supabase.auth.signInWithPassword({
+                            email: clientEmail,
+                            password: 'NexusPreReg!123'
+                        });
+                        if (error && !error.message.includes('Invalid login credentials')) {
+                            console.warn(error);
+                        }
+                        finalUserId = preRegClientId;
+                    } else {
+                        // Generic form hit (no client_id link)
+                        const dummyPassword = 'NexusPreReg!123';
+                        const authRes = await supabase.auth.signUp({
+                            email: clientEmail,
+                            password: dummyPassword,
+                            options: { data: { full_name: clientName } }
+                        });
+                        
+                        if (authRes.error && !authRes.error.message.includes('already registered')) {
+                            throw authRes.error;
+                        }
+                        
+                        // We sign them in just to be safe
+                        await supabase.auth.signInWithPassword({ email: clientEmail, password: dummyPassword });
+                        
+                        const { data: { user } } = await supabase.auth.getUser();
+                        if (user) finalUserId = user.id;
+                    }
+
+                    if (finalUserId) {
+                        try {
+                            // Link profile to buyer role
+                            await supabase.from('profiles').update({
+                                role: 'buyer',
+                                phone: clientWhatsApp,
+                                assigned_agent_id: assignedAgentId || null
+                            }).eq('id', finalUserId);
+
+                            const partnerName = document.getElementById('partnerName')?.value.trim();
+                            const partnerEmail = document.getElementById('partnerEmail')?.value.trim();
+                            const finalNotes = `Searching for: ${searchDuration}. \n${notes}` + (partnerEmail ? `\nPartner Email: ${partnerEmail}` : '');
+                            
+                            // Check if a pending_onboarding search exists
+                            const { data: pendingSearches } = await supabase.from('searches')
+                                .select('id')
+                                .eq('status', 'pending_onboarding')
+                                .eq('client_name', clientName);
+                                
+                            // AUTO-CREATE PARTNER ACCOUNT IF EMAIL PROVIDED
+                            let partnerId = null;
+                            if (partnerEmail) {
+                                const dummyPassword = 'NexusPreReg!123';
+                                const partnerAuth = await supabase.auth.signUp({
+                                    email: partnerEmail,
+                                    password: dummyPassword,
+                                    options: { data: { full_name: partnerName } }
+                                });
+                                if (!partnerAuth.error && partnerAuth.data?.user) {
+                                    partnerId = partnerAuth.data.user.id;
+                                    await supabase.from('profiles').update({
+                                        role: 'buyer',
+                                        assigned_agent_id: assignedAgentId || null
+                                    }).eq('id', partnerId);
+                                }
+                            }
+                                
+                            if (pendingSearches && pendingSearches.length > 0) {
+                                await supabase.from('searches').update({
+                                    status: 'active',
+                                    co_client_name: partnerName || '',
+                                    co_client_email: partnerEmail || '',
+                                    buyer_id: finalUserId,
+                                    partner_id: partnerId,
+                                    co_buyer_id: finalUserId, // legacy support
+                                    property_type: propertyType,
+                                    location: locationStr,
+                                    budget_max: budgetMax,
+                                    must_haves: customMustHaves,
+                                    notes: finalNotes,
+                                    timing: timing
+                                }).eq('id', pendingSearches[0].id);
+                                
+                                // Store partnerId in local storage for a hack if we need it later
+                                if (partnerId) localStorage.setItem('nexusPartnerId', partnerId);
+                            } else {
+                                // Fallback normal create
+                                await createSearch({
+                                    client_name: clientName + " (Direct Client)",
+                                    co_client_name: partnerName || '',
+                                    co_client_email: partnerEmail || '',
+                                    buyer_id: finalUserId,
+                                    partner_id: partnerId,
+                                    co_buyer_id: finalUserId, // legacy support
+                                    search_type: 'buy',
+                                    property_type: propertyType,
+                                    location: locationStr,
+                                    budget_max: budgetMax,
+                                    must_haves: customMustHaves,
+                                    notes: finalNotes,
+                                    timing: timing
+                                });
+                            }
+                            
+                            localStorage.setItem('userRole', 'buyer');
+                            localStorage.setItem('isPremium', 'true');
+                            localStorage.setItem('nexusEmail', clientEmail);
+                        } catch (err) {
+                            console.warn("DB Insert failed. Fallback to local storage mode.", err);
+                        }
+                    }
+                } else {
+                    // Local Storage Fallback
+                    const searches = JSON.parse(localStorage.getItem('nexusSearches') || '[]');
+                    searches.push({ 
+                        id: Date.now(), 
+                        client_name: clientName, 
+                        location: locationStr, 
+                        budget_max: budgetMax,
+                        property_type: propertyType,
+                        must_haves: customMustHaves,
+                        status: 'active', 
+                        created_at: new Date().toISOString() 
+                    });
+                    localStorage.setItem('nexusSearches', JSON.stringify(searches));
+                    localStorage.setItem('userRole', 'buyer');
+                }
+
+                // Show success alert
+                document.getElementById('successModal').classList.remove('hidden');
+                document.getElementById('successModal').classList.add('flex');
+                
+                setTimeout(() => window.location.href='buyer-matches.html', 3500);
+                
+            } catch(e) {
+                console.error("Submission error:", e);
+                alert("Error connecting to server. Attempting Local Storage Mode...");
+                const btn = document.querySelector('button[type="submit"]');
+                btn.innerHTML = 'Submit & Find Matches <i class="fa-solid fa-radar ml-1 animate-pulse"></i>';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

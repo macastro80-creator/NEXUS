@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEXUS - My Matches</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Use local libraries/scripts to sync formatting/styles -->
+    <script src="global-theme.js"></script>
+    <script src="supabase-client.js"></script>
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f1f5f9;
+            overflow: hidden; /* Prevent scrolling, pure app feel */
+            overscroll-behavior-y: none;
+        }
+
+        .card-stack {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 180px); /* Leave room for header and footer buttons */
+            perspective: 1000px;
+        }
+
+        .property-card {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            background-color: white;
+            transition: transform 0.4s ease, opacity 0.4s ease;
+            transform-origin: 50% 100%;
+            will-change: transform;
+            z-index: 10;
+        }
+        
+        /* Behind cards for stack effect */
+        .property-card:nth-child(2) { z-index: 9; transform: scale(0.95) translateY(20px); opacity: 0.8; }
+        .property-card:nth-child(3) { z-index: 8; transform: scale(0.90) translateY(40px); opacity: 0.5; }
+        .property-card:nth-child(n+4) { display: none; }
+
+        .image-gradient {
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0) 100%);
+        }
+
+        .swipe-like {
+            transform: translateX(120%) rotate(15deg);
+            opacity: 0;
+        }
+
+        .swipe-pass {
+            transform: translateX(-120%) rotate(-15deg);
+            opacity: 0;
+        }
+        
+        .overlay-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            align-items: flex-end; /* Slide up from bottom */
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+        }
+        
+        .modal-content {
+            animation: slideUp 0.3s ease-out forwards;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen max-w-md mx-auto relative md:border-x md:border-slate-300 md:shadow-2xl bg-slate-50">
+
+    <!-- Header: Privacy & Agent curation focus -->
+    <header class="p-5 flex justify-between items-center bg-white shadow-sm z-20">
+        <div>
+            <p class="text-[10px] font-black uppercase text-blue-600 tracking-widest mb-0.5" id="agent-curator">Curated by Alejandra</p>
+            <h1 class="text-xl font-black italic text-slate-900 leading-none">Your Matches</h1>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="document.getElementById('criteria-modal').style.display='flex'" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-blue-100 hover:text-blue-600 transition">
+                <i class="fa-solid fa-list-check"></i>
+            </button>
+            <div class="w-10 h-10 rounded-full border-2 border-amber-400 overflow-hidden shadow-md">
+                <img src="https://ui-avatars.com/api/?name=Alejandra+Castro&background=003DA5&color=fff" alt="Agent" class="w-full h-full object-cover">
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Stack Container -->
+    <main class="flex-1 p-4 relative z-10 flex flex-col justify-center">
+        
+        <!-- Empty State (Hidden initially) -->
+        <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center hidden">
+            <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-3xl mb-4">
+                <i class="fa-solid fa-check-double"></i>
+            </div>
+            <h2 class="text-2xl font-black italic text-slate-800 mb-2">You're all caught up!</h2>
+            <p class="text-xs font-bold text-slate-500">We've notified Alejandra. She is searching for more properties that match your criteria.</p>
+        </div>
+
+        <!-- The Deck -->
+        <div id="card-deck" class="card-stack">
+            <!-- Cards will be injected by JavaScript -->
+        </div>
+    </main>
+
+    <!-- Controls (Like / Pass) -->
+    <footer class="p-6 pb-8 z-20 flex justify-center gap-6 items-center">
+        <!-- Pass Button -->
+        <button onclick="handlePass()" class="w-16 h-16 rounded-full bg-white shadow-xl shadow-red-500/10 text-red-500 flex items-center justify-center text-2xl active:scale-90 transition-transform border border-red-50 hover:bg-red-50">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <!-- Info Button (Optional small button) -->
+        <button class="w-10 h-10 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-sm active:scale-90 transition-transform shadow-inner">
+            <i class="fa-solid fa-info"></i>
+        </button>
+        <!-- Like Button -->
+        <button onclick="handleLike()" class="w-16 h-16 rounded-full bg-gradient-to-tr from-emerald-400 to-green-500 shadow-xl shadow-green-500/30 text-white flex items-center justify-center text-2xl active:scale-90 transition-transform transform">
+            <i class="fa-solid fa-heart"></i>
+        </button>
+    </footer>
+
+    <!-- Reject Reason Modal -->
+    <div id="reject-modal" class="overlay-modal">
+        <div class="modal-content w-full bg-white rounded-t-[35px] p-6 pb-12 shadow-[0_-10px_40px_rgba(0,0,0,0.2)]">
+            <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6"></div>
+            
+            <h3 class="text-xl font-black text-slate-900 uppercase italic mb-2">Help Alejandra understand</h3>
+            <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-6">Why didn't you like this property?</p>
+            
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <button onclick="submitReject('Price too high')" class="py-4 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-black text-slate-700 hover:bg-red-50 hover:border-red-200 hover:text-red-700 transition flex flex-col items-center gap-2 active:scale-95">
+                    <i class="fa-solid fa-sack-dollar text-xl opacity-50"></i> Price too high
+                </button>
+                <button onclick="submitReject('Location')" class="py-4 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-black text-slate-700 hover:bg-red-50 hover:border-red-200 hover:text-red-700 transition flex flex-col items-center gap-2 active:scale-95">
+                    <i class="fa-solid fa-map-location-dot text-xl opacity-50"></i> Wrong Location
+                </button>
+                <button onclick="submitReject('Too small')" class="py-4 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-black text-slate-700 hover:bg-red-50 hover:border-red-200 hover:text-red-700 transition flex flex-col items-center gap-2 active:scale-95">
+                    <i class="fa-solid fa-compress text-xl opacity-50"></i> Too Small
+                </button>
+                <button onclick="submitReject('Style / Needs work')" class="py-4 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-black text-slate-700 hover:bg-red-50 hover:border-red-200 hover:text-red-700 transition flex flex-col items-center gap-2 active:scale-95">
+                    <i class="fa-solid fa-hammer text-xl opacity-50"></i> Needs Work
+                </button>
+            </div>
+            
+            <button onclick="submitReject('Other / Just passing')" class="w-full py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:bg-slate-50 transition active:scale-95">
+                Skip / Other Reason
+            </button>
+        </div>
+    </div>
+
+    <!-- My Criteria Modal -->
+    <div id="criteria-modal" class="overlay-modal relative z-[1000] items-center">
+        <div class="w-[90%] max-w-sm bg-white rounded-[35px] p-6 shadow-2xl relative">
+            <button onclick="document.getElementById('criteria-modal').style.display='none'" class="absolute right-6 top-6 text-slate-400 hover:text-slate-900 transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 class="text-xl font-black text-slate-900 uppercase italic mb-1 mt-2">My Criteria</h3>
+            <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-6">What Alejandra is hunting for</p>
+            
+            <div class="space-y-4 mb-6">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <span class="text-xs font-bold text-slate-500"><i class="fa-solid fa-sack-dollar mr-2"></i> Max Budget</span>
+                    <span class="text-sm font-black text-emerald-600">$650,000</span>
+                </div>
+                <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <span class="text-xs font-bold text-slate-500"><i class="fa-solid fa-map-location-dot mr-2"></i> Locations</span>
+                    <span class="text-xs font-black text-slate-800">Dominical, Uvita</span>
+                </div>
+                <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <span class="text-xs font-bold text-slate-500"><i class="fa-solid fa-bed mr-2"></i> Min Beds</span>
+                    <span class="text-xs font-black text-slate-800">3 Beds</span>
+                </div>
+            </div>
+
+            <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">My Must Haves:</h4>
+            <div class="flex flex-wrap gap-2">
+                <span class="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-black uppercase px-3 py-1.5 rounded-full"><i class="fa-solid fa-check mr-1 opacity-50"></i> Ocean View</span>
+                <span class="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-black uppercase px-3 py-1.5 rounded-full"><i class="fa-solid fa-check mr-1 opacity-50"></i> Pool</span>
+                <span class="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-black uppercase px-3 py-1.5 rounded-full"><i class="fa-solid fa-check mr-1 opacity-50"></i> Turnkey</span>
+                <span class="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-black uppercase px-3 py-1.5 rounded-full"><i class="fa-solid fa-check mr-1 opacity-50"></i> Gated</span>
+            </div>
+            
+            <button onclick="document.getElementById('criteria-modal').style.display='none'" class="w-full mt-6 bg-slate-900 text-white rounded-xl py-4 text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition active:scale-95">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const deck = document.getElementById('card-deck');
+            
+            // 1. Fetch real matches from Supabase
+            async function loadMatches() {
+                if (typeof isSupabaseConfigured === 'undefined' || !isSupabaseConfigured() || !supabase) {
+                    console.warn("Supabase not active, showing empty state.");
+                    updateCards();
+                    return;
+                }
+                
+                try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) {
+                        console.warn("No client logged in.");
+                        document.getElementById('empty-state').classList.remove('hidden');
+                        return;
+                    }
+                    
+                    // Fetch matches for this buyer
+                    const matches = await getBuyerMatches(user.id);
+                    const newMatches = matches.filter(m => {
+                        const likedBy = m.liked_by || [];
+                        const rejectedBy = m.rejected_by || [];
+                        const hasActed = likedBy.includes(user.id) || rejectedBy.includes(user.id);
+                        return !hasActed && (m.status === 'new' || m.status === 'waiting_partner');
+                    });
+                    
+                    // Render Cards
+                    newMatches.forEach(match => {
+                        const img = match.image_url || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=800';
+                        const priceStr = match.property_price ? '$' + match.property_price.toLocaleString() : 'Price upon request';
+                        const link = match.property_link || '#';
+                        // Extract must haves if any passed via notes or logic
+                        const extrasHtml = ``; 
+
+                        const cardHtml = `
+                        <div class="property-card" data-id="${match.id}" data-name="${match.property_name}">
+                            <img src="${img}" class="absolute inset-0 w-full h-full object-cover" alt="Property">
+                            <div class="absolute inset-0 image-gradient flex flex-col justify-end p-6">
+                                <div class="flex justify-between items-start mb-2">
+                                    <span class="bg-blue-600 text-white text-[9px] font-black uppercase px-3 py-1 rounded-full">New Match</span>
+                                    <button onclick="window.open('${link}', '_blank')" class="bg-white/20 hover:bg-white/40 backdrop-blur-md text-white w-8 h-8 rounded-full flex items-center justify-center transition z-50">
+                                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                                    </button>
+                                </div>
+                                <h2 class="text-3xl font-black text-white leading-tight drop-shadow-md shadow-black mb-1">${match.property_name}</h2>
+                                <p class="text-lg font-black text-emerald-400 mb-2 shadow-black drop-shadow-md">${priceStr}</p>
+                                
+                                <div class="flex gap-4 text-white text-xs font-bold border-t border-white/20 pt-3 mt-3">
+                                    ${match.property_bedrooms ? `<div class="flex items-center gap-1.5"><i class="fa-solid fa-bed text-blue-300"></i> ${match.property_bedrooms} Beds</div>` : ''}
+                                    ${match.property_bathrooms ? `<div class="flex items-center gap-1.5"><i class="fa-solid fa-bath text-blue-300"></i> ${match.property_bathrooms} Baths</div>` : ''}
+                                    ${match.property_location ? `<div class="flex items-center gap-1.5"><i class="fa-solid fa-location-dot text-blue-300"></i> ${match.property_location}</div>` : ''}
+                                </div>
+                            </div>
+                        </div>`;
+                        
+                        deck.insertAdjacentHTML('beforeend', cardHtml);
+                    });
+                    
+                    updateCards();
+                    
+                } catch(e) {
+                    console.error("Error fetching matches:", e);
+                    document.getElementById('empty-state').classList.remove('hidden');
+                }
+            }
+
+            function updateCards() {
+                const cards = deck.querySelectorAll('.property-card:not(.swipe-like):not(.swipe-pass)');
+                if (cards.length === 0) {
+                    document.getElementById('empty-state').classList.remove('hidden');
+                    return;
+                }
+                
+                cards.forEach((card, index) => {
+                    card.style.zIndex = 10 - index;
+                    if(index === 0) {
+                        card.style.transform = 'scale(1) translateY(0)';
+                        card.style.opacity = '1';
+                    } else if (index === 1) {
+                        card.style.transform = 'scale(0.95) translateY(20px)';
+                        card.style.opacity = '1';
+                    } else if (index === 2) {
+                        card.style.transform = 'scale(0.90) translateY(40px)';
+                        card.style.opacity = '0.5';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+
+            window.handleLike = async function() {
+                const topCard = getTopCard();
+                if (!topCard) return;
+
+                const matchId = topCard.getAttribute('data-id');
+                topCard.classList.add('swipe-like');
+                
+                try {
+                    if (isSupabaseConfigured() && typeof updateMatchStatus === 'function') {
+                        const updatedMatch = await updateMatchStatus(matchId, 'liked');
+                        if (updatedMatch && updatedMatch.status === 'liked') {
+                            triggerMatchConfetti();
+                        } else if (updatedMatch && updatedMatch.status === 'waiting_partner') {
+                            showWaitingPartnerToast();
+                        }
+                    }
+                } catch(e) { console.error('DB Error', e); }
+                
+                setTimeout(() => {
+                    topCard.remove();
+                    updateCards();
+                }, 400); 
+            }
+
+            window.handlePass = function() {
+                const topCard = getTopCard();
+                if (!topCard) return;
+                document.getElementById('reject-modal').style.display = 'flex';
+            }
+
+            window.submitReject = async function(reason) {
+                document.getElementById('reject-modal').style.display = 'none';
+                
+                const topCard = getTopCard();
+                if (!topCard) return;
+
+                const matchId = topCard.getAttribute('data-id');
+                topCard.classList.add('swipe-pass');
+                
+                try {
+                    if (isSupabaseConfigured() && typeof updateMatchStatus === 'function') {
+                        await updateMatchStatus(matchId, 'rejected', reason);
+                    }
+                } catch(e) { console.error('DB Error', e); }
+                
+                setTimeout(() => {
+                    topCard.remove();
+                    updateCards();
+                }, 400); 
+            }
+
+            function getTopCard() {
+                const cards = deck.querySelectorAll('.property-card:not(.swipe-like):not(.swipe-pass)');
+                return cards.length > 0 ? cards[0] : null;
+            }
+
+            function showWaitingPartnerToast() {
+                const toast = document.createElement('div');
+                toast.className = 'fixed top-24 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-full shadow-2xl font-black text-xs uppercase tracking-widest z-[100] animate-fade';
+                toast.innerHTML = '<i class="fa-solid fa-clock-rotate-left mr-2"></i> Waiting on Partner';
+                document.body.appendChild(toast);
+                setTimeout(() => {
+                    toast.classList.add('opacity-0', 'transition-opacity');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+
+            function triggerMatchConfetti() {
+                const toast = document.createElement('div');
+                toast.className = 'fixed inset-0 flex items-center justify-center pointer-events-none z-[100] bg-black/40 backdrop-blur-sm animate-fade';
+                toast.innerHTML = `
+                    <div class="bg-white dark:bg-slate-800 p-8 rounded-[32px] text-center shadow-2xl transform scale-110">
+                        <div class="text-6xl mb-4">🎉</div>
+                        <h2 class="text-3xl font-black italic text-[#003DA5] uppercase mb-2">It's a Match!</h2>
+                        <p class="text-xs font-bold text-slate-500">You and your partner both liked this property.<br>Your agent has been notified.</p>
+                    </div>
+                `;
+                document.body.appendChild(toast);
+                setTimeout(() => {
+                    toast.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                    setTimeout(() => toast.remove(), 500);
+                }, 4000);
+            }
+
+            // Init
+            await loadMatches();
+        });
+    </script>
+</body>
+</html>

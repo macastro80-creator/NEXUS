@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>My Business - NEXUS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+
+        let currentLang = 'en';
+        let generatedPlan = null;
+        let pendingTodos = []; 
+        let currentGrossVol = 0;
+
+        const C_PROSPECT_TO_PRE = 0.20; 
+        const C_PRE_TO_ACM = 0.70;      
+        const C_ACM_TO_EXCL = 0.50;     
+        const C_EXCL_TO_SALE = 0.10;    
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'es' : 'en';
+            applyLanguage();
+            renderTodos();
+        }
+
+        function applyLanguage() {
+            document.getElementById('langToggleBtn').innerText = currentLang.toUpperCase();
+            const enEls = document.querySelectorAll('.lang-en');
+            const esEls = document.querySelectorAll('.lang-es');
+            enEls.forEach(el => currentLang === 'en' ? el.classList.remove('hidden') : el.classList.add('hidden'));
+            esEls.forEach(el => currentLang === 'es' ? el.classList.remove('hidden') : el.classList.add('hidden'));
+            setDateDisplay();
+        }
+
+        function setDateDisplay() {
+            const options = { weekday: 'short', month: 'short', day: 'numeric' };
+            const dateStr = new Date().toLocaleDateString(currentLang === 'en' ? 'en-US':'es-ES', options);
+            if(document.getElementById('currentDateDisp2')) document.getElementById('currentDateDisp2').innerText = dateStr;
+        }
+
+        function checkTimeForRedBtn() {
+            const now = new Date();
+            const btn = document.getElementById('mainOKRBtn');
+            if(!btn) return;
+            if(now.getHours() >= 17) {
+                btn.classList.remove('bg-blue-500', 'shadow-blue-500/30');
+                btn.classList.add('bg-[#ED1C24]', 'shadow-red-500/40', 'animate-pulse');
+            }
+        }
+
+        
+        let currentTrackerTab = 'week';
+        let trackerOffset = 0;
+
+        function changeTrackerOffset(delta) {
+            trackerOffset += delta;
+            if(trackerOffset > 0) trackerOffset = 0; // Don't go into the future
+            
+            const nextBtn = document.getElementById('trackerNextBtn');
+            if(trackerOffset === 0) {
+                nextBtn.disabled = true;
+                nextBtn.classList.add('opacity-50', 'pointer-events-none');
+            } else {
+                nextBtn.disabled = false;
+                nextBtn.classList.remove('opacity-50', 'pointer-events-none');
+            }
+
+            updateTrackerLabel();
+            updateDashboardCharts();
+        }
+
+        function updateTrackerLabel() {
+            const lbl = document.getElementById('timePeriodLabel');
+            if(!lbl) return;
+
+            if(trackerOffset === 0) {
+                lbl.innerText = currentTrackerTab === 'week' ? (currentLang==='en'?'This Week':'Esta Sem') : currentTrackerTab === 'month' ? (currentLang==='en'?'This Month':'Este Mes') : (currentLang==='en'?'This Year':'Este Año');
+            } else {
+                let absOff = Math.abs(trackerOffset);
+                if(currentTrackerTab === 'week') {
+                    lbl.innerText = absOff === 1 ? (currentLang==='en'?'Last Week':'Sem Pasada') : (currentLang==='en'? absOff + ' Wks Ago' : absOff + ' Sem Atrás');
+                } else if(currentTrackerTab === 'month') {
+                    lbl.innerText = absOff === 1 ? (currentLang==='en'?'Last Month':'Mes Pasado') : (currentLang==='en'? absOff + ' Mos Ago' : absOff + ' Mes Atrás');
+                } else {
+                    lbl.innerText = absOff === 1 ? (currentLang==='en'?'Last Year':'Año Pasado') : (currentLang==='en'? absOff + ' Yrs Ago' : absOff + ' Años Atrás');
+                }
+            }
+        }
+
+
+        function setTrackerTab(tab) {
+            currentTrackerTab = tab;
+            trackerOffset = 0; // Reset offset on tab change
+            const nextBtn = document.getElementById('trackerNextBtn');
+            if(nextBtn) {
+                nextBtn.disabled = true;
+                nextBtn.classList.add('opacity-50', 'pointer-events-none');
+            }
+
+            // Update UI tabs
+            ['week', 'month', 'year'].forEach(t => {
+                const el = document.getElementById('tab-' + t);
+                if(t === tab) {
+                    el.className = 'tracker-tab px-3 py-1 text-[10px] font-bold rounded-md bg-white dark:bg-slate-600 shadow-sm text-slate-800 dark:text-white transition';
+                } else {
+                    el.className = 'tracker-tab px-3 py-1 text-[10px] font-bold rounded-md text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition';
+                }
+            });
+            updateTrackerLabel();
+            updateDashboardCharts();
+        }
+
+        function generatePlan() {
+            const vision = document.getElementById('myVisionText').value || 'To be free and happy';
+            const g1 = document.getElementById('goal1').value || '';
+            const g2 = document.getElementById('goal2').value || '';
+            const g3 = document.getElementById('goal3').value || '';
+
+            const expPersonal = parseFloat(document.getElementById('expPersonal').value) || 0;
+            const expBusiness = parseFloat(document.getElementById('expBusiness').value) || 0;
+            const split = parseFloat(document.getElementById('splitPercent').value);
+            const avgCommRate = parseFloat(document.getElementById('avgCommission').value);
+            const avgTicket = parseFloat(document.getElementById('avgPrice').value);
+
+            if(expPersonal === 0 && expBusiness === 0) {
+                alert(currentLang === 'en' ? "Please input your baseline expenses." : "Por favor, ingresa tus gastos base.");
+                return;
+            }
+
+            const totalMonthlyNeed = expPersonal + expBusiness;
+            const yearlyIncomeTarget = totalMonthlyNeed * 12;
+            const comisionBruta = avgTicket * avgCommRate; 
+            const comisionBolsillo = comisionBruta * split; 
+            const yearlySalesNeeded = Math.ceil(yearlyIncomeTarget / comisionBolsillo);
+            
+            if (yearlySalesNeeded === 0 || isNaN(yearlySalesNeeded) || yearlySalesNeeded === Infinity) {
+                alert(currentLang === 'en' ? "Calculations resulted in 0. Check your numbers." : "Cálculos resultaron en 0. Revisa tus números.");
+                return;
+            }
+
+            const yearlyExclusivesNeeded = Math.ceil(yearlySalesNeeded / C_EXCL_TO_SALE); 
+            const yearlyACMsNeeded = Math.ceil(yearlyExclusivesNeeded / C_ACM_TO_EXCL);   
+            const yearlyPreNeeded = Math.ceil(yearlyACMsNeeded / C_PRE_TO_ACM);           
+            const yearlyProspectsNeeded = Math.ceil(yearlyPreNeeded / C_PROSPECT_TO_PRE); 
+
+            const WORK_WEEKS_YEAR = 50;
+            const WORK_MONTHS_YEAR = 11;
+            
+            generatedPlan = {
+                visionText: vision,
+                indicators: [g1, g2, g3],
+                targetIncome: yearlyIncomeTarget,
+                
+                yearCalls: yearlyProspectsNeeded, yearPre: yearlyPreNeeded, yearAcm: yearlyACMsNeeded, yearExcl: yearlyExclusivesNeeded, yearSales: yearlySalesNeeded,
+                monthCalls: Math.ceil(yearlyProspectsNeeded / WORK_MONTHS_YEAR), monthPre: Math.ceil(yearlyPreNeeded / WORK_MONTHS_YEAR), monthAcm: Math.ceil(yearlyACMsNeeded / WORK_MONTHS_YEAR), monthExcl: Math.ceil(yearlyExclusivesNeeded / WORK_MONTHS_YEAR), monthSales: Math.ceil(yearlySalesNeeded / WORK_MONTHS_YEAR),
+                weekCalls: Math.ceil(yearlyProspectsNeeded / WORK_WEEKS_YEAR), weekPre: Math.ceil(yearlyPreNeeded / WORK_WEEKS_YEAR), weekAcm: Math.ceil(yearlyACMsNeeded / WORK_WEEKS_YEAR), weekExcl: Math.ceil(yearlyExclusivesNeeded / WORK_WEEKS_YEAR), weekSales: Math.ceil(yearlySalesNeeded / WORK_WEEKS_YEAR)
+            };
+
+            generatedPlan.tracked = {
+                calls: 0, pre: 0, acm: 0, excl: 0, sales: 0, currentVol: 0
+            };
+
+            localStorage.setItem('nexus_business_plan', JSON.stringify(generatedPlan));
+            loadDashboardUI();
+        }
+
+        function loadDashboardUI() {
+            const savedPlan = localStorage.getItem('nexus_business_plan');
+            if(savedPlan) {
+                generatedPlan = JSON.parse(savedPlan);
+                if(!generatedPlan.tracked) generatedPlan.tracked = { calls:0, pre:0, acm:0, excl:0, sales:0, currentVol:0 };
+                
+                document.getElementById('setupWizard').classList.add('hidden');
+                document.getElementById('mainDashboard').classList.remove('hidden');
+
+                document.getElementById('dispYearlyTarget').innerText = "$" + Math.round(generatedPlan.targetIncome).toLocaleString();
+                document.getElementById('dispVisionText').innerText = `"${generatedPlan.visionText}"`;
+                document.getElementById('dispGoal1').innerText = generatedPlan.indicators[0];
+                document.getElementById('dispGoal2').innerText = generatedPlan.indicators[1];
+                document.getElementById('dispGoal3').innerText = generatedPlan.indicators[2];
+
+                updateDashboardCharts();
+            } else {
+                document.getElementById('setupWizard').classList.remove('hidden');
+                document.getElementById('mainDashboard').classList.add('hidden');
+            }
+        }
+
+        function updateDashboardCharts() {
+            if(!generatedPlan) return;
+            const t = generatedPlan.tracked;
+            // Backwards compat
+            if(t.calls === undefined) {
+                 t.calls = t.weekCalls || 0; t.pre = t.weekPre || 0; t.acm = t.weekAcm || 0; t.excl = 0; t.sales = 0;
+            }
+
+            let tgtCalls, tgtPre, tgtAcm, tgtExcl, tgtSales;
+            if(currentTrackerTab === 'week') {
+                tgtCalls = generatedPlan.weekCalls; tgtPre = generatedPlan.weekPre; tgtAcm = generatedPlan.weekAcm; tgtExcl = generatedPlan.weekExcl; tgtSales = generatedPlan.weekSales;
+            } else if (currentTrackerTab === 'month') {
+                tgtCalls = generatedPlan.monthCalls; tgtPre = generatedPlan.monthPre; tgtAcm = generatedPlan.monthAcm; tgtExcl = generatedPlan.monthExcl; tgtSales = generatedPlan.monthSales;
+            } else {
+                tgtCalls = generatedPlan.yearCalls; tgtPre = generatedPlan.yearPre; tgtAcm = generatedPlan.yearAcm; tgtExcl = generatedPlan.yearExcl; tgtSales = generatedPlan.yearSales;
+            }
+
+            // Fake historical data logic:
+            // If offset is negative, generate a fake "historical" amount based on the target,
+            // minus some random variance to make it look realistic.
+            let dispCalls = t.calls, dispPre = t.pre, dispAcm = t.acm, dispExcl = t.excl, dispSales = t.sales;
+            
+            if (trackerOffset < 0) {
+                // Generate a deterministic fake value based on the offset and the target
+                // so it stays the same when you toggle back and forth
+                const seed = Math.abs(trackerOffset) * (currentTrackerTab === 'week' ? 7 : currentTrackerTab === 'month' ? 30 : 365);
+                const variance = ((seed * 13) % 40) / 100; // 0% to 40% variance
+                
+                // Usually historic weeks are randomly between 60% and 110% of target
+                const multiplier = 0.6 + variance; 
+                dispCalls = Math.round(tgtCalls * multiplier);
+                dispPre = Math.round(tgtPre * multiplier);
+                dispAcm = Math.round(tgtAcm * multiplier);
+                dispExcl = Math.round(tgtExcl * multiplier);
+                dispSales = Math.round(tgtSales * multiplier);
+            }
+
+            const clamp = (val, max) => Math.min((val/max)*100, 100) || 0;
+            const makeRow = (labelEn, labelEs, current, tgt, colorHex) => `
+                <div>
+                    <div class="flex justify-between text-[10px] font-bold mb-1">
+                        <span class="${trackerOffset < 0 ? 'text-slate-400 opacity-80' : 'text-slate-500'} uppercase">${currentLang === 'en' ? labelEn : labelEs}</span>
+                        <span class="text-slate-700 dark:text-slate-300"><span>${current}</span> / <span>${tgt}</span></span>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden ${trackerOffset < 0 ? 'opacity-60 saturate-50' : ''}">
+                        <div class="h-full w-0 progress-bar-fill duration-1000" style="background-color: ${colorHex}; width: ${clamp(current, tgt)}%"></div>
+                    </div>
+                </div>
+            `;
+
+            const htmlContent = [
+                makeRow('Calls/Prospects', 'Llamados/Prospectos', dispCalls, tgtCalls, '#3b82f6'),
+                makeRow('Pre-Listings', 'Pre-Listings', dispPre, tgtPre, '#a855f7'),
+                makeRow('ACM / CMA', 'ACM / CMA', dispAcm, tgtAcm, '#f59e0b'),
+                makeRow('Exclusives', 'Exclusivas', dispExcl, tgtExcl, '#10b981'),
+                makeRow('Closings', 'Cierres', dispSales, tgtSales, '#6366f1')
+            ].join('');
+
+            if(document.getElementById('trackerDisplayArea')) {
+                const area = document.getElementById('trackerDisplayArea');
+                // subtle fade effect on change
+                area.style.opacity = '0';
+                setTimeout(() => {
+                    area.innerHTML = htmlContent;
+                    area.style.opacity = '1';
+                }, 150);
+            }
+
+            const airPct = clamp(t.currentVol, generatedPlan.targetIncome);
+            if(document.getElementById('airProgressBar')) document.getElementById('airProgressBar').style.width = airPct + '%';
+            if(document.getElementById('airplaneIcon')) document.getElementById('airplaneIcon').style.left = `calc(${airPct}% - 12px)`;
+            if(document.getElementById('totalGrossDisp')) document.getElementById('totalGrossDisp').innerText = "$" + t.currentVol.toLocaleString();
+            
+            localStorage.setItem('nexus_business_plan', JSON.stringify(generatedPlan));
+        }
+
+        function resetPlan() {
+            if(confirm(currentLang === 'en' ? "Erase plan and start over?" : "¿Borrar plan y empezar de nuevo?")) {
+                localStorage.removeItem('nexus_business_plan');
+                loadDashboardUI();
+            }
+        }
+
+        function openOkrModal() { document.getElementById('fullOkrModal').classList.remove('hidden'); }
+        function closeOkrModal() { document.getElementById('fullOkrModal').classList.add('hidden'); }
+
+        
+        function incrementOkr(id) {
+            const el = document.getElementById(id);
+            if(el) el.value = parseInt(el.value || 0) + 1;
+        }
+        function decrementOkr(id) {
+            const el = document.getElementById(id);
+            if(el && parseInt(el.value || 0) > 0) el.value = parseInt(el.value || 0) - 1;
+        }
+
+        function showSuccessModal(titleEn, titleEs, bodyEn, bodyEs) {
+            document.getElementById('successModalTitle').innerText = currentLang === 'en' ? titleEn : titleEs;
+            document.getElementById('successModalBody').innerText = currentLang === 'en' ? bodyEn : bodyEs;
+            const modal = document.getElementById('successModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('successModalInner').classList.remove('scale-95');
+                document.getElementById('successModalInner').classList.add('scale-100');
+            }, 10);
+            triggerConfetti();
+        }
+
+        function closeSuccessModal() {
+            const modal = document.getElementById('successModal');
+            document.getElementById('successModalInner').classList.remove('scale-100');
+            document.getElementById('successModalInner').classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+function submitFullOkr() {
+            const calls = parseInt(document.getElementById('okrLlamados').value) || 0;
+            const pre = parseInt(document.getElementById('okrPL').value) || 0;
+            const acm = parseInt(document.getElementById('okrACM').value) || 0;
+            const excli = parseInt(document.getElementById('okrExclusivas').value) || 0;
+            const dealClosed = parseInt(document.getElementById('okrTransacciones').value) || 0;
+            const addedVol = parseInt(document.getElementById('okrVolume').value) || 0;
+
+            if(generatedPlan) {
+                generatedPlan.tracked.calls += calls;
+                generatedPlan.tracked.pre += pre;
+                generatedPlan.tracked.acm += acm;
+                generatedPlan.tracked.excl += excli;
+                generatedPlan.tracked.sales += dealClosed;
+                generatedPlan.tracked.currentVol += addedVol;
+                updateDashboardCharts();
+            }
+
+            if (excli > 0) {
+                for (let i = 0; i < excli; i++) {
+                    pendingTodos.push({ id: Date.now() + i, type: 'listing', title_en: 'Upload New Exclusive', title_es: 'Subir Nueva Exclusiva', link: 'https://docs.google.com/forms/d/e/1FAIpQLSd788bL1fT5r6FHzn89eR2B84D3W21g_m0N5P7A41tE2w56Q/viewform' });
+                }
+            }
+            if (dealClosed > 0) {
+                for (let i = 0; i < dealClosed; i++) {
+                    pendingTodos.push({ id: Date.now() + 1000 + i, type: 'reserva', title_en: 'Report Closed Deal', title_es: 'Reportar Cierre', link: 'https://docs.google.com/forms/d/e/1FAIpQLSdpw3j1ZgIrmzBofK84pQ4s1L1kYyZJ9q8h50M8v9O8C1A8Nw/viewform' });
+                }
+            }
+            if(pendingTodos.length > 0) {
+                localStorage.setItem('nexus_pending_todos', JSON.stringify(pendingTodos));
+                renderTodos();
+            }
+
+            document.querySelectorAll('#fullOkrModal input[type="number"]').forEach(inp => inp.value = 0);
+            closeOkrModal();
+            showSuccessModal('OKR Saved', 'OKR Guardado', 'Your daily numbers have been recorded.', 'Tus números diarios han sido registrados.');
+        }
+
+        function renderTodos() {
+            const container = document.getElementById('pendingActionsContainer');
+            if(!container) return; 
+            
+            const emptyState = document.getElementById('emptyActionsState');
+            const badge = document.getElementById('pendingCountBadge');
+
+            const savedTodos = localStorage.getItem('nexus_pending_todos');
+            if (savedTodos) pendingTodos = JSON.parse(savedTodos);
+
+            Array.from(container.children).forEach(child => { if (child.id !== 'emptyActionsState') child.remove(); });
+
+            if (pendingTodos.length === 0) {
+                emptyState.classList.remove('hidden'); badge.classList.add('hidden'); document.getElementById('actionChecklist').classList.add('hidden');
+            } else {
+                document.getElementById('actionChecklist').classList.remove('hidden'); emptyState.classList.add('hidden'); badge.innerText = pendingTodos.length; badge.classList.remove('hidden');
+                pendingTodos.forEach(todo => {
+                    const icon = todo.type === 'listing' ? 'fa-house-flag' : 'fa-handshake';
+                    const color = todo.type === 'listing' ? 'text-blue-600' : 'text-purple-600';
+                    const bg = todo.type === 'listing' ? 'bg-blue-50 dark:bg-slate-700' : 'bg-purple-50 dark:bg-slate-700';
+                    const title = currentLang === 'en' ? todo.title_en : todo.title_es;
+                    const h = `
+                        <div class="${bg} p-4 rounded-xl flex items-center justify-between border border-slate-200 shadow-sm transition">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm"><i class="fa-solid ${icon} ${color} text-xs"></i></div>
+                                <p class="text-[10px] font-black uppercase tracking-widest">${title}</p>
+                            </div>
+                            <button onclick="resolveTodo(${todo.id}, '${todo.link}')" class="bg-[#ED1C24] text-white text-[9px] font-black uppercase px-4 py-2 rounded-lg">${currentLang === 'en'?'Complete':'Completar'}</button>
+                        </div>`;
+                    container.insertAdjacentHTML('beforeend', h);
+                });
+            }
+        }
+
+        function resolveTodo(id, link) {
+            window.open(link, '_blank'); pendingTodos = pendingTodos.filter(t => t.id !== id); localStorage.setItem('nexus_pending_todos', JSON.stringify(pendingTodos)); renderTodos();
+        }
+
+        function triggerConfetti() {
+            if (typeof confetti === 'function') {
+                var duration = 2000; var end = Date.now() + duration;
+                (function frame() {
+                    confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#ED1C24', '#003DA5', '#fcd34d'] });
+                    confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#ED1C24', '#003DA5', '#fcd34d'] });
+                    if (Date.now() < end) requestAnimationFrame(frame);
+                }());
+            }
+        }
+
+        function handleDealStatusChange(selectEl, dealId) {
+            if(selectEl.value === 'sold') {
+                triggerConfetti();
+                selectEl.className = "bg-green-100 text-green-700 text-[9px] font-black px-2 py-1 rounded outline-none";
+                document.getElementById('okrTransacciones').value = 1;
+                setTimeout(() => { selectEl.parentElement.parentElement.remove(); }, 2000);
+            } else if(selectEl.value === 'caida') {
+                if(generatedPlan) document.getElementById('caidaVisionTarget').innerText = generatedPlan.visionText;
+                document.getElementById('caidaModal').classList.remove('hidden');
+                selectEl.className = "bg-slate-200 text-slate-500 text-[9px] font-black px-2 py-1 rounded outline-none";
+                setTimeout(() => { selectEl.parentElement.parentElement.remove(); }, 3000);
+            }
+        }
+
+        function closeCaidaModal() { document.getElementById('caidaModal').classList.add('hidden'); }
+
+        function openRookieModal() { document.getElementById('rookieModal').classList.remove('hidden'); }
+        function closeRookieModal() { document.getElementById('rookieModal').classList.add('hidden'); }
+        
+        function unlockNextRookieTask(currentTaskNum) {
+            const currentTaskLabel = document.getElementById('rookieTask' + currentTaskNum);
+            const isChecked = currentTaskLabel.querySelector('input').checked;
+            
+            // Toggle strike-through on current text
+            if(isChecked) {
+                currentTaskLabel.querySelector('p').classList.add('line-through', 'text-slate-400', 'dark:text-slate-500');
+            } else {
+                currentTaskLabel.querySelector('p').classList.remove('line-through', 'text-slate-400', 'dark:text-slate-500');
+            }
+
+            // Only reveal the NEXT task if checking the box (not unchecking)
+            if(isChecked) {
+                const nextTask = document.getElementById('rookieTask' + (currentTaskNum + 1));
+                if(nextTask) {
+                    nextTask.classList.remove('hidden');
+                    nextTask.classList.add('animate-fade-in-up'); // nice little pop in
+                } else {
+                    // if it was the last task (10)
+                    triggerConfetti();
+                    alert(currentLang === 'en' ? "Congratulations! You've completed the Rookie Checklist!" : "¡Felicidades! ¡Has completado el Checklist de Novato!");
+                }
+            }
+        }
+
+        window.onload = function() {
+            if (currentLang === 'es') applyLanguage(); else setDateDisplay();
+            updateTrackerLabel();
+            checkTimeForRedBtn();
+            loadDashboardUI();
+            renderTodos();
+
+            const isPremium = localStorage.getItem('isPremium') === 'true';
+            if (!isPremium) {
+                document.querySelectorAll('.premium-only').forEach(el => {
+                    if (el && el.tagName === 'A') {
+                        el.classList.add('grayscale', 'opacity-60', 'relative');
+                        el.insertAdjacentHTML('beforeend', '<div class="absolute top-1 right-1 lg:top-2 lg:right-2 bg-slate-900 border border-slate-700 rounded-full w-4 h-4 flex items-center justify-center shadow-lg z-20"><i class="fa-solid fa-lock text-[8px] text-slate-400"></i></div>');
+                        el.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            alert(currentLang === 'es' ? '💎 ¡Esta es una función Premium!' : '💎 This is a Premium feature!');
+                        });
+                    }
+                });
+            }
+            setInterval(checkTimeForRedBtn, 600000); 
+        }
+
+</script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <script src="global-theme.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 6px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-blur {
+            backdrop-filter: blur(12px);
+            background: rgba(15, 23, 42, 0.6);
+        }
+
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+
+        .okr-counter {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .okr-counter:active {
+            transform: scale(0.9);
+        }
+        
+        .progress-bar-fill {
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .airplane-icon {
+            transition: left 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 font-sans pb-32 text-slate-800 dark:text-slate-200">
+
+    <!-- Top Nav -->
+    <nav class="bg-white dark:bg-slate-800 border-b px-4 py-4 sticky top-0 z-40 shadow-sm flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <a href="index.html" class="text-slate-400 text-lg"><i class="fa-solid fa-arrow-left"></i></a>
+            <div class="flex flex-col items-start gap-0">
+                <h1 class="text-3xl font-black text-[#003DA5] leading-none">NEXUS</h1>
+                <p class="text-[10px] uppercase tracking-widest text-[#ED1C24] font-bold mt-1">My Business</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <button id="langToggleBtn" onclick="toggleLanguage()" class="text-slate-400 font-black text-xs hover:text-[#003DA5] transition-colors uppercase">EN</button>
+            <button onclick="toggleDarkMode()" class="text-slate-400 hover:text-[#003DA5] dark:hover:text-amber-400 transition-colors text-lg">
+                <i class="fa-solid fa-moon dark:hidden"></i>
+                <i class="fa-solid fa-sun hidden dark:inline"></i>
+            </button>
+            <a href="profile.html" class="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 font-black text-xs border border-amber-200 shadow-sm">JD</a>
+        </div>
+    </nav>
+    
+                <!-- PREMIUM TOP NAV -->
+    <div id="premium-top-nav" class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-amber-500/30 flex justify-between items-center mt-2 mb-4 mx-4 rounded-2xl overflow-hidden shadow-2xl relative shadow-amber-500/10">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+        <a href="Mi_Oficina.html" id="nav-office" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
+            <i class="fa-solid fa-building mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Office</span>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Oficina</span>
+        </a>
+        <div class="w-[1px] h-8 bg-amber-500/20 relative z-10"></div>
+        <a href="my-business.html" id="nav-business" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
+            <i class="fa-solid fa-briefcase-medical mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Business</span>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Negocio</span>
+        </a>
+        <div class="w-[1px] h-8 bg-amber-500/20 relative z-10"></div>
+        <a href="#" id="nav-resources" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
+            <i class="fa-solid fa-book-open mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Resources</span>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Recursos</span>
+        </a>
+    </div>
+
+    <!-- MAIN APP WRAPPER -->
+    <main class="p-4 space-y-6 max-w-lg mx-auto w-full pt-4">
+
+        <!-- 1. DAY 1 SETUP WIZARD (Visible if no plan exists) -->
+        <div id="setupWizard" class="bg-white dark:bg-slate-800 rounded-[32px] p-6 shadow-xl border border-slate-200 dark:border-slate-700 relative overflow-hidden hidden animate-fade">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-bl-full pointer-events-none"></div>
+            
+            <div class="text-center mb-6 relative z-10">
+                <div class="w-16 h-16 bg-amber-50 dark:bg-amber-900/30 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl border border-amber-100 dark:border-amber-800">
+                    <i class="fa-solid fa-rocket"></i>
+                </div>
+                <h2 class="text-2xl font-black italic text-slate-900 dark:text-white mb-1"><span class="lang-en">Your Flight Plan</span><span class="lang-es hidden">Tu Plan de Vuelo</span></h2>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
+                    <span class="lang-en">Let's define your "Why" and calculate the daily actions to achieve it.</span>
+                    <span class="lang-es hidden">Definamos tu "Por qué" y calculemos las acciones diarias para lograrlo.</span>
+                </p>
+            </div>
+
+            <form id="planForm" class="space-y-4 relative z-10">
+                
+                <!-- Vision Section -->
+                <div class="space-y-2 p-4 bg-amber-50 dark:bg-amber-900/10 rounded-2xl border border-amber-100 dark:border-amber-800/30">
+                    <label class="text-xs font-black uppercase text-amber-600 dark:text-amber-500 tracking-widest block mb-1">
+                        <i class="fa-solid fa-eye mr-1"></i> <span class="lang-en">My Vision (The 'Why')</span><span class="lang-es hidden">Mi Visión (El 'Por Qué')</span>
+                    </label>
+                    <p class="text-[9px] text-amber-700/70 dark:text-amber-300/60 leading-tight mb-2">Money is just a tool to get to your real goals... what is that thing you want to achieve and what is your powerful Why that will wake you up every day?</p>
+                    <textarea id="myVisionText" rows="3" placeholder="Ej: Llevar a mi familia de viaje a Europa en el verano de 2026 y remodelar la cocina." class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-3 text-sm font-bold text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-amber-500 placeholder-slate-400"></textarea>
+                    
+                    <label class="text-[9px] font-black uppercase text-amber-600 dark:text-amber-500 tracking-widest block mt-4 mb-2">
+                        <span class="lang-en">Name 3 things that will make you know you got there:</span><span class="lang-es hidden">Nombra 3 cosas que te indicarán que llegaste:</span>
+                    </label>
+                    <input type="text" id="goal1" placeholder="1." class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-amber-500 mb-2">
+                    <input type="text" id="goal2" placeholder="2." class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-amber-500 mb-2">
+                    <input type="text" id="goal3" placeholder="3." class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-amber-500">
+                </div>
+
+                <!-- Financial Section -->
+                <div class="grid grid-cols-2 gap-3 mt-4">
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest">
+                            <i class="fa-solid fa-house"></i> <span class="lang-en">Personal /mo ($)</span><span class="lang-es hidden">Personal /mes ($)</span>
+                        </label>
+                        <input type="number" id="expPersonal" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-3 text-sm font-bold text-[#003DA5] dark:text-blue-400 outline-none focus:ring-2 focus:ring-[#003DA5]">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest">
+                            <i class="fa-solid fa-briefcase"></i> <span class="lang-en">Business /mo ($)</span><span class="lang-es hidden">Negocio /mes ($)</span>
+                        </label>
+                        <input type="number" id="expBusiness" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-3 text-sm font-bold text-[#003DA5] dark:text-blue-400 outline-none focus:ring-2 focus:ring-[#003DA5]">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3 pt-2 border-t border-slate-100 dark:border-slate-700 mt-4">
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest"><span class="lang-en">Your Split</span><span class="lang-es hidden">Tu Split</span></label>
+                        <select id="splitPercent" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl px-2 py-3 text-xs font-bold text-[#003DA5] dark:text-blue-400 outline-none">
+                            <option value="0.45">45%</option>
+                            <option value="0.60">60%</option>
+                            <option value="0.80">80%</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest"><span class="lang-en">Avg Comm</span><span class="lang-es hidden">Com. Prom</span></label>
+                        <select id="avgCommission" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl px-2 py-3 text-xs font-bold text-[#003DA5] dark:text-blue-400 outline-none">
+                            <option value="0.05">5%</option>
+                            <option value="0.06">6%</option>
+                            <option value="0.07">7%</option>
+                            <option value="0.08" selected>8%</option>
+                            <option value="0.09">9%</option>
+                            <option value="0.10">10%</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest" title="Ticket Promedio"><span class="lang-en">Avg Price</span><span class="lang-es hidden">Precio Prom</span></label>
+                        <input type="number" id="avgPrice" value="400000" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl px-2 py-3 text-[10px] font-bold text-[#003DA5] dark:text-blue-400 outline-none">
+                    </div>
+                </div>
+
+                <button type="button" onclick="generatePlan()" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white py-4 rounded-xl font-black uppercase text-[11px] tracking-widest shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 active:scale-95 transition-all mt-4 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-plane-departure mr-1"></i> <span class="lang-en">Launch My Plan</span><span class="lang-es hidden">Lanzar mi Plan</span>
+                </button>
+            </form>
+        </div>
+
+
+        <!-- 2. MAIN DASHBOARD (Visible if plan exists) -->
+        <div id="mainDashboard" class="hidden animate-fade space-y-6">
+
+            <!-- MAIN OKR ACTION BUTTON at Top -->
+            <button id="mainOKRBtn" onclick="openOkrModal()" class="w-full bg-blue-500 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-blue-500/30 hover:-translate-y-1 active:translate-y-0 transition-transform flex items-center justify-center gap-3">
+                <i class="fa-solid fa-list-check text-xl"></i>
+                <span class="lang-en">Complete OKR Today</span>
+                <span class="lang-es hidden">Completar OKR Hoy</span>
+            </button>
+
+            <!-- Airplane Progress & Vision Board -->
+            <div class="bg-gradient-to-br from-[#003DA5] to-blue-800 rounded-[32px] p-6 shadow-xl text-white relative overflow-hidden">
+                <i class="fa-solid fa-cloud absolute top-4 right-8 text-white/5 text-4xl"></i>
+                <i class="fa-solid fa-cloud absolute bottom-4 left-4 text-white/5 text-6xl"></i>
+                
+                <div class="flex justify-between items-start mb-6 relative z-10">
+                    <div>
+                        <p class="text-[9px] font-black uppercase tracking-widest text-blue-200 mb-1"><span class="lang-en">Yearly Commission Goal</span><span class="lang-es hidden">Meta de Comisión Anual</span></p>
+                        <h2 id="dispYearlyTarget" class="text-3xl font-black italic shadow-blue-900/50 drop-shadow-md">$0</h2>
+                    </div>
+                    <button onclick="resetPlan()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition" title="Reset Plan">
+                        <i class="fa-solid fa-gear text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Airplane Bar -->
+                <div class="relative w-full h-8 mb-6 z-10">
+                    <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-2 bg-black/20 rounded-full overflow-hidden">
+                        <div id="airProgressBar" class="h-full bg-gradient-to-r from-amber-400 to-amber-300 w-0 progress-bar-fill"></div>
+                    </div>
+                    <!-- The Airplane -->
+                    <div id="airplaneIcon" class="absolute top-1/2 -translate-y-1/2 -ml-3 text-white text-xl airplane-icon drop-shadow-lg" style="left: 0%;">
+                        <i class="fa-solid fa-plane text-amber-300"></i>
+                    </div>
+                    <div class="absolute right-0 top-full mt-1 text-[9px] font-black text-blue-200"><span id="totalGrossDisp">$0</span> YTD</div>
+                </div>
+
+                <!-- Vision Board -->
+                <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 mt-2 relative z-10">
+                    <p class="text-[8px] font-black text-amber-300 uppercase tracking-widest mb-2 flex items-center gap-1">
+                        <i class="fa-solid fa-star"></i> <span class="lang-en">My Vision (Why I Wake Up)</span><span class="lang-es hidden">Mi Visión (Por qué me despierto)</span>
+                    </p>
+                    <p id="dispVisionText" class="text-xs font-medium italic text-blue-50 leading-relaxed mb-3">...</p>
+                    
+                    <ul class="text-[10px] space-y-1 text-blue-100/90 list-disc list-inside px-1">
+                        <li id="dispGoal1">...</li>
+                        <li id="dispGoal2">...</li>
+                        <li id="dispGoal3">...</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- TABBED PLAN VS REALITY TRACKER -->
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-700">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-3">
+                    <h3 class="text-xs font-black uppercase tracking-widest text-[#003DA5] dark:text-blue-400">
+                        <i class="fa-solid fa-bullseye mr-1.5"></i>
+                        <span class="lang-en">Plan vs. Reality</span>
+                        <span class="lang-es hidden">Plan vs. Realidad</span>
+                    </h3>
+                    
+                    <!-- Tabs -->
+                    <div class="flex items-center gap-2 w-full md:w-auto overflow-x-auto no-scrollbar pb-1 md:pb-0">
+                        <div class="flex items-center shrink-0 bg-slate-100 dark:bg-slate-700/50 rounded-lg p-1">
+                            <button onclick="changeTrackerOffset(-1)" class="w-6 h-6 flex items-center justify-center rounded text-slate-500 hover:bg-white dark:hover:bg-slate-600 shadow-sm transition active:scale-95">
+                                <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                            </button>
+                            <span class="text-[9px] font-bold uppercase tracking-widest mx-2 text-slate-700 dark:text-slate-300 min-w-[60px] text-center" id="timePeriodLabel">Current</span>
+                            <button onclick="changeTrackerOffset(1)" id="trackerNextBtn" class="w-6 h-6 flex items-center justify-center rounded text-slate-300 dark:text-slate-600 transition pointer-events-none" disabled>
+                                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                            </button>
+                        </div>
+                        <div class="flex shrink-0 bg-slate-100 dark:bg-slate-700/50 rounded-lg p-1 gap-1">
+                            <button onclick="setTrackerTab('week')" id="tab-week" class="tracker-tab px-3 py-1 text-[10px] font-bold rounded-md bg-white dark:bg-slate-600 shadow-sm text-slate-800 dark:text-white transition">Week</button>
+                            <button onclick="setTrackerTab('month')" id="tab-month" class="tracker-tab px-3 py-1 text-[10px] font-bold rounded-md text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition">Month</button>
+                            <button onclick="setTrackerTab('year')" id="tab-year" class="tracker-tab px-3 py-1 text-[10px] font-bold rounded-md text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition">Year</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-4" id="trackerDisplayArea">
+                    <!-- Tracking rows injected via JS -->
+                </div>
+            </div>
+
+            <!-- ACTIVE DEALS / PIPELINE -->
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-700">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-200">
+                        <i class="fa-solid fa-handshake text-emerald-500 mr-1.5"></i>
+                        <span class="lang-en">Active Deals (Reservada)</span>
+                        <span class="lang-es hidden">Negocios Activos (Reservada)</span>
+                    </h3>
+                    <button class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 flex items-center justify-center text-xs"><i class="fa-solid fa-plus"></i></button>
+                </div>
+
+                <div id="dealsContainer" class="space-y-3">
+                    <!-- Dynamic Deal Card Example -->
+                    <div class="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 p-3 rounded-2xl">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 class="text-sm font-black text-slate-800 dark:text-slate-200">Casa en Escazu</h4>
+                                <p class="text-[10px] font-bold text-amber-600 dark:text-amber-500">$350,000 • <span class="lang-en">Buyer</span><span class="lang-es hidden">Comprador</span>: Roberto M.</p>
+                            </div>
+                            <select onchange="handleDealStatusChange(this, 'deal1')" class="bg-amber-100 text-amber-700 text-[9px] font-black px-2 py-1 rounded outline-none cursor-pointer">
+                                <option value="reservada">Reservada</option>
+                                <option value="sold">SOLD (Cierre)</option>
+                                <option value="caida">CAÍDA</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-2 mt-2 pt-2 border-t border-amber-200/50 dark:border-amber-800/50">
+                            <i class="fa-regular fa-calendar text-slate-400 text-[10px]"></i>
+                            <input type="date" class="bg-transparent text-[10px] font-bold text-slate-600 dark:text-slate-400 outline-none cursor-pointer" value="2023-11-15">
+                            <span class="text-[9px] text-slate-400 ml-auto"><span class="lang-en">Est. Close</span><span class="lang-es hidden">Cierre Est.</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROOKIE CHECKLIST BUTTON -->
+            <button onclick="openRookieModal()" class="w-full bg-[#ED1C24] text-white py-4 rounded-3xl font-black uppercase tracking-widest text-xs shadow-lg shadow-red-500/30 hover:-translate-y-1 active:translate-y-0 transition-transform flex items-center justify-center gap-3">
+                <i class="fa-solid fa-clipboard-check text-lg"></i>
+                <span class="lang-en">Open Rookie Checklist</span>
+                <span class="lang-es hidden">Abrir Checklist de Novato</span>
+            </button>
+
+            <!-- ACTION CHECKLIST (Smart tracking for required actions) -->
+            <div id="actionChecklist" class="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-black italic text-slate-900 dark:text-white uppercase tracking-widest">
+                        <i class="fa-solid fa-list-check text-remax-red mr-2"></i>
+                        <span class="lang-en">Pending System Actions</span>
+                        <span class="lang-es hidden">Acciones del Sistema</span>
+                    </h3>
+                    <span id="pendingCountBadge" class="bg-remax-red text-white text-[9px] font-black px-2 py-0.5 rounded-full hidden">0</span>
+                </div>
+                <div id="pendingActionsContainer" class="space-y-3">
+                    <div id="emptyActionsState" class="text-center py-6 opacity-50">
+                        <i class="fa-solid fa-mug-hot text-3xl text-slate-300 dark:text-slate-600 mb-3 block"></i>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">All caught up!</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- FULL OKR MODAL (10 Fields) -->
+    <div id="fullOkrModal" class="fixed inset-0 z-[100] modal-blur hidden flex items-center justify-center p-4">
+        <div class="w-full max-w-lg bg-white dark:bg-slate-900 rounded-[32px] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            
+            <div class="bg-[#003DA5] p-5 text-center relative shrink-0">
+                <h3 class="text-lg font-black italic text-white leading-tight uppercase tracking-widest">
+                    <span class="lang-en">Report OKR</span><span class="lang-es hidden">Reportar OKR</span>
+                </h3>
+                <p class="text-[10px] font-bold text-blue-200 uppercase tracking-widest mt-1">
+                    <i class="fa-regular fa-calendar mr-1"></i> <span id="currentDateDisp2">Today</span>
+                </p>
+                <button onclick="closeOkrModal()" class="absolute top-4 right-4 w-8 h-8 bg-blue-800/50 hover:bg-blue-800 text-white rounded-full flex items-center justify-center transition">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-5 overflow-y-auto custom-scrollbar space-y-3 bg-slate-50 dark:bg-slate-800 grow">
+                <!-- Helper text -->
+                <p class="text-[10px] text-center font-bold text-slate-400 mb-4 px-4"><span class="lang-en">Enter your daily totals below. Honesty builds your business.</span><span class="lang-es hidden">Ingresa tus totales diarios. La honestidad construye tu negocio.</span></p>
+
+                <!-- Grid Form -->
+                <div class="grid grid-cols-2 gap-3">
+
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3 rounded-xl flex flex-col justify-center items-center text-center">
+                        <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 leading-tight h-6"><span class="lang-en">Llamados (Prospects)</span><span class="lang-es hidden">Llamados (Prospectos)</span></p>
+                        <div class="flex items-center justify-between w-full bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden">
+                            <button onclick="decrementOkr('okrLlamados')" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-black/5 active:bg-black/10 transition"><i class="fa-solid fa-minus text-xs"></i></button>
+                            <input type="number" id="okrLlamados" value="0" min="0" class="w-full bg-transparent text-center font-black text-lg py-1 text-slate-900 dark:text-white outline-none appearance-none m-0 p-0">
+                            <button onclick="incrementOkr('okrLlamados')" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-black/5 active:bg-black/10 transition"><i class="fa-solid fa-plus text-xs"></i></button>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3 rounded-xl flex flex-col justify-center items-center text-center">
+                        <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 leading-tight h-6"><span class="lang-en">Consultas (Inquiries)</span><span class="lang-es hidden">Consultas (Inquiries)</span></p>
+                        <div class="flex items-center justify-between w-full bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden">
+                            <button onclick="decrementOkr('okrConsultas')" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-black/5 active:bg-black/10 transition"><i class="fa-solid fa-minus text-xs"></i></button>
+                            <input type="number" id="okrConsultas" value="0" min="0" class="w-full bg-transparent text-center font-black text-lg py-1 text-slate-900 dark:text-white outline-none appearance-none m-0 p-0">
+                            <button onclick="incrementOkr('okrConsultas')" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-black/5 active:bg-black/10 transition"><i class="fa-solid fa-plus text-xs"></i></button>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3 rounded-xl flex flex-col justify-center items-center text-center">
+                        <p class="text-[9px] font-black text-purple-500 uppercase tracking-widest mb-1 leading-tight h-6"><span class="lang-en">Pre-Listings (PL)</span><span class="lang-es hidden">Pre-Listings (PL)</span></p>
+                        <div class="flex items-center justify-between w-full bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden">
+                            <button onclick="decrementOkr('okrPL')" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-black/5 active:bg-black/10 transition"><i class="fa-solid fa-minus text-xs"></i></button>
+                            <input type="number" id="okrPL" value="0" min="0" class="w-full bg-transparent text-center font-black text-lg py-1 text-slate-900 dark:text-white outline-none appearance-none m-0 p-0">
+                            <button onclick="incrementOkr('okrPL')" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-black/5 active:bg-black/10 transition"><i class="fa-solid fa-plus text-xs"></i></button>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3 rounded-xl flex flex-col justify-center items-center text-center">
+                        <p class="text-[9px] font-black text-amber-500 uppercase tracking-widest mb-1 leading-tight h-6"><span class="lang-en">ACM / CMA</span><span class="lang-es hidden">ACM / CMA</span></p>
+                        <div class="flex items-center justify-between w-full bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden">
+                            <button onclick="decrementOkr('okrACM')" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-black/5 active:bg-black/10 transition"><i class="fa-solid fa-minus text-xs"></i></button>
+                            <input type="number" id="okrACM" value="0" min="0" class="w-full bg-transparent text-center font-black text-lg py-1 text-slate-900 dark:text-white outline-none appearance-none m-0 p-0">
+                            <button onclick="incrementOkr('okrACM')" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-black/5 active:bg-black/10 transition"><i class="fa-solid fa-plus text-xs"></i></button>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3 rounded-xl flex flex-col justify-center items-center text-center">
+                        <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 leading-tight h-6"><span class="lang-en">Muestras (Showings)</span><span class="lang-es hidden">Muestras (Showings)</span></p>
+                        <div class="flex items-center justify-between w-full bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden">
+                            <button onclick="decrementOkr('okrMuestras')" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-black/5 active:bg-black/10 transition"><i class="fa-solid fa-minus text-xs"></i></button>
+                            <input type="number" id="okrMuestras" value="0" min="0" class="w-full bg-transparent text-center font-black text-lg py-1 text-slate-900 dark:text-white outline-none appearance-none m-0 p-0">
+                            <button onclick="incrementOkr('okrMuestras')" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-black/5 active:bg-black/10 transition"><i class="fa-solid fa-plus text-xs"></i></button>
+                        </div>
+                    </div>
+                    <div class="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 p-3 rounded-xl flex flex-col justify-center items-center text-center">
+                        <p class="text-[9px] font-black text-green-600 uppercase tracking-widest mb-1 leading-tight h-6"><span class="lang-en">Captaciones Exclusivas</span><span class="lang-es hidden">Captaciones Exclusivas</span></p>
+                        <div class="flex items-center justify-between w-full bg-white dark:bg-slate-800 border border-green-100 dark:border-green-700 rounded-lg overflow-hidden">
+                            <button onclick="decrementOkr('okrExclusivas')" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-black/5 active:bg-black/10 transition"><i class="fa-solid fa-minus text-xs"></i></button>
+                            <input type="number" id="okrExclusivas" value="0" min="0" class="w-full bg-transparent text-center font-black text-lg py-1 text-slate-900 dark:text-white outline-none appearance-none m-0 p-0">
+                            <button onclick="incrementOkr('okrExclusivas')" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-black/5 active:bg-black/10 transition"><i class="fa-solid fa-plus text-xs"></i></button>
+                        </div>
+                    </div>
+                    <div class="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 p-3 rounded-xl flex flex-col justify-center items-center text-center">
+                        <p class="text-[9px] font-black text-green-600 uppercase tracking-widest mb-1 leading-tight h-6"><span class="lang-en">Contratos (Buyers)</span><span class="lang-es hidden">Contratos (Compradores)</span></p>
+                        <div class="flex items-center justify-between w-full bg-white dark:bg-slate-800 border border-green-100 dark:border-green-700 rounded-lg overflow-hidden">
+                            <button onclick="decrementOkr('okrContratos')" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-black/5 active:bg-black/10 transition"><i class="fa-solid fa-minus text-xs"></i></button>
+                            <input type="number" id="okrContratos" value="0" min="0" class="w-full bg-transparent text-center font-black text-lg py-1 text-slate-900 dark:text-white outline-none appearance-none m-0 p-0">
+                            <button onclick="incrementOkr('okrContratos')" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-black/5 active:bg-black/10 transition"><i class="fa-solid fa-plus text-xs"></i></button>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 p-3 rounded-xl flex flex-col justify-center items-center text-center">
+                        <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1 leading-tight h-6"><span class="lang-en">Reservas</span><span class="lang-es hidden">Reservas</span></p>
+                        <div class="flex items-center justify-between w-full bg-white dark:bg-slate-800 border border-blue-100 dark:border-blue-700 rounded-lg overflow-hidden">
+                            <button onclick="decrementOkr('okrReservas')" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-black/5 active:bg-black/10 transition"><i class="fa-solid fa-minus text-xs"></i></button>
+                            <input type="number" id="okrReservas" value="0" min="0" class="w-full bg-transparent text-center font-black text-lg py-1 text-slate-900 dark:text-white outline-none appearance-none m-0 p-0">
+                            <button onclick="incrementOkr('okrReservas')" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-black/5 active:bg-black/10 transition"><i class="fa-solid fa-plus text-xs"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Bottom Full Width -->
+                <div class="bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-200 dark:border-indigo-800 p-3 rounded-xl flex items-center justify-between">
+                    <p class="text-[10px] font-black text-indigo-600 uppercase tracking-widest pl-2">Transacciones (Closings)</p>
+                    <div class="flex items-center bg-white dark:bg-slate-800 rounded-lg overflow-hidden border border-indigo-100 dark:border-indigo-700">
+                        <button onclick="decrementOkr('okrTransacciones')" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-black/5 active:bg-black/10 transition"><i class="fa-solid fa-minus text-xs"></i></button>
+                        <input type="number" id="okrTransacciones" value="0" min="0" class="w-12 bg-transparent text-center font-black text-lg py-1 text-slate-900 dark:text-white outline-none m-0 p-0">
+                        <button onclick="incrementOkr('okrTransacciones')" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-black/5 active:bg-black/10 transition"><i class="fa-solid fa-plus text-xs"></i></button>
+                    </div>
+                </div>
+
+                <div class="bg-amber-100 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-600 p-4 rounded-xl text-center">
+                    <p class="text-[10px] font-black text-amber-700 dark:text-amber-500 uppercase tracking-widest mb-2"><i class="fa-solid fa-sack-dollar text-sm mr-1"></i> Volume $$$$ Generated Today</p>
+                    <div class="relative max-w-[200px] mx-auto">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 font-black text-amber-700 dark:text-amber-500">$</span>
+                        <input type="number" id="okrVolume" value="0" min="0" class="w-full bg-white dark:bg-slate-800 rounded-xl text-center font-black text-2xl py-2 pl-6 text-slate-900 dark:text-white outline-none">
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="p-4 shrink-0 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+                <button onclick="submitFullOkr()" class="w-full bg-gradient-to-r from-blue-600 to-[#003DA5] text-white py-4 rounded-xl font-black uppercase text-[11px] tracking-widest shadow-lg shadow-blue-500/30 active:scale-95 transition-all">
+                    <i class="fa-solid fa-check-double mr-1"></i> <span class="lang-en">Submit OKR</span><span class="lang-es hidden">Cargar OKR</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ROOKIE CHECKLIST MODAL -->
+    <div id="rookieModal" class="fixed inset-0 z-[110] bg-slate-900/80 hidden flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white dark:bg-slate-800 rounded-[32px] p-6 max-w-sm w-full shadow-2xl relative overflow-hidden flex flex-col max-h-[80vh]">
+            <button onclick="closeRookieModal()" class="absolute top-4 right-4 w-8 h-8 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-500 rounded-full flex items-center justify-center transition z-10">
+                <i class="fa-solid fa-times"></i>
+            </button>
+            <div class="shrink-0 mb-4 pr-10">
+                <h3 class="text-lg font-black uppercase tracking-widest text-[#ED1C24]">
+                    <i class="fa-solid fa-clipboard-check mr-1.5"></i> <span class="lang-en">Rookie Checklist</span><span class="lang-es hidden">Checklist de Novato</span>
+                </h3>
+            </div>
+            <div class="space-y-3 overflow-y-auto custom-scrollbar pr-2 grow" id="rookieTasks">
+
+                <label id="rookieTask1" class=" flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition border border-slate-100 dark:border-slate-700/50">
+                    <input type="checkbox" onchange="unlockNextRookieTask(1)" class="mt-1 w-5 h-5 rounded text-[#ED1C24] focus:ring-[#ED1C24] bg-white border-slate-300 transition-colors">
+                    <div>
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-through-if-checked">
+                            <span class="lang-en">1. Complete your Business Plan</span>
+                            <span class="lang-es hidden">1. Completar tu Plan de Negocios en Plataforma</span>
+                        </p>
+                    </div>
+                </label>
+                <label id="rookieTask2" class="hidden flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition border border-slate-100 dark:border-slate-700/50">
+                    <input type="checkbox" onchange="unlockNextRookieTask(2)" class="mt-1 w-5 h-5 rounded text-[#ED1C24] focus:ring-[#ED1C24] bg-white border-slate-300 transition-colors">
+                    <div>
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-through-if-checked">
+                            <span class="lang-en">2. Prepare your Database (100 Contacts)</span>
+                            <span class="lang-es hidden">2. Preparar tu Base de Datos (100 Contactos)</span>
+                        </p>
+                    </div>
+                </label>
+                <label id="rookieTask3" class="hidden flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition border border-slate-100 dark:border-slate-700/50">
+                    <input type="checkbox" onchange="unlockNextRookieTask(3)" class="mt-1 w-5 h-5 rounded text-[#ED1C24] focus:ring-[#ED1C24] bg-white border-slate-300 transition-colors">
+                    <div>
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-through-if-checked">
+                            <span class="lang-en">3. Announce your new career on Social Media</span>
+                            <span class="lang-es hidden">3. Anunciar tu nueva carrera en Redes Sociales</span>
+                        </p>
+                    </div>
+                </label>
+                <label id="rookieTask4" class="hidden flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition border border-slate-100 dark:border-slate-700/50">
+                    <input type="checkbox" onchange="unlockNextRookieTask(4)" class="mt-1 w-5 h-5 rounded text-[#ED1C24] focus:ring-[#ED1C24] bg-white border-slate-300 transition-colors">
+                    <div>
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-through-if-checked">
+                            <span class="lang-en">4. Complete the 'Quick Start' Training</span>
+                            <span class="lang-es hidden">4. Completar el Entrenamiento 'Quick Start'</span>
+                        </p>
+                    </div>
+                </label>
+                <label id="rookieTask5" class="hidden flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition border border-slate-100 dark:border-slate-700/50">
+                    <input type="checkbox" onchange="unlockNextRookieTask(5)" class="mt-1 w-5 h-5 rounded text-[#ED1C24] focus:ring-[#ED1C24] bg-white border-slate-300 transition-colors">
+                    <div>
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-through-if-checked">
+                            <span class="lang-en">5. Shadow a top producer on a listing appointment</span>
+                            <span class="lang-es hidden">5. Acompañar a un top producer a una captación</span>
+                        </p>
+                    </div>
+                </label>
+                <label id="rookieTask6" class="hidden flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition border border-slate-100 dark:border-slate-700/50">
+                    <input type="checkbox" onchange="unlockNextRookieTask(6)" class="mt-1 w-5 h-5 rounded text-[#ED1C24] focus:ring-[#ED1C24] bg-white border-slate-300 transition-colors">
+                    <div>
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-through-if-checked">
+                            <span class="lang-en">6. Roleplay your listing presentation 3 times</span>
+                            <span class="lang-es hidden">6. Hacer roleplay de tu presentación 3 veces</span>
+                        </p>
+                    </div>
+                </label>
+                <label id="rookieTask7" class="hidden flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition border border-slate-100 dark:border-slate-700/50">
+                    <input type="checkbox" onchange="unlockNextRookieTask(7)" class="mt-1 w-5 h-5 rounded text-[#ED1C24] focus:ring-[#ED1C24] bg-white border-slate-300 transition-colors">
+                    <div>
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-through-if-checked">
+                            <span class="lang-en">7. Send 25 personal letters to your sphere</span>
+                            <span class="lang-es hidden">7. Enviar 25 cartas personales a tu esfera</span>
+                        </p>
+                    </div>
+                </label>
+                <label id="rookieTask8" class="hidden flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition border border-slate-100 dark:border-slate-700/50">
+                    <input type="checkbox" onchange="unlockNextRookieTask(8)" class="mt-1 w-5 h-5 rounded text-[#ED1C24] focus:ring-[#ED1C24] bg-white border-slate-300 transition-colors">
+                    <div>
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-through-if-checked">
+                            <span class="lang-en">8. Do 2 Open Houses with an experienced agent</span>
+                            <span class="lang-es hidden">8. Hacer 2 Open Houses con un agente experimentado</span>
+                        </p>
+                    </div>
+                </label>
+                <label id="rookieTask9" class="hidden flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition border border-slate-100 dark:border-slate-700/50">
+                    <input type="checkbox" onchange="unlockNextRookieTask(9)" class="mt-1 w-5 h-5 rounded text-[#ED1C24] focus:ring-[#ED1C24] bg-white border-slate-300 transition-colors">
+                    <div>
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-through-if-checked">
+                            <span class="lang-en">9. Call 50 For-Sale-By-Owners (FSBO)</span>
+                            <span class="lang-es hidden">9. Llamar a 50 dueños venden (FSBO)</span>
+                        </p>
+                    </div>
+                </label>
+                <label id="rookieTask10" class="hidden flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition border border-slate-100 dark:border-slate-700/50">
+                    <input type="checkbox" onchange="unlockNextRookieTask(10)" class="mt-1 w-5 h-5 rounded text-[#ED1C24] focus:ring-[#ED1C24] bg-white border-slate-300 transition-colors">
+                    <div>
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-through-if-checked">
+                            <span class="lang-en">10. Secure your first Exclusive Listing!</span>
+                            <span class="lang-es hidden">10. ¡Conseguir tu primera Captación Exclusiva!</span>
+                        </p>
+                    </div>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUCCESS MODAL -->
+    <div id="successModal" class="fixed inset-0 z-[120] bg-slate-900/80 hidden flex items-center justify-center p-6 backdrop-blur-md">
+        <div class="bg-white dark:bg-slate-800 rounded-[32px] p-8 max-w-sm w-full text-center shadow-2xl relative overflow-hidden transform scale-95 transition-transform duration-300" id="successModalInner">
+            <div class="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex flex-col items-center justify-center mx-auto mb-4 text-green-500 shadow-inner">
+                <i class="fa-solid fa-check text-4xl"></i>
+            </div>
+            <h3 class="text-xl font-black text-slate-900 dark:text-white mb-2 italic uppercase tracking-widest" id="successModalTitle">Great Job!</h3>
+            <p class="text-sm font-bold text-slate-500 dark:text-slate-400 mb-6" id="successModalBody">Your OKR has been saved successfully.</p>
+            <button onclick="closeSuccessModal()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-green-500/30">
+                <span class="lang-en">Continue</span><span class="lang-es hidden">Continuar</span>
+            </button>
+        </div>
+    </div>
+    <!-- CAIDA MODAL (Fell Through) -->
+    <div id="caidaModal" class="fixed inset-0 z-[110] bg-slate-900/80 hidden flex items-center justify-center p-6 backdrop-blur-md">
+        <div class="bg-white dark:bg-slate-800 rounded-[32px] p-8 max-w-sm w-full text-center shadow-2xl relative overflow-hidden">
+            <div class="w-20 h-20 bg-amber-100 dark:bg-amber-900/30 rounded-full flex flex-col items-center justify-center mx-auto mb-4 text-amber-500 shadow-inner">
+                <i class="fa-solid fa-heart-crack text-3xl"></i>
+            </div>
+            <h3 class="text-xl font-black text-slate-900 dark:text-white mb-2 italic uppercase">Resilience.</h3>
+            <p class="text-sm font-bold text-slate-500 dark:text-slate-400 mb-6 italic">
+                "Don't give up on: <br>
+                <span id="caidaVisionTarget" class="text-amber-600 dark:text-amber-500 font-black text-base not-italic">...</span>"
+            </p>
+            <button onclick="closeCaidaModal()" class="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all">
+                Find The Next Deal <i class="fa-solid fa-arrow-right ml-1"></i>
+            </button>
+        </div>
+    </div>
+
+
+                <!-- BOTTOM NAVIGATION -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t py-4 px-6 flex justify-between items-center text-slate-600 dark:text-slate-400 z-50 shadow-xl pb-6 overflow-x-auto no-scrollbar gap-4">
+        <a href="index.html" data-nav="index.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
+            <i class="fa-solid fa-house mb-1 text-xl hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-bold" data-i18n="navFeed">Match Board</span>
+        </a>
+        <a href="my-desk.html" data-nav="my-desk.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
+            <i class="fa-solid fa-briefcase mb-1 text-xl hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-bold" data-i18n="navMyDesk">My Hub</span>
+        </a>
+        
+        <!-- Premium Links -->
+        <a href="market.html" data-nav="market.html" id="nav-market" class="flex flex-col items-center justify-center min-w-[3.5rem] text-amber-500 hover:text-amber-400 transition-all relative group premium-only">
+            <div class="absolute inset-0 bg-amber-500/10 blur-xl rounded-full group-hover:bg-amber-500/20 transition"></div>
+            <i class="fa-solid fa-chart-line mb-1 text-xl drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] group-hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-black uppercase tracking-widest lang-en">Market</span>
+            <span class="text-[10px] font-black uppercase tracking-widest lang-es hidden" data-i18n="navMarket">Mercado</span>
+        </a>
+
+        <!-- Universal Link -->
+        <a href="profile.html" data-nav="profile.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
+            <i class="fa-solid fa-user mb-1 text-xl hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-bold" data-i18n="navProfile">Profile</span>
+        </a>
+    </div>
+    <script>
+    (function(){
+        var page = location.pathname.split('/').pop() || 'index.html';
+        var links = document.querySelectorAll('[data-nav]');
+        links.forEach(function(a){
+            if(a.getAttribute('data-nav') === page){
+                a.classList.remove('text-slate-400','text-amber-500');
+                a.classList.add('text-[#003DA5]');
+                var dot = document.createElement('div');
+                dot.className = 'absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full';
+                a.appendChild(dot);
+            }
+        });
+    })();
+    </script>
+    <script>
+    (function(){
+        var page = location.pathname.split('/').pop() || 'index.html';
+        var links = document.querySelectorAll('[data-nav]');
+        links.forEach(function(a){
+            if(a.getAttribute('data-nav') === page){
+                a.classList.remove('text-slate-400','text-amber-500');
+                a.classList.add('text-[#003DA5]');
+                var dot = document.createElement('div');
+                dot.className = 'absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full';
+                a.appendChild(dot);
+            }
+        });
+    })();
+    </script>
+
+
+   <script>
+        document.addEventListener('DOMContentLoaded', () => {
+             // Auto-fill OKR data from actions taken in other pages
+             const savedMatches = localStorage.getItem('okr_matches_sent');
+             if (savedMatches) {
+                 const acmInput = document.getElementById('okrACM');
+                 if (acmInput) acmInput.value = savedMatches;
+             }
+        });
+    </script>
+</body>
+</html>

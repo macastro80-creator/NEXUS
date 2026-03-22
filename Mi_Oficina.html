@@ -1,0 +1,724 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REMAX App - Mi Oficina</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f1f5f9;
+            padding-bottom: 120px;
+        }
+
+        /* Language Toggle */
+        .lang-toggle {
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 900;
+            background: #e2e8f0;
+            padding: 4px 8px;
+            border-radius: 12px;
+            color: #64748b;
+            border: none;
+        }
+
+        .lang-toggle.active {
+            background: #003DA5;
+            color: white;
+        }
+
+        /* Card Hover Effects */
+        .agent-card {
+            transition: all 0.3s ease;
+        }
+
+        .agent-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .calendar-card {
+            transition: all 0.3s ease;
+        }
+
+        .calendar-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-color: #003DA5;
+        }
+
+        /* Gold Highlight for Golden Circle */
+        .text-gold {
+            color: #d4af37;
+        }
+
+        .bg-gold {
+            background-color: #d4af37;
+        }
+
+        .border-gold {
+            border-color: #d4af37;
+        }
+
+        /* Modal Overlay */
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            padding: 16px;
+        }
+
+        .modal-content {
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        /* Custom scrollbar for modal */
+        .modal-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .modal-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body class="p-4 max-w-lg mx-auto relative">
+
+    <!-- Modal: Why REMAX ALTITUD (Círculo Dorado & Manifiesto) -->
+    <div id="modal-why" class="overlay">
+        <div class="modal-content bg-white w-full max-w-md rounded-[35px] relative overflow-hidden shadow-2xl">
+            <!-- Close Button -->
+            <button onclick="document.getElementById('modal-why').style.display='none'"
+                class="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 w-8 h-8 rounded-full flex items-center justify-center font-bold z-20 transition">
+                ✕
+            </button>
+
+            <div class="p-6">
+                <!-- Círculo Dorado Content -->
+                <h3 class="text-lg font-black text-slate-800 uppercase italic mb-6 flex items-center gap-2 mt-2">
+                    <span class="w-2 h-2 rounded-full bg-gold"></span>
+                    <span data-i18n="whyTitle">Why REMAX Altitud</span>
+                </h3>
+
+                <div class="space-y-6 mb-8">
+                    <!-- POR QUÉ -->
+                    <div class="border-l-4 border-gold pl-4">
+                        <h4 class="text-[11px] font-black text-gold uppercase mb-1 tracking-wider" data-i18n="goldWhy">
+                            1. Por Qué (Propósito)</h4>
+                        <p class="text-xs text-slate-600 font-medium leading-relaxed italic" data-i18n="goldWhyText">
+                            "Existimos para elevar el bienestar de nuestro valle a través del emprendimiento
+                            inmobiliario ético. Creemos que al empoderar a profesionales con visión de futuro y valores
+                            sólidos, transformamos cada transacción en un motor de prosperidad y confianza para nuestra
+                            comunidad."
+                        </p>
+                    </div>
+
+                    <!-- CÓMO -->
+                    <div class="border-l-4 border-blue-600 pl-4">
+                        <h4 class="text-[11px] font-black text-blue-600 uppercase mb-2 tracking-wider"
+                            data-i18n="goldHow">2. Cómo (La Plataforma y Valores)</h4>
+                        <ul class="space-y-3">
+                            <li class="text-xs text-slate-600 leading-relaxed">
+                                <span class="font-bold text-slate-800 block mb-1" data-i18n="val1Title">🌱
+                                    Emprendimiento con Raíces:</span>
+                                <span data-i18n="val1Text">Somos la plataforma para el emprendedor que asume un
+                                    compromiso inquebrantable con su propio negocio. Valoramos a quienes entienden que
+                                    el éxito es un proceso de constancia: entre plantar y cosechar, existe un tiempo
+                                    sagrado de regar, cuidar y trabajar.</span>
+                            </li>
+                            <li class="text-xs text-slate-600 leading-relaxed">
+                                <span class="font-bold text-slate-800 block mb-1" data-i18n="val2Title">🤝 Cultura de
+                                    Cooperación y Respeto:</span>
+                                <span data-i18n="val2Text">Impulsamos un ecosistema donde compartir negocios es nuestra
+                                    mayor fortaleza. Actuamos con un profundo respeto por el trabajo de los demás
+                                    colegas, sabiendo que la colaboración ética multiplica los resultados para
+                                    todos.</span>
+                            </li>
+                            <li class="text-xs text-slate-600 leading-relaxed">
+                                <span class="font-bold text-slate-800 block mb-1" data-i18n="val3Title">🎓 Asesoría
+                                    Especializada:</span>
+                                <span data-i18n="val3Text">Guiamos a familias, inversores, comerciantes y
+                                    desarrolladores con la maestría técnica de un emprendedor que no solo vende, sino
+                                    que construye su propio legado a través del servicio de excelencia.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- QUÉ -->
+                    <div class="border-l-4 border-red-600 pl-4">
+                        <h4 class="text-[11px] font-black text-red-600 uppercase mb-1 tracking-wider"
+                            data-i18n="goldWhat">3. Qué (El Resultado)</h4>
+                        <p class="text-xs text-slate-600 font-medium leading-relaxed italic" data-i18n="goldWhatText">
+                            "La comunidad inmobiliaria líder de la zona, donde los mejores emprendedores encuentran el
+                            soporte para transformar su vida y los clientes encuentran la seguridad de un patrimonio
+                            cultivado con integridad."
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manifiesto Container inside the same Modal -->
+            <div class="bg-slate-900 text-white p-8 relative overflow-hidden">
+                <!-- Abstract Background Decoration -->
+                <div
+                    class="absolute -top-10 -right-10 w-40 h-40 bg-blue-600 rounded-full blur-3xl opacity-20">
+                </div>
+                <div
+                    class="absolute -bottom-10 -left-10 w-40 h-40 bg-red-600 rounded-full blur-3xl opacity-20">
+                </div>
+
+                <div class="relative z-10">
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2"
+                        data-i18n="manifestoLabel">Manifiesto</h3>
+                    <h4 class="text-xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 mb-6 leading-tight"
+                        data-i18n="manifestoTitle">El Éxito se Cultiva con Respeto</h4>
+
+                    <div class="space-y-4 text-[11px] font-medium leading-relaxed text-slate-300 italic">
+                        <p data-i18n="man1">En RE/MAX ALTITUD, somos el hogar de quienes se atreven a construir con
+                            propósito.</p>
+                        <p data-i18n="man2">Somos una plataforma diseñada para el emprendedor que ama los retos y asume
+                            un compromiso total con su propio crecimiento. En nuestra casa, honramos el proceso:
+                            entendemos que, al igual que en nuestra tierra, entre la siembra y la cosecha hay un tiempo
+                            necesario para regar, para cuidar y para perseverar.</p>
+                        <p data-i18n="man3">Nuestra fuerza reside en la unión y en la integridad. Caminamos con un
+                            respeto absoluto por el negocio de los demás, sabiendo que al compartir negocios y actuar
+                            con ética, el mercado crece para todos. Somos especialistas al servicio de familias que
+                            buscan un hogar, inversores que buscan rentabilidad y desarrolladores que construyen el
+                            futuro de nuestro valle.</p>
+                    </div>
+
+                    <p class="mt-6 text-xs font-black text-center border-t border-white/20 pt-4 text-white uppercase tracking-widest"
+                        data-i18n="manCall">Compromiso propio, respeto compartido, éxito cultivado.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reusable Iframe Modal for Calendars & Forms -->
+    <div id="modal-iframe" class="overlay">
+        <div class="modal-content bg-white w-full max-w-lg h-[80vh] rounded-[35px] relative overflow-hidden shadow-2xl flex flex-col">
+            <!-- Header -->
+            <div class="bg-slate-900 text-white p-4 flex justify-between items-center z-10">
+                <h3 class="text-xs font-black uppercase tracking-widest" id="iframe-modal-title">Cargando...</h3>
+                <button onclick="document.getElementById('modal-iframe').style.display='none'" class="text-slate-400 hover:text-white transition w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold">✕</button>
+            </div>
+            <!-- Iframe container -->
+            <div class="flex-1 w-full relative bg-slate-50">
+                <div id="iframe-loader" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-3">
+                    <i class="fa-solid fa-spinner fa-spin text-3xl text-blue-600"></i>
+                    <span class="text-[10px] font-bold uppercase tracking-widest">Conectando...</span>
+                </div>
+                <iframe id="booking-iframe" class="w-full h-full border-none relative z-10" onload="document.getElementById('iframe-loader').style.display='none'"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Navigation -->
+    <header class="mb-4">
+        <a href="index.html" class="inline-flex gap-2 items-center text-[10px] font-black uppercase text-slate-400 mb-2 hover:text-blue-900 transition mt-2">
+            <i class="fa-solid fa-arrow-left"></i> <span data-i18n="backNexus">Volver a NEXUS</span>
+        </a>
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-black italic uppercase">REMAX <span class="text-slate-400 font-light">Altitud</span></h1>
+            <div class="flex gap-2 mt-1">
+                <button id="btn-es" class="lang-toggle active" onclick="setLanguage('es')">ES</button>
+                <button id="btn-en" class="lang-toggle" onclick="setLanguage('en')">EN</button>
+            </div>
+        </div>
+    </header>
+
+                            <!-- PREMIUM TOP NAV -->
+    <div id="premium-top-nav" class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-amber-500/30 flex justify-between items-center mt-2 mb-4 mx-4 rounded-2xl overflow-hidden shadow-2xl relative shadow-amber-500/10">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+        <a href="Mi_Oficina.html" id="nav-office" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
+            <i class="fa-solid fa-building mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Office</span>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Oficina</span>
+        </a>
+        <div class="w-[1px] h-8 bg-amber-500/20 relative z-10"></div>
+        <a href="my-business.html" id="nav-business" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
+            <i class="fa-solid fa-briefcase-medical mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Business</span>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Negocio</span>
+        </a>
+        <div class="w-[1px] h-8 bg-amber-500/20 relative z-10"></div>
+        <a href="#" id="nav-resources" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
+            <i class="fa-solid fa-book-open mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Resources</span>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Recursos</span>
+        </a>
+    </div>
+
+    <h2 class="text-2xl font-black text-blue-900 italic uppercase mb-6 drop-shadow-sm w-full border-b-2 border-slate-200 pb-2"
+        data-i18n="pageTitle">Mi Oficina</h2>
+
+    <div onclick="document.getElementById('modal-why').style.display='flex'"
+        class="cursor-pointer bg-gradient-to-r from-slate-900 to-blue-950 p-6 rounded-[35px] shadow-lg relative overflow-hidden group hover:shadow-2xl transition duration-300 mb-4">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10">
+        </div>
+        <!-- Glow Effect -->
+        <div
+            class="absolute -right-10 -top-10 w-32 h-32 bg-gold rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition duration-500">
+        </div>
+
+        <div class="relative z-10 flex items-center justify-between">
+            <div>
+                <h3 class="text-white font-black uppercase italic text-lg tracking-wide flex items-center gap-2 mb-1"
+                    data-i18n="whyTitle">
+                    <span class="w-2 h-2 rounded-full bg-gold"></span>
+                    Why REMAX Altitud
+                </h3>
+                <p class="text-slate-300 text-[10px] font-medium" data-i18n="readManifesto">Lee nuestro propósito,
+                    valores y manifiesto.</p>
+            </div>
+            <!-- Right Arrow Icon -->
+            <div
+                class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-gold group-hover:bg-gold group-hover:text-slate-900 transition duration-300 font-black">
+                ➜
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Link Button -->
+    <a href="https://docs.google.com/document/d/1LOLgEhG-SN9YsTn4XOERnUcODAn3ouJBExPwDs-Z7gA/edit?usp=sharing"
+        target="_blank"
+        class="flex items-center justify-between bg-white border border-slate-100 p-5 rounded-[25px] shadow-sm hover:shadow-md transition group">
+        <div class="flex items-center gap-4">
+            <div
+                class="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center text-lg shadow-inner">
+                📖
+            </div>
+            <div>
+                <h4 class="text-[11px] font-black text-slate-800 uppercase italic" data-i18n="manualTitle">Manual de
+                    Normas y Procedimientos</h4>
+                <p class="text-[9px] text-slate-400 font-bold" data-i18n="manualSub">Documento Oficial para Agentes</p>
+            </div>
+        </div>
+        <div class="text-slate-300 group-hover:text-red-500 transition">
+            ➜
+        </div>
+    </a>
+    </section>
+
+    <!-- SECTION 3: Directorio de Agentes -->
+    <section class="mb-8">
+        <div class="flex justify-between items-end mb-4 px-2">
+            <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-wider" data-i18n="directoryTitle">
+                Directorio de Oficina</h3>
+            <span class="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">Pérez Zeledón &
+                Dominical</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="agent-directory">
+            <!-- Mock Agent 1 -->
+            <div class="agent-card bg-white p-4 rounded-3xl border border-slate-100 flex items-center gap-4">
+                <div class="w-16 h-16 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border-2 border-white shadow-md">
+                    <!-- Placeholder using UI Faces or similar -->
+                    <img src="https://i.pravatar.cc/150?img=68" alt="Alejandra Castro" class="w-full h-full object-cover">
+                </div>
+                <div class="flex-1">
+                    <h4 class="text-sm font-black text-slate-800 leading-tight">Alejandra Castro</h4>
+                    <p class="text-[10px] font-bold text-red-600 uppercase mb-2">Broker / Owner</p>
+                    <div class="flex gap-2">
+                        <a href="https://wa.me/50688888888" target="_blank" class="text-[9px] font-bold bg-[#25D366]/10 text-[#25D366] px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-[#25D366]/20 transition-colors">
+                            <i class="fa-brands fa-whatsapp text-xs"></i> WhatsApp
+                        </a>
+                        <a href="mailto:ale@remax-altitud.cr" class="text-[9px] font-bold bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-blue-100 transition-colors">
+                            <i class="fa-solid fa-envelope text-xs"></i> Email
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mock Agent 2 -->
+            <div class="agent-card bg-white p-4 rounded-3xl border border-slate-100 flex items-center gap-4">
+                <div class="w-16 h-16 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border-2 border-white shadow-md">
+                    <img src="https://i.pravatar.cc/150?img=11" alt="César R." class="w-full h-full object-cover">
+                </div>
+                <div class="flex-1">
+                    <h4 class="text-sm font-black text-slate-800 leading-tight">César R.</h4>
+                    <p class="text-[10px] font-bold text-blue-600 uppercase mb-2">Broker / Owner</p>
+                    <div class="flex gap-2">
+                        <a href="https://wa.me/50688888888" target="_blank" class="text-[9px] font-bold bg-[#25D366]/10 text-[#25D366] px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-[#25D366]/20 transition-colors">
+                            <i class="fa-brands fa-whatsapp text-xs"></i> WhatsApp
+                        </a>
+                        <a href="mailto:cesar@remax-altitud.cr" class="text-[9px] font-bold bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-blue-100 transition-colors">
+                            <i class="fa-solid fa-envelope text-xs"></i> Email
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mock Agent 3 -->
+            <div class="agent-card bg-white p-4 rounded-3xl border border-slate-100 flex items-center gap-4">
+                <div class="w-16 h-16 rounded-full bg-slate-800 text-white font-black flex items-center justify-center flex-shrink-0 border-2 border-white shadow-md">
+                    MR
+                </div>
+                <div class="flex-1">
+                    <h4 class="text-sm font-black text-slate-800 leading-tight">Maria Rodriguez</h4>
+                    <p class="text-[10px] font-bold text-amber-500 uppercase mb-2">Top Producer</p>
+                    <div class="flex gap-2">
+                        <a href="https://wa.me/50688888888" target="_blank" class="text-[9px] font-bold bg-[#25D366]/10 text-[#25D366] px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-[#25D366]/20 transition-colors">
+                            <i class="fa-brands fa-whatsapp text-xs"></i> WhatsApp
+                        </a>
+                        <a href="mailto:maria@remax-altitud.cr" class="text-[9px] font-bold bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-blue-100 transition-colors">
+                            <i class="fa-solid fa-envelope text-xs"></i> Email
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 4: Conoce a tu equipo (Onboarding Info) -->
+    <section class="mb-8 bg-white p-6 rounded-[35px] border border-slate-100 shadow-sm text-center">
+        <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2" data-i18n="teamTitle">Conoce a
+            tu Equipo</h3>
+        <p class="text-[10px] text-slate-500 mb-4" data-i18n="teamSub">Descubre los talentos, gustos y fortalezas de los
+            miembros de nuestra familia ALTITUD basados en su Onboarding.</p>
+
+        <button
+            class="w-full bg-slate-900 text-white font-black text-xs uppercase py-4 rounded-2xl hover:bg-slate-800 transition shadow-lg"
+            data-i18n="btnTeam">Explorar Perfiles del Equipo</button>
+    </section>
+
+    <!-- SECTION 5: Reservas y Calendarios -->
+    <section id="agenda-recursos" class="mb-10 pt-4"> <!-- Added ID and pt-4 for anchor linking padding -->
+        <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-4 px-2" data-i18n="bookingTitle">
+            Agenda y Recursos</h3>
+
+        <div class="grid grid-cols-2 gap-3 mb-3">
+            <!-- Salas -->
+            <div onclick="openBooking('https://calendar.app.google/zCUFoYKFXevsTkzH7', 'Reservar Sala')"
+                class="calendar-card block bg-white border border-slate-100 p-4 rounded-2xl text-center group cursor-pointer">
+                <div class="text-2xl mb-2 group-hover:scale-110 transition duration-300">🛋️</div>
+                <h4 class="text-[10px] font-black text-slate-700 uppercase" data-i18n="bookRoom">Salas</h4>
+            </div>
+
+            <!-- Fotógrafo -->
+            <div onclick="openBooking('https://calendar.app.google/yYSUgBYr6Zv7Wrgn9', 'Reservar Fotógrafo')"
+                class="calendar-card block bg-white border border-slate-100 p-4 rounded-2xl text-center group cursor-pointer">
+                <div class="text-2xl mb-2 group-hover:scale-110 transition duration-300">📸</div>
+                <h4 class="text-[10px] font-black text-slate-700 uppercase" data-i18n="bookPhoto">Fotógrafo</h4>
+            </div>
+
+            <!-- Mentoría Ale -->
+            <div onclick="openBooking('https://calendar.app.google/qAoRQX1wEYFn1Bdo9', 'Mentoría Alejandra')"
+                class="calendar-card block bg-white border border-slate-100 p-4 rounded-2xl text-center group cursor-pointer">
+                <div class="text-2xl mb-2 group-hover:scale-110 transition duration-300">💡</div>
+                <h4 class="text-[10px] font-black text-slate-700 uppercase" data-i18n="bookAle">Mentoría Ale</h4>
+            </div>
+
+            <!-- Mentoría Cesar -->
+            <div onclick="openBooking('https://calendar.app.google/c27MZwebHHgUmLBx6', 'Mentoría César')"
+                class="calendar-card block bg-white border border-slate-100 p-4 rounded-2xl text-center group cursor-pointer">
+                <div class="text-2xl mb-2 group-hover:scale-110 transition duration-300">📈</div>
+                <h4 class="text-[10px] font-black text-slate-700 uppercase" data-i18n="bookCesar">Mentoría César</h4>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <div onclick="openBooking('https://docs.google.com/forms/d/e/1FAIpQLSeQ4D1E5y5gq4i7i8Y7Q3nK9jQ/viewform?embedded=true', 'Reportar Reserva')" class="calendar-card block bg-emerald-500 hover:bg-emerald-600 shadow-md shadow-emerald-500/30 text-white border border-emerald-400 p-4 rounded-2xl text-center group cursor-pointer transition active:scale-95">
+                <div class="text-2xl mb-2 group-hover:scale-110 transition duration-300">📝</div>
+                <h4 class="text-[10px] font-black uppercase tracking-widest" data-i18n="bookReportReserva">Reportar Reserva</h4>
+            </div>
+            <div onclick="openBooking('https://docs.google.com/forms/d/e/1FAIpQLSf8u2G9kLp1M8jH9W4o5E7/viewform?embedded=true', 'Reportar Listing')" class="calendar-card block bg-[#003DA5] hover:bg-blue-800 shadow-md shadow-blue-900/30 text-white border border-blue-800 p-4 rounded-2xl text-center group cursor-pointer transition active:scale-95">
+                <div class="text-2xl mb-2 group-hover:scale-110 transition duration-300">🏡</div>
+                <h4 class="text-[10px] font-black uppercase tracking-widest" data-i18n="bookReportListing">Reportar Listing</h4>
+            </div>
+        </div>
+        <p class="text-[10px] text-center text-slate-400 mt-4 italic font-medium" data-i18n="bookingNote">* Select an option to open its calendar or form inside NEXUS.</p>
+    </section>
+                            <!-- BOTTOM NAVIGATION -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t py-4 px-6 flex justify-between items-center text-slate-600 dark:text-slate-400 z-50 shadow-xl pb-6 overflow-x-auto no-scrollbar gap-4">
+        <a href="index.html" data-nav="index.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
+            <i class="fa-solid fa-house mb-1 text-xl hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-bold" data-i18n="navFeed">Match Board</span>
+        </a>
+        <a href="my-desk.html" data-nav="my-desk.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
+            <i class="fa-solid fa-briefcase mb-1 text-xl hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-bold" data-i18n="navMyDesk">My Hub</span>
+        </a>
+        
+        <!-- Premium Links -->
+        <a href="market.html" data-nav="market.html" id="nav-market" class="flex flex-col items-center justify-center min-w-[3.5rem] text-amber-500 hover:text-amber-400 transition-all relative group premium-only">
+            <div class="absolute inset-0 bg-amber-500/10 blur-xl rounded-full group-hover:bg-amber-500/20 transition"></div>
+            <i class="fa-solid fa-chart-line mb-1 text-xl drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] group-hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-black uppercase tracking-widest lang-en">Market</span>
+            <span class="text-[10px] font-black uppercase tracking-widest lang-es hidden" data-i18n="navMarket">Mercado</span>
+        </a>
+
+        <!-- Universal Link -->
+        <a href="profile.html" data-nav="profile.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
+            <i class="fa-solid fa-user mb-1 text-xl hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-bold" data-i18n="navProfile">Profile</span>
+        </a>
+    </div>
+    <script>
+    (function(){
+        var page = location.pathname.split('/').pop() || 'index.html';
+        var links = document.querySelectorAll('[data-nav]');
+        links.forEach(function(a){
+            if(a.getAttribute('data-nav') === page){
+                a.classList.remove('text-slate-400','text-amber-500');
+                a.classList.add('text-[#003DA5]');
+                var dot = document.createElement('div');
+                dot.className = 'absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full';
+                a.appendChild(dot);
+            }
+        });
+    })();
+    </script>
+    <script>
+    (function(){
+        var page = location.pathname.split('/').pop() || 'index.html';
+        var links = document.querySelectorAll('[data-nav]');
+        links.forEach(function(a){
+            if(a.getAttribute('data-nav') === page){
+                a.classList.remove('text-slate-400','text-amber-500');
+                a.classList.add('text-[#003DA5]');
+                var dot = document.createElement('div');
+                dot.className = 'absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full';
+                a.appendChild(dot);
+            }
+        });
+    })();
+    </script>
+
+    <script>
+        let currentLang = 'es';
+
+        // Translation Dictionary
+        const translations = {
+            es: {
+                pageTitle: "MI OFICINA",
+                whyTitle: "WHY REMAX ALTITUD",
+                goldWhy: "1. Por Qué (Propósito)",
+                goldWhyText: '"Existimos para elevar el bienestar de nuestro valle a través del emprendimiento inmobiliario ético. Creemos que al empoderar a profesionales con visión de futuro y valores sólidos, transformamos cada transacción en un motor de prosperidad y confianza para nuestra comunidad."',
+                goldHow: "2. Cómo (La Plataforma y Valores)",
+                val1Title: "Emprendimiento con Raíces:",
+                val1Text: "Somos la plataforma para el emprendedor que asume un compromiso inquebrantable con su propio negocio. Valoramos a quienes entienden que el éxito es un proceso de constancia: entre plantar y cosechar, existe un tiempo sagrado de regar, cuidar y trabajar.",
+                val2Title: "Cultura de Cooperación y Respeto:",
+                val2Text: "Impulsamos un ecosistema donde compartir negocios es nuestra mayor fortaleza. Actuamos con un profundo respeto por el trabajo de los demás colegas, sabiendo que la colaboración ética multiplica los resultados para todos.",
+                val3Title: "Asesoría Especializada:",
+                val3Text: "Guiamos a familias, inversores, comerciantes y desarrolladores con la maestría técnica de un emprendedor que no solo vende, sino que construye su propio legado a través del servicio de excelencia.",
+                goldWhat: "3. Qué (El Resultado)",
+                goldWhatText: '"La comunidad inmobiliaria líder de la zona, donde los mejores emprendedores encuentran el soporte para transformar su vida y los clientes encuentran la seguridad de un patrimonio cultivado con integridad."',
+                manifestoLabel: "MANIFIESTO",
+                manifestoTitle: "El Éxito se Cultiva con Respeto",
+                man1: "En RE/MAX ALTITUD, somos el hogar de quienes se atreven a construir con propósito.",
+                man2: "Somos una plataforma diseñada para el emprendedor que ama los retos y asume un compromiso total con su propio crecimiento. En nuestra casa, honramos el proceso: entendemos que, al igual que en nuestra tierra, entre la siembra y la cosecha hay un tiempo necesario para regar, para cuidar y para perseverar.",
+                man3: "Nuestra fuerza reside en la unión y en la integridad. Caminamos con un respeto absoluto por el negocio de los demás, sabiendo que al compartir negocios y actuar con ética, el mercado crece para todos. Somos especialistas al servicio de familias que buscan un hogar, inversores que buscan rentabilidad y desarrolladores que construyen el futuro de nuestro valle.",
+                manCall: "Compromiso propio, respeto compartido, éxito cultivado.",
+                readManifesto: "Lee nuestro propósito, valores y manifiesto.",
+                directoryTitle: "Directorio de Oficina",
+                teamTitle: "CONOCE A TU EQUIPO",
+                teamSub: "Descubre los talentos, gustos y fortalezas de los miembros de nuestra familia ALTITUD basados en su Onboarding.",
+                btnTeam: "Explorar Perfiles del Equipo",
+                bookingTitle: "AGENDA Y RECURSOS",
+                bookRoom: "SALAS",
+                bookPhoto: "FOTÓGRAFO",
+                bookAle: "MENTORÍA ALE",
+                bookCesar: "MENTORÍA CÉSAR",
+                bookReportReserva: "REPORTAR RESERVA",
+                bookReportListing: "REPORTAR LISTING",
+                bookingNote: "* Haz clic en cualquiera de las opciones para abrir el calendario respectivo.",
+                // Navigación
+                backNexus: "Volver a NEXUS",
+                navFeed: "Feed",
+                navMyDesk: "Escritorio",
+                navMarket: "Mercado",
+                navOffice: "MI OFICINA",
+                navBusiness: "MI NEGOCIO",
+                navResources: "RECURSOS",
+                navBroker: "Broker",
+                navProfile: "Perfil",
+
+                // Additions
+                manualTitle: "Manual de Normas y Procedimientos",
+                manualSub: "Documento Oficial",
+                dictionaryTitle: "DICCIONARIO INMOBILIARIO",
+                dictionarySub: "Términos esenciales de RE/MAX Altitud."
+            },
+            en: {
+                pageTitle: "MY OFFICE",
+                whyTitle: "WHY REMAX ALTITUD",
+                goldWhy: "1. Why (Purpose)",
+                goldWhyText: '"We exist to elevate the well-being of our valley through ethical real estate entrepreneurship. We believe that by empowering professionals with a forward-looking vision and solid values, we transform every transaction into a motor of prosperity and trust for our community."',
+                goldHow: "2. How (Platform and Values)",
+                val1Title: "Entrepreneurship with Roots:",
+                val1Text: "We are the platform for the entrepreneur who makes an unwavering commitment to their own business. We value those who understand that success is a process of perseverance: between planting and harvesting, there is a sacred time to water, care, and work.",
+                val2Title: "Culture of Cooperation and Respect:",
+                val2Text: "We drive an ecosystem where sharing business is our greatest strength. We act with profound respect for the work of our colleagues, knowing that ethical collaboration multiplies results for everyone.",
+                val3Title: "Specialized Advising:",
+                val3Text: "We guide families, investors, merchants, and developers with the technical mastery of an entrepreneur who doesn't just sell, but builds their own legacy through excellent service.",
+                goldWhat: "3. What (The Result)",
+                goldWhatText: '"The leading real estate community in the area, where the best entrepreneurs find the support to transform their lives and clients find the security of an estate cultivated with integrity."',
+                manifestoLabel: "MANIFESTO",
+                manifestoTitle: "Success is Cultivated with Respect",
+                man1: "At RE/MAX ALTITUD, we are the home for those who dare to build with purpose.",
+                man2: "We are a platform designed for the entrepreneur who loves challenges and makes a total commitment to their own growth. In our home, we honor the process: we understand that, just like in our land, between sowing and harvesting there is a necessary time to water, to care, and to persevere.",
+                man3: "Our strength lies in unity and integrity. We walk with absolute respect for the business of others, knowing that by sharing business and acting ethically, the market grows for everyone. We are specialists at the service of families looking for a home, investors looking for profitability, and developers who build the future of our valley.",
+                manCall: "Self-commitment, shared respect, cultivated success.",
+                readManifesto: "Read our purpose, values, and manifesto.",
+                directoryTitle: "Office Directory",
+                teamTitle: "MEET YOUR TEAM",
+                teamSub: "Discover the talents, tastes, and strengths of our ALTITUD family members based on their Onboarding.",
+                btnTeam: "Explore Team Profiles",
+                bookingTitle: "SCHEDULE & RESOURCES",
+                bookRoom: "ROOMS",
+                bookPhoto: "PHOTOGRAPHER",
+                bookAle: "MENTORING ALE",
+                bookCesar: "MENTORING CÉSAR",
+                bookReportReserva: "REPORT DEAL",
+                bookReportListing: "REPORT LISTING",
+                bookingNote: "* Select any option to load the form directly inside NEXUS.",
+                // Navigation Menu
+                backNexus: "Back to NEXUS",
+                navFeed: "Match Board",
+                navMyDesk: "Hub",
+                navMarket: "Market",
+                navOffice: "MY OFFICE",
+                navBusiness: "MY BUSINESS",
+                navResources: "RESOURCES",
+                navBroker: "Broker",
+                navProfile: "Profile",
+
+                // Additions
+                manualTitle: "Norms and Procedures Manual",
+                manualSub: "Official Document",
+                dictionaryTitle: "REAL ESTATE DICTIONARY",
+                dictionarySub: "Essential terms of RE/MAX Altitud."
+            }
+        };
+
+        // Initialize UI texts
+        document.addEventListener("DOMContentLoaded", () => {
+            setLanguage('es');
+
+            // Close modal correctly when clicking outside the content block
+            const modal = document.getElementById('modal-why');
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
+
+        // Set Language
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.getElementById('btn-es').classList.toggle('active', lang === 'es');
+            document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    if (el.tagName === 'OPTION') {
+                        el.textContent = translations[lang][key];
+                    } else if (el.tagName === 'INPUT' && el.type === 'button') {
+                        el.value = translations[lang][key];
+                    } else {
+                        el.textContent = translations[lang][key];
+                    }
+                }
+            });
+        }
+
+        // Iframe Logic
+        function openBooking(url, title) {
+            document.getElementById('iframe-modal-title').innerText = title;
+            document.getElementById('iframe-loader').style.display = 'flex';
+            document.getElementById('booking-iframe').src = url;
+            document.getElementById('modal-iframe').style.display = 'flex';
+        }
+
+        // Dictionary Data rendering
+        const terms = [
+            { t: "60 Minutos", d: "Presentación del negocio a prospectos de agentes para que se sumen a la oficina." },
+            { t: "ACM", d: "Análisis Comparativo de Mercado basado en propiedades similares vendidas recientemente." },
+            { t: "Agente", d: "Profesional inmobiliario que representa a clientes en la compra, venta o alquiler." },
+            { t: "Agente Alto", d: "Categoría con nivel avanzado de desempeño (60% de comisión)." },
+            { t: "Agente Captador", d: "Agente que representa al vendedor en una transacción." },
+            { t: "Agente Comprador", d: "Agente que representa al comprador en una transacción." },
+            { t: "Agente Puro", d: "Agente independiente exclusivo bajo la marca RE/MAX (80% de comisión)." },
+            { t: "Agente RAPP", d: "Agente en programa de productividad (45% de comisión)." },
+            { t: "Beneficios", d: "Forma en que una característica se ajusta al cliente. (Ej: 'La casa es ideal para tu gran familia')." },
+            { t: "Carpeta Pre Listing", d: "Carpeta física para la entrevista inicial con el cliente." },
+            { t: "Entrevista Listing", d: "Reunión con propietario para presentar propuesta comercial antes de la exclusividad." },
+            { t: "Entrevista Pre Listing", d: "Primera conversación con el propietario para expectativas  y forma de trabajo." },
+            { t: "Max Center", d: "Plataforma oficial global de RE/MAX con múltiples herramientas." },
+            { t: "OKR", d: "Objectives and Key Results: reporte y seguimiento de llamadas, visitas y avances." },
+            { t: "Top Producers", d: "Agentes con los mayores niveles de producción y cierres." },
+            { t: "Winner Circle", d: "Grupo exclusivo con nivel de producción de excelencia." }
+        ];
+
+        const dictContainer = document.getElementById('dict-container');
+        if (dictContainer) {
+            terms.forEach(i => {
+                dictContainer.innerHTML += `<div class="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                    <span class="font-black text-blue-900 block mb-1 uppercase tracking-widest text-[9px]">${i.t}</span>
+                    ${i.d}
+                </div>`;
+            });
+        }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const isPremium = localStorage.getItem('isPremium') === 'true';
+            const isAdmin = localStorage.getItem('isAdmin') === 'true';
+
+            // Hide Admin feature
+            if (!isAdmin) {
+                const broker = document.getElementById('nav-broker');
+                if (broker) broker.style.display = 'none';
+            }
+
+            // Premium Access Control - Visible to all, but restricted access
+            if (!isPremium) {
+                const premiumElements = [
+                    document.getElementById('nav-market'),
+                    document.getElementById('nav-office'),
+                    document.getElementById('nav-business'),
+                    document.getElementById('nav-resources'),
+                    ...Array.from(document.querySelectorAll('.premium-only'))
+                ];
+                
+                                premiumElements.forEach(el => {
+                    if (el && el.tagName === 'A') {
+                        // Apply visual lock
+                        el.classList.add('grayscale', 'opacity-60', 'relative');
+                        el.insertAdjacentHTML('beforeend', '<div class="absolute top-1 right-1 lg:top-2 lg:right-2 bg-slate-900 border border-slate-700 rounded-full w-4 h-4 flex items-center justify-center shadow-lg z-20"><i class="fa-solid fa-lock text-[8px] text-slate-400"></i></div>');
+
+                        el.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            alert(currentLang === 'es' ? '💎 ¡Esta es una función Premium! Actualiza tu cuenta para acceder a increíbles herramientas de Productores Top.' : '💎 This is a Premium feature! Upgrade tu cuenta para acceder a increíbles herramientas de Productores Top.');
+                        });
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

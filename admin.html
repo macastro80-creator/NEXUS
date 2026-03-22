@@ -2,122 +2,826 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - NEXUS Control</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin Panel - NEXUS</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="global-theme.js"></script>
+    <script src="supabase-client.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .admin-card { border-left: 4px solid #003DA5; }
-        .alert-card { border-left: 4px solid #ED1C24; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .animate-fade { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .tab-btn.active { background: #003DA5; color: white; box-shadow: 0 2px 8px rgba(0,61,165,0.3); }
+        .ticket-card:hover { transform: translateY(-1px); }
+        .location-row:hover { background: #f8fafc; }
+        .dark .location-row:hover { background: #1e293b; }
     </style>
 </head>
-<body class="bg-slate-900 font-sans pb-10 text-slate-100">
+<body class="bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-200 min-h-screen">
 
-    <div class="bg-slate-800 px-6 py-4 border-b border-slate-700 flex justify-between items-center sticky top-0 z-50">
-        <div class="flex flex-col items-start gap-0">
-            <h1 class="text-2xl font-black tracking-tighter text-white leading-none">NEXUS - <span class="text-blue-400">ADMIN</span></h1>
-            <p class="text-[10px] uppercase tracking-widest text-[#ED1C24] font-bold mt-1">Powered by REMAX Altitud</p>
-            <p class="text-[10px] text-slate-400 uppercase font-bold mt-0.5">RE/MAX Altitud Internal Control</p>
+<!-- ============ ADMIN LOGIN GATE ============ -->
+<div id="adminLoginGate" class="fixed inset-0 z-[200] bg-gradient-to-br from-slate-900 via-[#003DA5] to-slate-900 flex items-center justify-center p-6">
+    <div class="bg-white dark:bg-slate-800 rounded-[32px] p-8 max-w-sm w-full shadow-2xl text-center animate-fade">
+        <div class="w-20 h-20 bg-blue-100 dark:bg-blue-900/50 text-[#003DA5] dark:text-blue-400 rounded-full flex items-center justify-center mx-auto mb-6">
+            <i class="fa-solid fa-shield-halved text-3xl"></i>
         </div>
-        <div class="flex gap-4">
-            <div class="text-right">
-                <p class="text-xs font-bold text-slate-400">Total Agents</p>
-                <p class="text-lg font-black text-blue-400">482</p>
+        <h1 class="text-2xl font-black text-slate-900 dark:text-white italic tracking-tighter uppercase mb-1">Admin Panel</h1>
+        <p class="text-[10px] uppercase tracking-widest text-[#ED1C24] font-bold mb-6">NEXUS Platform Control</p>
+        <form onsubmit="event.preventDefault(); adminLogin();" class="space-y-4">
+            <input type="password" id="adminPassInput" placeholder="Admin Password"
+                class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-center tracking-[0.3em] uppercase focus:ring-2 focus:ring-[#003DA5]">
+            <p id="adminLoginError" class="text-[10px] text-red-500 font-bold hidden">Incorrect password</p>
+            <button type="submit" class="w-full bg-[#003DA5] hover:bg-blue-700 text-white py-4 rounded-2xl font-black text-sm uppercase shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-lock-open"></i> Access Panel
+            </button>
+        </form>
+        <a href="index.html" class="block mt-4 text-[10px] font-bold text-slate-400 hover:text-[#003DA5] uppercase tracking-widest transition-colors">
+            <i class="fa-solid fa-arrow-left mr-1"></i> Back to Match Board
+        </a>
+    </div>
+</div>
+
+<!-- ============ ADMIN PANEL ============ -->
+<div id="adminPanel" class="hidden">
+
+    <!-- TOP NAV -->
+    <nav class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 py-4 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-[60] flex justify-between items-center shadow-sm">
+        <div>
+            <h1 class="font-black text-2xl text-[#003DA5] tracking-tighter uppercase italic leading-none">NEXUS <span class="text-[#ED1C24]">Admin</span></h1>
+            <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1" data-i18n="navSubtitle">Platform Control Panel</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-full text-[9px] font-black border border-slate-200 dark:border-slate-600">
+                <button onclick="setAdminLang('en')" id="admin-btn-en" class="px-2 py-1 rounded-full bg-[#003DA5] text-white transition-colors">EN</button>
+                <button onclick="setAdminLang('es')" id="admin-btn-es" class="px-2 py-1 rounded-full text-slate-400 dark:text-slate-300 transition-colors">ES</button>
             </div>
-            <div class="text-right">
-                <p class="text-xs font-bold text-slate-400">Active Deals</p>
-                <p class="text-lg font-black text-green-400">24</p>
+            <button onclick="toggleDarkMode()" class="text-slate-400 hover:text-[#003DA5] dark:hover:text-yellow-400 transition-colors text-lg px-2">
+                <i class="fa-solid fa-moon dark:hidden"></i>
+                <i class="fa-solid fa-sun hidden dark:inline"></i>
+            </button>
+            <button onclick="adminLogout()" class="w-8 h-8 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center text-red-500 hover:bg-red-100 transition" title="Logout">
+                <i class="fa-solid fa-arrow-right-from-bracket text-sm"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- DASHBOARD KPIs -->
+    <div class="max-w-2xl mx-auto px-4 mt-4">
+        <div class="grid grid-cols-4 gap-2 mb-4">
+            <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl border text-center shadow-sm">
+                <p id="kpiOffices" class="text-xl font-black text-[#003DA5]">0</p>
+                <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest"><span data-i18n="kpiOffices">Offices</span></p>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl border text-center shadow-sm">
+                <p id="kpiTeams" class="text-xl font-black text-purple-600">0</p>
+                <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest"><span data-i18n="kpiTeams">Teams</span></p>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl border text-center shadow-sm">
+                <p id="kpiRemax" class="text-xl font-black text-[#ED1C24]">0</p>
+                <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest"><span data-i18n="kpiRemax">REMAX</span></p>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl border text-center shadow-sm">
+                <p id="kpiExternal" class="text-xl font-black text-green-600">0</p>
+                <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest"><span data-i18n="kpiExternal">External</span></p>
             </div>
         </div>
     </div>
 
-    <div class="p-4 space-y-6 max-w-4xl mx-auto">
-        
-        <section>
-            <h2 class="text-xs font-black uppercase text-slate-500 mb-3 tracking-widest">Recent Ratings (Shadow View)</h2>
+    <!-- TABS -->
+    <div class="max-w-2xl mx-auto px-4">
+        <div class="flex bg-slate-200 dark:bg-slate-800 p-1 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-inner">
+            <button onclick="switchTab('tickets')" id="tabTickets" class="tab-btn active flex-1 py-3 rounded-lg transition-all">
+                <i class="fa-solid fa-ticket mr-1"></i> <span data-i18n="tabTickets">Tickets</span>
+            </button>
+            <button onclick="switchTab('offices')" id="tabOffices" class="tab-btn flex-1 py-3 rounded-lg transition-all text-slate-500">
+                <i class="fa-solid fa-building mr-1"></i> <span data-i18n="tabOffices">Offices</span>
+            </button>
+            <button onclick="switchTab('agents')" id="tabAgents" class="tab-btn flex-1 py-3 rounded-lg transition-all text-slate-500">
+                <i class="fa-solid fa-users mr-1"></i> <span data-i18n="tabAgents">Agents</span>
+            </button>
+            <button onclick="switchTab('locations')" id="tabLocations" class="tab-btn flex-1 py-3 rounded-lg transition-all text-slate-500">
+                <i class="fa-solid fa-map mr-1"></i> <span data-i18n="tabLocations">Locations</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ====== OFFICES SECTION ====== -->
+    <div id="sectionOffices" class="max-w-2xl mx-auto p-4 space-y-4 animate-fade hidden">
+        <h2 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest italic">
+            <i class="fa-solid fa-building text-[#003DA5] mr-1"></i> <span data-i18n="officesTitle">Offices</span>
+        </h2>
+
+        <!-- Office list -->
+        <div id="officesList" class="space-y-3"></div>
+
+        <!-- Add Office -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-[28px] border shadow-sm">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                <i class="fa-solid fa-plus-circle text-green-500 mr-1"></i> <span data-i18n="addOffice">Add New Office</span>
+            </h3>
             <div class="space-y-3">
-                
-                <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 admin-card">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <span class="text-[10px] font-black bg-blue-900 text-blue-200 px-2 py-0.5 rounded uppercase">Reviewer</span>
-                            <p class="text-sm font-bold">John Doe (Century 21)</p>
-                        </div>
-                        <i class="fa-solid fa-arrow-right text-slate-600"></i>
-                        <div class="text-right">
-                            <span class="text-[10px] font-black bg-red-900 text-red-200 px-2 py-0.5 rounded uppercase">Target</span>
-                            <p class="text-sm font-bold">Maria Rodriguez</p>
-                        </div>
-                    </div>
-                    <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-700 mt-2">
-                        <div class="flex gap-1 text-amber-500 text-[10px] mb-1">
-                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                        </div>
-                        <p class="text-xs italic text-slate-300">"Excellent response time. Maria shared the commission exactly as promised."</p>
-                    </div>
-                </div>
-
-                <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 alert-card">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <p class="text-sm font-bold">Carlos V. (Independent)</p>
-                        </div>
-                        <i class="fa-solid fa-arrow-right text-slate-600"></i>
-                        <div class="text-right">
-                            <p class="text-sm font-bold">Agent X</p>
-                        </div>
-                    </div>
-                    <div class="bg-slate-900/50 p-3 rounded-xl border border-red-900/30 mt-2">
-                        <div class="flex gap-1 text-amber-500 text-[10px] mb-1">
-                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star text-slate-700"></i><i class="fa-solid fa-star text-slate-700"></i><i class="fa-solid fa-star text-slate-700"></i><i class="fa-solid fa-star text-slate-700"></i>
-                        </div>
-                        <p class="text-xs italic text-red-200">"Never replied to my WhatsApp. Very difficult to coordinate."</p>
-                    </div>
-                </div>
-
-            </div>
-        </section>
-
-        <section>
-            <h2 class="text-xs font-black uppercase text-slate-500 mb-3 tracking-widest">New Companies Added (Other)</h2>
-            <div class="bg-slate-800 rounded-3xl overflow-hidden border border-slate-700">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-slate-700 text-slate-300 text-[10px] uppercase font-black">
-                        <tr>
-                            <th class="p-4">Suggested Name</th>
-                            <th class="p-4 text-right">Added By</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-700">
-                        <tr>
-                            <td class="p-4 font-bold text-blue-400">PZ Luxury Estates</td>
-                            <td class="p-4 text-right text-slate-400">4 Agents</td>
-                        </tr>
-                        <tr>
-                            <td class="p-4 font-bold text-blue-400">Pacific Surf Realty</td>
-                            <td class="p-4 text-right text-slate-400">2 Agents</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div class="p-4 bg-slate-700/30">
-                    <button class="w-full bg-blue-600 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">Update Master Company List</button>
-                </div>
-            </div>
-        </section>
-
-        <section class="bg-red-900/20 p-6 rounded-[40px] border border-red-900/30">
-            <div class="flex items-center gap-4 mb-4">
-                <i class="fa-solid fa-spider text-3xl text-red-500"></i>
                 <div>
-                    <h2 class="text-lg font-black text-white">Spider Alerts</h2>
-                    <p class="text-xs text-red-300">Searches pending renewal or archive.</p>
+                    <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2" data-i18n="officeName">Office Name</label>
+                    <input type="text" id="newOfficeName" placeholder="e.g. REMAX Altitud" class="w-full p-3 border border-slate-100 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-[11px]">
+                </div>
+                <div>
+                    <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2" data-i18n="officeBrand">Brand</label>
+                    <select id="newOfficeBrand" class="w-full p-3 border border-slate-100 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-[11px]">
+                        <option>REMAX</option><option>Century 21</option><option>Coldwell Banker</option>
+                        <option>Keller Williams</option><option>eXp Realty</option><option>Sotheby's</option><option>Independent</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2" data-i18n="officeArea">Linked Area (Canton)</label>
+                    <input type="text" id="newOfficeArea" placeholder="e.g. Pérez Zeledón" class="w-full p-3 border border-slate-100 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-[11px]">
+                </div>
+                <div>
+                    <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2" data-i18n="officeBroker">Broker Name</label>
+                    <input type="text" id="newOfficeBroker" placeholder="e.g. Alejandra Castro" class="w-full p-3 border border-slate-100 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-[11px]">
+                </div>
+                <button onclick="addOffice()" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-black text-[10px] uppercase shadow-md transition-all active:scale-95 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-plus"></i> <span data-i18n="addOfficeBtn">Add Office</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Future: Agent Hierarchy Note -->
+        <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4 rounded-2xl">
+            <p class="text-[10px] font-bold text-amber-800 dark:text-amber-300">
+                <i class="fa-solid fa-clock mr-1"></i>
+                <span class="lang-en"><strong>Coming Next:</strong> Offices will manage their own agents and Team Leaders. Team Leaders will add Junior Agents. Each person gets their own login.</span>
+                <span class="lang-es hidden"><strong>Próximamente:</strong> Las oficinas gestionarán sus agentes y Team Leaders. Los Team Leaders agregarán Junior Agents. Cada persona tendrá su propio login.</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- ====== TICKETS SECTION ====== -->
+    <div id="sectionTickets" class="max-w-2xl mx-auto p-4 space-y-4 animate-fade">
+        <div class="flex justify-between items-center">
+            <h2 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest italic">
+                <i class="fa-solid fa-inbox text-[#003DA5] mr-1"></i> Support Tickets
+            </h2>
+            <span id="ticketCount" class="bg-[#003DA5] text-white text-[9px] font-black px-3 py-1 rounded-full">0</span>
+        </div>
+        <div class="flex gap-2 text-[9px] font-black uppercase tracking-widest flex-wrap">
+            <button onclick="filterTickets('all', this)" class="ticket-filter px-3 py-1.5 rounded-full bg-[#003DA5] text-white transition-colors">All</button>
+            <button onclick="filterTickets('bug', this)" class="ticket-filter px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 transition-colors"><i class="fa-solid fa-bug mr-1"></i>Bugs</button>
+            <button onclick="filterTickets('feature', this)" class="ticket-filter px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 transition-colors"><i class="fa-solid fa-lightbulb mr-1"></i>Features</button>
+            <button onclick="filterTickets('question', this)" class="ticket-filter px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 transition-colors"><i class="fa-solid fa-circle-question mr-1"></i>Questions</button>
+        </div>
+        <div id="ticketsList" class="space-y-3"></div>
+        <p id="noTicketsMsg" class="text-center text-slate-400 text-xs font-bold py-8 hidden">
+            <i class="fa-solid fa-check-circle text-green-400 text-2xl block mb-2"></i>No tickets right now 🎉
+        </p>
+    </div>
+
+    <!-- ====== AGENTS SECTION ====== -->
+    <div id="sectionAgents" class="max-w-2xl mx-auto p-4 space-y-4 animate-fade hidden">
+        
+        <!-- Brand Summary Cards -->
+        <h2 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest italic">
+            <i class="fa-solid fa-chart-pie text-[#003DA5] mr-1"></i> <span data-i18n="agentsByBrand">Agents by Brand</span>
+        </h2>
+        <div id="brandCards" class="grid grid-cols-2 gap-3"></div>
+
+        <!-- TX Volume Summary -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-[28px] border shadow-sm">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                <i class="fa-solid fa-chart-bar text-amber-500 mr-1"></i> Agents by TX Volume (Last Year)
+            </h3>
+            <div id="txChart" class="space-y-2"></div>
+        </div>
+
+        <!-- Agent List -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-[28px] border shadow-sm">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <i class="fa-solid fa-user-group text-[#003DA5] mr-1"></i> All Agents
+                </h3>
+                <div class="relative">
+                    <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
+                    <input type="text" id="agentSearchInput" oninput="filterAgentList(this.value)" placeholder="Search..." class="pl-8 pr-3 py-2 border border-slate-100 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900 font-bold outline-none text-[10px] w-36">
                 </div>
             </div>
-            <div class="text-3xl font-black text-white mb-2">14 <span class="text-sm font-bold text-red-400 tracking-normal">STALE SEARCHES</span></div>
-            <button class="text-xs font-bold text-red-200 underline">Send mass reminder ping to agents?</button>
-        </section>
+            <div id="agentList" class="space-y-2 max-h-[50vh] overflow-y-auto no-scrollbar"></div>
+        </div>
 
+        <!-- Manage Brands -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-[28px] border shadow-sm">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                <i class="fa-solid fa-tags text-green-500 mr-1"></i> Manage Brands / Agencies
+            </h3>
+            <p class="text-[10px] text-slate-400 font-bold mb-3 italic">These appear in the agency dropdown on the Profile page. Add new brands here when agents keep typing the same one under "Other".</p>
+            <div id="brandList" class="flex flex-wrap gap-2 mb-3"></div>
+            <div class="flex gap-2">
+                <input type="text" id="newBrandInput" placeholder='e.g. Keller Williams' class="flex-1 p-3 border border-slate-100 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-[11px]">
+                <button onclick="addBrand()" class="bg-green-600 hover:bg-green-700 text-white px-4 rounded-xl font-black text-[10px] uppercase active:scale-95 transition-all shadow-sm">
+                    <i class="fa-solid fa-plus mr-1"></i> Add
+                </button>
+            </div>
+        </div>
     </div>
+
+    <!-- ====== LOCATIONS SECTION ====== -->
+    <div id="sectionLocations" class="max-w-2xl mx-auto p-4 space-y-4 animate-fade hidden">
+        
+        <!-- Stats -->
+        <div class="grid grid-cols-3 gap-3">
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border text-center shadow-sm">
+                <p id="statCantons" class="text-2xl font-black text-[#003DA5]">0</p>
+                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Cantons</p>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border text-center shadow-sm">
+                <p id="statDistricts" class="text-2xl font-black text-[#003DA5]">0</p>
+                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Districts</p>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border text-center shadow-sm">
+                <p id="statTotal" class="text-2xl font-black text-[#003DA5]">0</p>
+                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Total</p>
+            </div>
+        </div>
+
+        <!-- Add Canton -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-[28px] border shadow-sm">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                <i class="fa-solid fa-plus-circle text-green-500 mr-1"></i> Add New Canton
+            </h3>
+            <p class="text-[10px] text-slate-400 font-bold mb-3 italic">Creates the same structure as Pérez Zeledón: Province > Canton > Districts</p>
+            <div class="space-y-3">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2">Province</label>
+                        <select id="newProvince" class="w-full p-3 border border-slate-100 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-[11px]">
+                            <option>San José</option><option>Alajuela</option><option>Cartago</option>
+                            <option>Heredia</option><option>Guanacaste</option><option>Puntarenas</option><option>Limón</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2">Canton Name</label>
+                        <input type="text" id="newCantonName" placeholder="e.g. Buenos Aires" class="w-full p-3 border border-slate-100 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-[11px]">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2">Districts (comma separated)</label>
+                    <textarea id="newDistricts" rows="3" placeholder="e.g. Buenos Aires, Volcán, Potrero Grande, Boruca, Pilas..." class="w-full p-3 border border-slate-100 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-[11px] resize-none"></textarea>
+                </div>
+                <button onclick="addNewCanton()" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-black text-[10px] uppercase shadow-md transition-all active:scale-95 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Add Canton & Districts
+                </button>
+            </div>
+        </div>
+
+        <!-- Location tree -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-[28px] border shadow-sm">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <i class="fa-solid fa-sitemap text-[#003DA5] mr-1"></i> Location Tree
+                </h3>
+                <div class="relative">
+                    <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
+                    <input type="text" id="locationSearchAdmin" oninput="filterLocationTree(this.value)" placeholder="Search..." class="pl-8 pr-3 py-2 border border-slate-100 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900 font-bold outline-none text-[10px] w-36">
+                </div>
+            </div>
+            <div id="locationTree" class="space-y-1 max-h-[60vh] overflow-y-auto no-scrollbar"></div>
+        </div>
+
+        <button onclick="exportLocations()" class="w-full bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-download"></i> Export locations.js
+        </button>
+    </div>
+</div>
+
+<script>
+// ===== AUTH =====
+const ADMIN_PASSWORD = 'nexus2025';
+
+function adminLogin() {
+    if (document.getElementById('adminPassInput').value === ADMIN_PASSWORD) {
+        document.getElementById('adminLoginGate').classList.add('hidden');
+        document.getElementById('adminPanel').classList.remove('hidden');
+        sessionStorage.setItem('adminAuth', 'true');
+        initAll();
+    } else {
+        const err = document.getElementById('adminLoginError');
+        err.classList.remove('hidden');
+        document.getElementById('adminPassInput').classList.add('ring-2', 'ring-red-400');
+        setTimeout(() => { err.classList.add('hidden'); document.getElementById('adminPassInput').classList.remove('ring-2','ring-red-400'); }, 2000);
+    }
+}
+function adminLogout() { sessionStorage.removeItem('adminAuth'); location.reload(); }
+
+if (sessionStorage.getItem('adminAuth') === 'true') {
+    document.getElementById('adminLoginGate').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+}
+
+async function initAll() { await loadTickets(); await loadOffices(); loadAgents(); loadLocationTree(); await updateDashboardKPIs(); }
+
+// ===== TABS =====
+function switchTab(tab) {
+    ['tickets','offices','agents','locations'].forEach(t => {
+        const btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+        const sec = document.getElementById('section' + t.charAt(0).toUpperCase() + t.slice(1));
+        if (t === tab) { btn.classList.add('active'); sec.classList.remove('hidden'); }
+        else { btn.classList.remove('active'); sec.classList.add('hidden'); }
+    });
+}
+
+// ===== TICKETS =====
+const DEMO_TICKETS = [
+    { id:1, type:'bug', from:'Cesar Vargas', email:'cesar@remax.com', date:'2025-03-17', status:'open',
+      subject:'Dark mode breaks on add-search page', body:'When I switch to dark mode on Post Search, the property type cards stay white text on white background.' },
+    { id:2, type:'feature', from:'Roberto Méndez', email:'roberto@gmail.com', date:'2025-03-16', status:'open',
+      subject:'Add "Condominium Project" as property type', body:'I work a lot with condo developments. Would be great to have a specific type for new condo projects.' },
+    { id:3, type:'bug', from:'Ana López', email:'ana.lopez@c21.com', date:'2025-03-15', status:'open',
+      subject:'Location search - "Dominical" is missing', body:'I tried to post a search for Dominical but it doesn\'t appear. Can you add Osa canton?' },
+    { id:4, type:'question', from:'Maria Fernández', email:'maria@remax.com', date:'2025-03-14', status:'resolved',
+      subject:'How do I upgrade to REMAX features?', body:'I see locked buttons for Office and Business. How do I get access? I\'m a REMAX agent.' },
+    { id:5, type:'feature', from:'David Rojas', email:'david@coldwell.com', date:'2025-03-13', status:'open',
+      subject:'Notification sound for new matches', body:'A small sound alert when a new match comes in would be great, especially on mobile.' },
+];
+
+let tickets = DEMO_TICKETS;
+let activeFilter = 'all';
+
+async function loadTickets() {
+    if (isSupabaseConfigured() && supabase) {
+        try {
+            const data = await getAllTickets();
+            if (data && data.length > 0) {
+                tickets = data.map(t => ({
+                    id: t.id, type: t.type, from: t.user_name || t.user_email || 'Unknown',
+                    email: t.user_email, date: t.created_at?.substring(0,10) || '',
+                    status: t.status, subject: t.subject, body: t.body || ''
+                }));
+            }
+        } catch(e) { console.warn('Supabase tickets fallback to demo:', e.message); }
+    } else {
+        tickets = JSON.parse(localStorage.getItem('nexusTickets')) || DEMO_TICKETS;
+    }
+    renderTickets();
+}
+
+function renderTickets() {
+    const list = document.getElementById('ticketsList');
+    const filtered = activeFilter === 'all' ? tickets : tickets.filter(t => t.type === activeFilter);
+    document.getElementById('ticketCount').textContent = filtered.length;
+    if (filtered.length === 0) { list.innerHTML = ''; document.getElementById('noTicketsMsg').classList.remove('hidden'); return; }
+    document.getElementById('noTicketsMsg').classList.add('hidden');
+
+    const icons = { bug:'fa-bug text-red-500', feature:'fa-lightbulb text-amber-500', question:'fa-circle-question text-blue-500' };
+    const labels = { bug:'Bug Report', feature:'Feature Request', question:'Question' };
+    const bg = { bug:'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800', feature:'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800', question:'bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800' };
+
+    list.innerHTML = filtered.map(t => `
+        <div class="ticket-card bg-white dark:bg-slate-800 p-4 rounded-2xl border shadow-sm transition-all ${t.status==='resolved'?'opacity-50':''}">
+            <div class="flex justify-between items-start mb-2">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 ${bg[t.type]} rounded-lg flex items-center justify-center border"><i class="fa-solid ${icons[t.type]} text-xs"></i></div>
+                    <div>
+                        <span class="text-[8px] font-black uppercase tracking-widest ${t.type==='bug'?'text-red-500':t.type==='feature'?'text-amber-600':'text-blue-500'}">${labels[t.type]}</span>
+                        <p class="text-[11px] font-black text-slate-900 dark:text-white leading-tight">${t.subject}</p>
+                    </div>
+                </div>
+                <span class="text-[8px] font-black uppercase px-2 py-1 rounded-full ${t.status==='open'?'bg-green-100 text-green-700':'bg-slate-100 text-slate-500'}">${t.status}</span>
+            </div>
+            <p class="text-[10px] text-slate-600 dark:text-slate-400 font-medium leading-relaxed mb-2 border-l-2 border-slate-200 dark:border-slate-700 pl-3">${t.body}</p>
+            <div class="flex justify-between items-center">
+                <span class="text-[9px] font-bold text-slate-400"><i class="fa-solid fa-user mr-1"></i>${t.from} · ${t.date}</span>
+                <div class="flex gap-1">
+                    ${t.status==='open'?`<button onclick="resolveTicket('${t.id}')" class="text-[9px] font-black uppercase px-2 py-1 rounded-lg bg-green-50 text-green-600 hover:bg-green-100"><i class="fa-solid fa-check mr-1"></i>Resolve</button>`
+                    :`<button onclick="reopenTicket('${t.id}')" class="text-[9px] font-black uppercase px-2 py-1 rounded-lg bg-slate-50 text-slate-500 hover:bg-slate-100"><i class="fa-solid fa-rotate-left mr-1"></i>Reopen</button>`}
+                    <button onclick="deleteTicket('${t.id}')" class="text-[9px] font-black uppercase px-2 py-1 rounded-lg bg-red-50 text-red-500 hover:bg-red-100"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>
+        </div>`).join('');
+}
+
+function filterTickets(type, el) {
+    activeFilter = type;
+    document.querySelectorAll('.ticket-filter').forEach(b => { b.classList.remove('bg-[#003DA5]','text-white'); b.classList.add('bg-slate-100','text-slate-500'); });
+    el.classList.remove('bg-slate-100','text-slate-500'); el.classList.add('bg-[#003DA5]','text-white');
+    renderTickets();
+}
+async function resolveTicket(id) {
+    if (isSupabaseConfigured()) { try { await updateTicketStatus(id, 'resolved'); } catch(e) { console.error(e); }}
+    tickets = tickets.map(t => String(t.id)===String(id)?{...t,status:'resolved'}:t);
+    localStorage.setItem('nexusTickets',JSON.stringify(tickets)); renderTickets();
+}
+async function reopenTicket(id) {
+    if (isSupabaseConfigured()) { try { await updateTicketStatus(id, 'open'); } catch(e) { console.error(e); }}
+    tickets = tickets.map(t => String(t.id)===String(id)?{...t,status:'open'}:t);
+    localStorage.setItem('nexusTickets',JSON.stringify(tickets)); renderTickets();
+}
+async function deleteTicketAction(id) {
+    if(!confirm('Delete this ticket?')) return;
+    if (isSupabaseConfigured()) { try { await supabase.from('tickets').delete().eq('id', id); } catch(e) { console.error(e); }}
+    tickets = tickets.filter(t => String(t.id)!==String(id));
+    localStorage.setItem('nexusTickets',JSON.stringify(tickets)); renderTickets();
+}
+
+// ===== AGENTS =====
+const DEMO_AGENTS = [
+    { name:'Alejandra Castro', brand:'REMAX', role:'broker', tx:'16-30', zones:['Pérez Zeledón','Dominical'], joined:'2018-01' },
+    { name:'Cesar Vargas', brand:'REMAX', role:'remax', tx:'31-50', zones:['Pérez Zeledón'], joined:'2015-06' },
+    { name:'Roberto Méndez', brand:'Independent', role:'agent', tx:'6-15', zones:['Pérez Zeledón'], joined:'2020-03' },
+    { name:'Ana López', brand:'Century 21', role:'agent', tx:'1-5', zones:['Pérez Zeledón'], joined:'2023-01' },
+    { name:'Maria Fernández', brand:'REMAX', role:'remax', tx:'6-15', zones:['Pérez Zeledón'], joined:'2019-08' },
+    { name:'David Rojas', brand:'Coldwell Banker', role:'agent', tx:'6-15', zones:['Pérez Zeledón'], joined:'2021-11' },
+    { name:'Sofia Mora', brand:'REMAX', role:'remax', tx:'16-30', zones:['Pérez Zeledón','San Isidro'], joined:'2017-02' },
+    { name:'Carlos Jiménez', brand:'Keller Williams', role:'agent', tx:'1-5', zones:['Pérez Zeledón'], joined:'2024-01' },
+    { name:'Laura Ureña', brand:'Independent', role:'agent', tx:'1-5', zones:['Pérez Zeledón'], joined:'2024-06' },
+    { name:'Fernando Solís', brand:'Century 21', role:'agent', tx:'6-15', zones:['Pérez Zeledón'], joined:'2022-04' },
+];
+
+let agents = JSON.parse(localStorage.getItem('nexusAgents')) || DEMO_AGENTS;
+let defaultBrands = ['REMAX','Century 21','Coldwell Banker','Keller Williams','eXp Realty','Sotheby\'s','Independent'];
+let brands = JSON.parse(localStorage.getItem('nexusBrands')) || defaultBrands;
+
+function loadAgents() {
+    renderBrandCards();
+    renderTxChart();
+    renderAgentList(agents);
+    renderBrandManager();
+}
+
+function renderBrandCards() {
+    const counts = {};
+    agents.forEach(a => { counts[a.brand] = (counts[a.brand]||0) + 1; });
+    const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+    const colors = ['bg-blue-500','bg-red-500','bg-amber-500','bg-green-500','bg-purple-500','bg-pink-500','bg-indigo-500','bg-teal-500'];
+    
+    document.getElementById('brandCards').innerHTML = sorted.map(([brand, count], i) => `
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border shadow-sm hover:shadow-md transition-shadow cursor-pointer" onclick="filterAgentsByBrand('${brand.replace(/'/g,"\\'")}')">
+            <div class="flex items-center gap-2 mb-2">
+                <div class="w-3 h-3 ${colors[i%colors.length]} rounded-full"></div>
+                <span class="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">${brand}</span>
+            </div>
+            <p class="text-3xl font-black text-[#003DA5]">${count}</p>
+            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">agents</p>
+        </div>`).join('');
+}
+
+function renderTxChart() {
+    const ranges = ['1-5','6-15','16-30','31-50','50+'];
+    const counts = {};
+    ranges.forEach(r => counts[r] = 0);
+    agents.forEach(a => { if(counts[a.tx] !== undefined) counts[a.tx]++; });
+    const max = Math.max(...Object.values(counts), 1);
+    const colors = ['bg-blue-200','bg-blue-300','bg-blue-400','bg-blue-500','bg-blue-600'];
+
+    document.getElementById('txChart').innerHTML = ranges.map((r,i) => `
+        <div class="flex items-center gap-3">
+            <span class="text-[10px] font-black text-slate-500 w-10 text-right">${r} TX</span>
+            <div class="flex-1 bg-slate-100 dark:bg-slate-700 rounded-full h-6 overflow-hidden">
+                <div class="${colors[i]} h-full rounded-full flex items-center justify-end pr-2 transition-all" style="width: ${Math.max((counts[r]/max)*100, 8)}%">
+                    <span class="text-[9px] font-black text-white">${counts[r]}</span>
+                </div>
+            </div>
+        </div>`).join('');
+}
+
+function renderAgentList(list) {
+    const roleIcons = { broker:'fa-user-tie text-amber-500', remax:'fa-user-shield text-blue-500', agent:'fa-user text-slate-400', teamleader:'fa-users-gear text-purple-500' };
+    const roleLabels = { broker:'Broker', remax:'REMAX Agent', agent:'Agent', teamleader:'Team Leader' };
+
+    document.getElementById('agentList').innerHTML = list.map(a => `
+        <div class="flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+                    <i class="fa-solid ${roleIcons[a.role]||'fa-user text-slate-400'} text-sm"></i>
+                </div>
+                <div>
+                    <p class="text-[11px] font-black text-slate-900 dark:text-white">${a.name}</p>
+                    <p class="text-[9px] font-bold text-slate-400">${a.brand} · ${roleLabels[a.role]||'Agent'} · Since ${a.joined}</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <p class="text-[11px] font-black text-[#003DA5]">${a.tx}</p>
+                <p class="text-[8px] font-bold text-slate-400 uppercase">TX/yr</p>
+            </div>
+        </div>`).join('');
+}
+
+function filterAgentsByBrand(brand) {
+    const filtered = agents.filter(a => a.brand === brand);
+    renderAgentList(filtered);
+    document.getElementById('agentSearchInput').value = brand;
+}
+
+function filterAgentList(q) {
+    if (!q) { renderAgentList(agents); return; }
+    const norm = q.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+    renderAgentList(agents.filter(a => 
+        (a.name+a.brand+a.role+a.tx).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().includes(norm)
+    ));
+}
+
+function renderBrandManager() {
+    document.getElementById('brandList').innerHTML = brands.map(b => `
+        <div class="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 text-[#003DA5] dark:text-blue-400 px-3 py-1.5 rounded-lg text-[10px] font-black border border-blue-100 dark:border-blue-800">
+            ${b}
+            <i class="fa-solid fa-xmark ml-1 cursor-pointer opacity-50 hover:opacity-100 hover:text-red-500 transition-all" onclick="removeBrand('${b.replace(/'/g,"\\'")}')"></i>
+        </div>`).join('');
+}
+
+function addBrand() {
+    const input = document.getElementById('newBrandInput');
+    const name = input.value.trim();
+    if (!name) return;
+    if (brands.includes(name)) { alert('Brand already exists.'); return; }
+    brands.push(name);
+    localStorage.setItem('nexusBrands', JSON.stringify(brands));
+    renderBrandManager();
+    input.value = '';
+}
+
+function removeBrand(name) {
+    if (!confirm(`Remove "${name}" from the brand list?`)) return;
+    brands = brands.filter(b => b !== name);
+    localStorage.setItem('nexusBrands', JSON.stringify(brands));
+    renderBrandManager();
+}
+
+// ===== LOCATIONS =====
+let locationData = [];
+
+function loadLocationTree() {
+    const stored = JSON.parse(localStorage.getItem('nexusLocations')) || [];
+    locationData = typeof LOCATION_DB !== 'undefined' ? [...new Set([...LOCATION_DB,...stored])].sort() : stored.sort();
+    renderLocationTree(locationData);
+    updateStats();
+}
+
+function updateStats() {
+    const cantons = new Set(), districts = new Set();
+    locationData.forEach(loc => {
+        const p = loc.split(' > ');
+        if (p.length >= 2) cantons.add(p.slice(0,2).join(' > '));
+        if (p.length >= 3) districts.add(p.slice(0,3).join(' > '));
+    });
+    document.getElementById('statCantons').textContent = cantons.size;
+    document.getElementById('statDistricts').textContent = districts.size;
+    document.getElementById('statTotal').textContent = locationData.length;
+}
+
+function renderLocationTree(data) {
+    const tree = {};
+    data.forEach(loc => {
+        const p = loc.split(' > ');
+        if (loc.includes('(Entire Canton)')) return;
+        const [prov,cant,dist,bar] = [p[0]||'',p[1]||'',p[2]||'',p[3]||''];
+        if (!tree[prov]) tree[prov] = {};
+        if (cant && !tree[prov][cant]) tree[prov][cant] = {};
+        if (dist && cant) { if (!tree[prov][cant][dist]) tree[prov][cant][dist] = []; if (bar) tree[prov][cant][dist].push(bar); }
+    });
+    const c = document.getElementById('locationTree');
+    let html = '';
+    for (const [prov, cantons] of Object.entries(tree)) {
+        for (const [cant, dists] of Object.entries(cantons)) {
+            const dc = Object.keys(dists).length;
+            const bc = Object.values(dists).reduce((s,b)=>s+b.length,0);
+            html += `<div class="border border-slate-100 dark:border-slate-700 rounded-xl overflow-hidden mb-2">
+                <div class="flex justify-between items-center p-3 bg-blue-50/50 dark:bg-slate-800 cursor-pointer" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                    <div class="flex items-center gap-2"><i class="fa-solid fa-map-pin text-[#003DA5] text-xs"></i><span class="text-[11px] font-black text-slate-800 dark:text-white">${prov} > ${cant}</span></div>
+                    <div class="flex items-center gap-2"><span class="text-[8px] font-black text-slate-400">${dc} dist · ${bc} barrios</span><i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i></div>
+                </div><div class="hidden p-2 space-y-1">`;
+            for (const [dist, bars] of Object.entries(dists)) {
+                html += `<div class="location-row flex justify-between items-center p-2 rounded-lg transition-colors">
+                    <div class="flex items-center gap-2"><i class="fa-solid fa-location-dot text-[10px] text-slate-400"></i><span class="text-[10px] font-bold text-slate-700 dark:text-slate-300">${dist}</span><span class="text-[8px] font-bold text-slate-400">(${bars.length})</span></div>
+                    <button onclick="removeDistrict('${prov}','${cant}','${dist}')" class="text-[10px] text-slate-300 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+                </div>`;
+            }
+            const cid = cant.replace(/[\s']/g,'_');
+            html += `<div class="flex gap-2 mt-2 p-2 border-t border-dashed border-slate-200 dark:border-slate-700">
+                <input type="text" id="addDist_${cid}" placeholder="New district name" class="flex-1 p-2 border border-slate-100 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900 font-bold outline-none text-[10px]">
+                <button onclick="addDistrict('${prov}','${cant}',document.getElementById('addDist_${cid}').value)" class="bg-green-500 text-white px-3 rounded-lg text-[10px] font-black active:scale-95"><i class="fa-solid fa-plus"></i></button>
+            </div></div></div>`;
+        }
+    }
+    c.innerHTML = html || '<p class="text-center text-slate-400 text-xs py-4">No locations loaded</p>';
+}
+
+function addNewCanton() {
+    const prov = document.getElementById('newProvince').value;
+    const cant = document.getElementById('newCantonName').value.trim();
+    if (!cant) { alert('Enter a canton name.'); return; }
+    const newE = [`${cant} (Entire Canton)`];
+    document.getElementById('newDistricts').value.split(',').map(d=>d.trim()).filter(Boolean).forEach(d => newE.push(`${prov} > ${cant} > ${d}`));
+    const stored = JSON.parse(localStorage.getItem('nexusLocations')) || [];
+    localStorage.setItem('nexusLocations', JSON.stringify([...new Set([...stored,...newE])]));
+    locationData = [...new Set([...locationData,...newE])].sort();
+    renderLocationTree(locationData); updateStats();
+    document.getElementById('newCantonName').value = ''; document.getElementById('newDistricts').value = '';
+    alert(`✅ Added ${cant}!`);
+}
+
+function addDistrict(prov,cant,name) {
+    if (!name||!name.trim()) return;
+    const entry = `${prov} > ${cant} > ${name.trim()}`;
+    const stored = JSON.parse(localStorage.getItem('nexusLocations'))||[];
+    if (!stored.includes(entry)) { stored.push(entry); localStorage.setItem('nexusLocations',JSON.stringify(stored)); }
+    if (!locationData.includes(entry)) { locationData.push(entry); locationData.sort(); }
+    renderLocationTree(locationData); updateStats();
+}
+
+function removeDistrict(prov,cant,dist) {
+    if (!confirm(`Remove ${dist} from ${cant}?`)) return;
+    const pfx = `${prov} > ${cant} > ${dist}`;
+    locationData = locationData.filter(l=>!l.startsWith(pfx));
+    const stored = JSON.parse(localStorage.getItem('nexusLocations'))||[];
+    localStorage.setItem('nexusLocations',JSON.stringify(stored.filter(l=>!l.startsWith(pfx))));
+    renderLocationTree(locationData); updateStats();
+}
+
+function filterLocationTree(q) {
+    if (!q) { renderLocationTree(locationData); return; }
+    const n = q.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+    renderLocationTree(locationData.filter(l=>l.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().includes(n)));
+}
+
+function exportLocations() {
+    const all = [...new Set(locationData)].sort();
+    const js = `// Auto-generated by NEXUS Admin Panel\n// ${new Date().toISOString()}\n\nconst LOCATION_DB = [\n${all.map(l=>`    "${l.replace(/"/g,'\\"')}"`).join(',\n')}\n];\n`;
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([js],{type:'application/javascript'})); a.download = 'locations.js'; a.click();
+}
+
+// ===== OFFICES =====
+let offices = [];
+
+async function loadOffices() {
+    if (isSupabaseConfigured() && supabase) {
+        try {
+            const data = await getAllOffices();
+            if (data) {
+                offices = data.map(o => ({
+                    id: o.id, name: o.name, brand: o.brand, area: o.area,
+                    broker: o.broker_name, agentCount: o.agentCount || 0,
+                    teamCount: o.teamCount || 0, created: o.created_at?.substring(0,7) || ''
+                }));
+            }
+        } catch(e) {
+            console.warn('Supabase offices fallback:', e.message);
+            offices = JSON.parse(localStorage.getItem('nexusOffices')) || [
+                { id: 1, name: 'REMAX Altitud', brand: 'REMAX', area: 'Pérez Zeledón', broker: 'Alejandra Castro', agentCount: 4, teamCount: 1, created: '2024-01' }
+            ];
+        }
+    } else {
+        offices = JSON.parse(localStorage.getItem('nexusOffices')) || [
+            { id: 1, name: 'REMAX Altitud', brand: 'REMAX', area: 'Pérez Zeledón', broker: 'Alejandra Castro', agentCount: 4, teamCount: 1, created: '2024-01' }
+        ];
+    }
+    renderOffices();
+}
+
+function renderOffices() {
+    const list = document.getElementById('officesList');
+    if (offices.length === 0) { list.innerHTML = '<p class="text-center text-slate-400 text-xs font-bold py-4">No offices yet</p>'; return; }
+    list.innerHTML = offices.map(o => `
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border shadow-sm">
+            <div class="flex justify-between items-start">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+                        <i class="fa-solid fa-building text-[#003DA5]"></i>
+                    </div>
+                    <div>
+                        <p class="text-[12px] font-black text-slate-900 dark:text-white">${o.name}</p>
+                        <p class="text-[9px] font-bold text-slate-400">${o.brand} · ${o.area}</p>
+                    </div>
+                </div>
+                <button onclick="deleteOfficeAction('${o.id}')" class="text-slate-300 hover:text-red-500 transition-colors text-xs"><i class="fa-solid fa-trash"></i></button>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+                <div class="text-center">
+                    <p class="text-sm font-black text-[#003DA5]">${o.broker || '-'}</p>
+                    <p class="text-[7px] font-black text-slate-400 uppercase">Broker</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm font-black text-purple-600">${o.teamCount || 0}</p>
+                    <p class="text-[7px] font-black text-slate-400 uppercase">Teams</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm font-black text-green-600">${o.agentCount || 0}</p>
+                    <p class="text-[7px] font-black text-slate-400 uppercase">Agents</p>
+                </div>
+            </div>
+        </div>`).join('');
+}
+
+async function addOffice() {
+    const name = document.getElementById('newOfficeName').value.trim();
+    if (!name) { alert('Enter an office name.'); return; }
+    const officeData = {
+        name: name,
+        brand: document.getElementById('newOfficeBrand').value,
+        area: document.getElementById('newOfficeArea').value.trim(),
+        broker_name: document.getElementById('newOfficeBroker').value.trim()
+    };
+    if (isSupabaseConfigured() && supabase) {
+        try {
+            await createOffice(officeData);
+            await loadOffices();
+        } catch(e) { console.error('Error creating office:', e); alert('Error: ' + e.message); return; }
+    } else {
+        const office = { id: Date.now(), ...officeData, broker: officeData.broker_name, agentCount: 0, teamCount: 0, created: new Date().toISOString().substring(0,7) };
+        offices.push(office);
+        localStorage.setItem('nexusOffices', JSON.stringify(offices));
+        renderOffices();
+    }
+    updateDashboardKPIs();
+    document.getElementById('newOfficeName').value = '';
+    document.getElementById('newOfficeArea').value = '';
+    document.getElementById('newOfficeBroker').value = '';
+}
+
+async function deleteOfficeAction(id) {
+    if (!confirm('Delete this office?')) return;
+    if (isSupabaseConfigured() && supabase) {
+        try {
+            await deleteOffice(id);
+            await loadOffices();
+        } catch(e) { console.error('Error deleting office:', e); }
+    } else {
+        offices = offices.filter(o => String(o.id) !== String(id));
+        localStorage.setItem('nexusOffices', JSON.stringify(offices));
+        renderOffices();
+    }
+    updateDashboardKPIs();
+}
+
+// ===== DASHBOARD KPIs =====
+async function updateDashboardKPIs() {
+    if (isSupabaseConfigured() && supabase) {
+        try {
+            const kpis = await getAdminKPIs();
+            document.getElementById('kpiOffices').textContent = kpis.totalOffices;
+            document.getElementById('kpiTeams').textContent = kpis.totalTeams;
+            document.getElementById('kpiRemax').textContent = kpis.remaxAgents;
+            document.getElementById('kpiExternal').textContent = kpis.externalAgents;
+            return;
+        } catch(e) { console.warn('KPI fallback to local:', e.message); }
+    }
+    document.getElementById('kpiOffices').textContent = offices.length;
+    const teamLeaders = agents.filter(a => a.role === 'teamleader');
+    document.getElementById('kpiTeams').textContent = teamLeaders.length;
+    const remaxAgents = agents.filter(a => a.brand === 'REMAX');
+    document.getElementById('kpiRemax').textContent = remaxAgents.length;
+    const externalAgents = agents.filter(a => a.brand !== 'REMAX');
+    document.getElementById('kpiExternal').textContent = externalAgents.length;
+}
+</script>
+
+<script src="locations.js"></script>
+<script>
+// ===== LANGUAGE =====
+const I18N = {
+    en: {
+        navSubtitle: 'Platform Control Panel', tabTickets: 'Tickets', tabOffices: 'Offices', tabAgents: 'Agents', tabLocations: 'Locations',
+        kpiOffices: 'Offices', kpiTeams: 'Teams', kpiRemax: 'REMAX', kpiExternal: 'External',
+        officesTitle: 'Offices', addOffice: 'Add New Office', officeName: 'Office Name', officeBrand: 'Brand', officeArea: 'Linked Area (Canton)', officeBroker: 'Broker Name', addOfficeBtn: 'Add Office',
+        supportTickets: 'Support Tickets', agentsByBrand: 'Agents by Brand', txVolume: 'Agents by TX Volume (Last Year)',
+        allAgents: 'All Agents', manageBrands: 'Manage Brands / Agencies', brandHint: 'These appear in the agency dropdown on the Profile page. Add new brands here when agents keep typing the same one under "Other".',
+        addCantonTitle: 'Add New Canton', cantonHint: 'Creates the same structure as Pérez Zeledón: Province > Canton > Districts',
+        province: 'Province', cantonName: 'Canton Name', districts: 'Districts (comma separated)',
+        addCantonBtn: 'Add Canton & Districts', locationTree: 'Location Tree', exportBtn: 'Export locations.js',
+        cantons: 'Cantons', districtsLabel: 'Districts', total: 'Total', noTickets: 'No tickets right now 🎉',
+        accessPanel: 'Access Panel', adminPassword: 'Admin Password', incorrectPassword: 'Incorrect password',
+        backToMatch: 'Back to Match Board', search: 'Search...'
+    },
+    es: {
+        navSubtitle: 'Panel de Control', tabTickets: 'Reportes', tabOffices: 'Oficinas', tabAgents: 'Agentes', tabLocations: 'Ubicaciones',
+        kpiOffices: 'Oficinas', kpiTeams: 'Equipos', kpiRemax: 'REMAX', kpiExternal: 'Externos',
+        officesTitle: 'Oficinas', addOffice: 'Agregar Oficina', officeName: 'Nombre de Oficina', officeBrand: 'Marca', officeArea: 'Área Vinculada (Cantón)', officeBroker: 'Nombre del Broker', addOfficeBtn: 'Agregar Oficina',
+        supportTickets: 'Tickets de Soporte', agentsByBrand: 'Agentes por Marca', txVolume: 'Agentes por Volumen TX (Último Año)',
+        allAgents: 'Todos los Agentes', manageBrands: 'Gestionar Marcas / Agencias', brandHint: 'Estas aparecen en el menú de agencias del Perfil. Agrega nuevas cuando los agentes escriben la misma bajo "Otro".',
+        addCantonTitle: 'Agregar Nuevo Cantón', cantonHint: 'Crea la misma estructura que Pérez Zeledón: Provincia > Cantón > Distritos',
+        province: 'Provincia', cantonName: 'Nombre del Cantón', districts: 'Distritos (separados por coma)',
+        addCantonBtn: 'Agregar Cantón y Distritos', locationTree: 'Árbol de Ubicaciones', exportBtn: 'Exportar locations.js',
+        cantons: 'Cantones', districtsLabel: 'Distritos', total: 'Total', noTickets: 'Sin reportes por ahora 🎉',
+        accessPanel: 'Acceder al Panel', adminPassword: 'Contraseña Admin', incorrectPassword: 'Contraseña incorrecta',
+        backToMatch: 'Volver al Match Board', search: 'Buscar...'
+    }
+};
+
+function setAdminLang(lang) {
+    localStorage.setItem('nexusLang', lang);
+    document.getElementById('admin-btn-en').className = lang === 'en' ? 'px-2 py-1 rounded-full bg-[#003DA5] text-white transition-colors' : 'px-2 py-1 rounded-full text-slate-400 dark:text-slate-300 transition-colors bg-transparent';
+    document.getElementById('admin-btn-es').className = lang === 'es' ? 'px-2 py-1 rounded-full bg-[#003DA5] text-white transition-colors' : 'px-2 py-1 rounded-full text-slate-400 dark:text-slate-300 transition-colors bg-transparent';
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (I18N[lang][key]) el.textContent = I18N[lang][key];
+    });
+}
+
+// Init language
+const savedAdminLang = localStorage.getItem('nexusLang') || 'en';
+setAdminLang(savedAdminLang);
+
+if (sessionStorage.getItem('adminAuth')==='true') initAll();
+</script>
 
 </body>
 </html>

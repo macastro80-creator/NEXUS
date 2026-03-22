@@ -1,124 +1,158 @@
-# NEXUS — Project Conventions
+# NEXUS Project Guidelines
 
-## What Is This
+## Project Overview
+NEXUS is a real estate agent collaboration platform built for the REMAX Altitud office in Pérez Zeledón, Costa Rica. It enables agents to post client searches and match them with other agents' properties. The project is a mobile-first Vanilla HTML/JS frontend with **Supabase** as the backend (PostgreSQL, Auth, Storage).
 
-**NEXUS** is a mobile-first real estate agent collaboration platform, powered by **RE/MAX Altitud**, targeting the Costa Rica market (primarily Pérez Zeledón). It enables agents across agencies to post client property searches, match with listing agents, exchange bids, rate collaborators, and view market analytics. Deployed as a static site on **Vercel**.
+**Owner**: Alejandra Castro (Broker, REMAX Altitud + REMAX Altitud Cero)
 
-## Tech Stack
+## Launch Status
+- **Phase 1**: UI complete ✅
+- **Phase 2**: Supabase backend integrated ✅ (auth, DB, RLS, Storage)
+- **Phase 3**: Profile persistence ✅ (Supabase + localStorage fallback)
+- **Deployed**: [nexus-gray-seven.vercel.app](https://nexus-gray-seven.vercel.app)
 
-| Layer       | Technology                                                             |
-|-------------|------------------------------------------------------------------------|
-| Markup      | Plain HTML5 (no framework, no build step)                              |
-| Styling     | **TailwindCSS v3 via CDN** (`https://cdn.tailwindcss.com`)             |
-| Icons       | **Font Awesome 6.4** via CDN                                           |
-| JavaScript  | Vanilla JS — inline `<script>` blocks per page                        |
-| Data        | `locations.js` — flat array `LOCATION_DB` loaded via `<script src>`    |
-| Hosting     | **Vercel** — static deployment with `vercel.json` config               |
-| Tests       | Python **Playwright** scripts (`test*.py`) for browser testing         |
+## Technical Stack
+- **Frontend**: Vanilla HTML, CSS, JavaScript — NO frameworks, NO npm packages
+- **Styling**: Tailwind CSS (via CDN), Font Awesome icons (via CDN)
+- **Backend**: Supabase (PostgreSQL + Auth + Storage)
+- **Data**: Supabase DB with `localStorage` fallback when no auth session
+- **Hosting**: Vercel (configured via `vercel.json`)
+- **Schema**: `supabase/schema.sql` — 8 tables, RLS policies, auto-profile trigger
 
-## Project Structure
+## Supabase Configuration
+- **URL**: Configured in `supabase-client.js`
+- **Anon Key**: Configured in `supabase-client.js`
+- **Client**: `supabase-client.js` — 30+ CRUD helper functions
+- **SDK**: Loaded via CDN (`@supabase/supabase-js@2`)
+- **Storage Bucket**: `avatars` (public) — for profile photos
 
+### Database Tables
+| Table | Purpose |
+|---|---|
+| `profiles` | User profiles (extends `auth.users`), roles, brand, expert zones |
+| `offices` | REMAX/other offices with broker info |
+| `searches` | Buyer/renter search posts on Match Board |
+| `matches` | Properties sent to searches |
+| `tickets` | Support tickets from agents |
+| `locations` | Costa Rica cantons + districts |
+| `deals` | Pipeline tracking (negotiation → sold) |
+| `notifications` | User notifications |
+
+### User Roles
+- `agent` — default, external agent
+- `remax` — REMAX-branded agent
+- `team_leader` — manages junior agents
+- `mainadmin` — full admin access
+- `buyer` — assigned to an agent via `assigned_agent_id`
+
+### Row Level Security (RLS)
+- Profiles: everyone reads, only own profile updates
+- Searches: active searches are public, agents manage own
+- Matches: sender + search owner can view/update
+- Tickets: users see own, admin sees all
+- All tables have RLS enabled
+
+## Key Pages
+| File | Purpose | Supabase Integration |
+|---|---|---|
+| `login.html` | Auth (sign up/in/reset) | ✅ Real Supabase Auth |
+| `index.html` | **Match Board** — search cards | ✅ Reads `searches` table |
+| `my-desk.html` | **My Hub / CRM** — manage searches, matches, invites | ✅ Reads user's searches |
+| `add-search.html` | **Post Search / Invite Client** — agent form | ✅ Writes to `searches` table |
+| `client-onboarding.html`| **Client Portal** — client criteria + co-buyer | ✅ Writes to `searches`, auth |
+| `buyer-matches.html` | **Client Match Board** — private property view | ✅ Reads `matches` table |
+| `profile.html` | **My Profile** — identity, languages, zones | ✅ Supabase + localStorage |
+| `network.html` | **Agent Roster** — directory of agents/offices | ✅ Reads `profiles` / `offices` |
+| `network-profile.html`| **Public Agent Profile** — leads, info, listings | ✅ Reads `profiles` |
+| `broker-dashboard.html`| **Broker Dashboard** — office analytics, zones | ✅ Reads enterprise metrics |
+| `admin.html` | **Admin Panel** — control center | ✅ Offices, tickets, KPIs |
+| `market.html` | Market page (locked — Premium Feature) | — |
+| `Mi_Oficina.html` | Office page (locked — Premium Feature) | — |
+| `my-business.html` | Business page (locked — Premium Feature) | — |
+
+### Profile Page Features
+- Name, email, WhatsApp (with country code dropdown, defaults to 🇨🇷 +506)
+- Agency/brand selection, TX closed, expected TX
+- Languages spoken (draggable, ordered)
+- Expert zones (location search with up to 3 selections)
+- Specializations (Residential, Commercial, Developers, Rentals)
+- Profile photo upload (Supabase Storage or local preview)
+- All fields persist via localStorage fallback + Supabase when authenticated
+
+## Admin Panel (`admin.html`)
+- **Password**: `nexus2025`
+- **Dashboard KPIs**: Offices, Teams, REMAX agents, External agents (from DB)
+- **4 Tabs**: Tickets, Offices, Agents, Locations
+- **Data source**: Supabase with localStorage fallback
+
+## Premium Feature Locking
+- Market, Office, Business, Resources pages are **locked** for all users at launch
+- Lock messages use neutral "Premium Feature" text (not REMAX-specific branding)
+- Premium locking code runs on `DOMContentLoaded` in each page
+
+## Agent Hierarchy — REMAX RECONNECT Integration (Phase 5 — Planned)
 ```
-NEXUS/
-├── index.html              # Feed — main search cards, swipe-to-dismiss, matchmaker notifications
-├── add-search.html         # Post New Client Search form (buy/rent, budget, location, must-haves)
-├── market.html             # Market Pulse — analytics, hot zones, premium gated content
-├── my-desk.html            # My Desk — agent's active searches and bid review inbox
-├── network.html            # Network — agent directory with search, profile modal, rating system
-├── network-profile.html    # Public agent profile (stats, expert zones, specializations)
-├── profile.html            # Identity Setup — onboarding form with Code of Conduct
-├── admin.html              # Admin Panel — shadow ratings view, spider alerts, company management
-├── locations.js            # Shared location database (Province > Canton > District hierarchy)
-├── vercel.json             # Vercel deployment config (clean URLs, security headers)
-├── nexus_logo.png          # Square logo
-├── nexus_logo_horizontal.png  # Horizontal logo
-├── test.py                 # Playwright test script
-├── test-add.py             # Playwright test for add-search location autocomplete
-└── test3.py                # Playwright test script
+Admin (Main) → creates Offices
+    Office Broker → connects REMAX RECONNECT API → syncs agent roster
+        REMAX Agent → invited via email, auto-assigned role + full access
+            If agent leaves office (API sync) → profile deactivated (not deleted)
 ```
+- Full plan documented in `WORKFLOW.md` → Phase 5
+- Uses REMAX RECONNECT API (`api.remax-cca.com/api/AgentsPerOffice/{OfficeID}`)
+- Each office broker manages their own agents independently
+- Deactivated agents keep their past searches, matches, and deals
 
-## Key Conventions
+## Avatar System
+- Profile page has circular photo upload with camera overlay
+- Uploads to Supabase Storage `avatars` bucket (if available)
+- Falls back to local preview via FileReader API
+- Saved to localStorage for persistence without auth
+- Default: person silhouette icon in gradient blue circle
 
-### Bilingual (EN/ES) Pattern
+## Costa Rica-Specific Rules
+- **NO MLS numbers** — Costa Rica does not have an MLS system
+- Properties identified by name + location
+- **Locations**: Pérez Zeledón core area for launch; more via admin panel
+- **Currency**: USD ($) for property prices
+- **WhatsApp**: Country code defaults to +506 (Costa Rica)
 
-All user-facing text is duplicated with CSS class toggling:
+## Terminology
+- **Match Board** (not "Feed") — the main page with search cards
+- **Searches** (not "Buyers") — stat card label in My Hub
+- **Matches Sent** (not "Listings") — stat card label in My Hub
+- **My Hub** (not "My Desk") — agent command center
+- **Post Search** (not "Add Search") — creating a new client search
+- **Premium Feature** (not "Join REMAX Altitud") — locked feature messaging
 
-```html
-<span class="lang-en">English Text</span>
-<span class="lang-es hidden">Texto en Español</span>
-```
+## localStorage Keys
+| Key | Purpose |
+|---|---|
+| `nexusProfile` | Full profile object (name, phone, country code, agency, languages, specializations, expert zones, avatar) |
+| `nexusTickets` | Support tickets array |
+| `nexusOffices` | Offices array |
+| `nexusLang` | Language preference (`en` / `es`) |
+| `nexusEmail` / `userEmail` | User's email |
+| `userName` | User's display name |
+| `isPremium` | Boolean — premium access |
+| `userRole` | `agent`, `remax`, `mainadmin`, `buyer` |
+| `adminAuth` (sessionStorage) | Admin panel auth flag |
+| `theme` | Theme (`dark` / not set) |
 
-The `setLanguage(lang)` function toggles visibility by adding/removing `hidden`. Every page has its own copy of this function. When adding new text, **always provide both `lang-en` and `lang-es` versions**.
+## Code Conventions
+1. **Keep it Vanilla** — No npm, React, or build steps
+2. **Mobile-first** — Design for 375-500px, scale to desktop
+3. **Bilingual** — All text must have EN/ES versions (`lang-en` / `lang-es` classes)
+4. **Tailwind classes** — Use via CDN, no custom config
+5. **Async safety** — All Supabase calls wrapped in try/catch; never block premium-locking code
+6. **Graceful fallback** — Always fallback to localStorage when Supabase is unavailable
+7. **Font Awesome** — For all icons, loaded via CDN
 
-### Branding
-
-| Token          | Value             | Usage                            |
-|----------------|-------------------|----------------------------------|
-| Primary Blue   | `#003DA5`         | Headers, buttons, navigation     |
-| Action Red     | `#ED1C24`         | CTAs, alerts, RE/MAX branding    |
-| Font style     | `font-black italic uppercase` | Section headers         |
-| Border radius  | `rounded-[32px]`  | Cards, `rounded-2xl` for inputs  |
-| Tagline        | "Powered by REMAX Altitud" | Appears on every page nav  |
-
-### Location Autocomplete
-
-The shared `locations.js` file exports a flat `LOCATION_DB` array with ~370 entries formatted as `"Province > Canton > District > Neighborhood"`. Two helper functions are also defined there:
-
-- `normalizeStr(str)` — strips accents for accent-insensitive search
-- `highlightMatch(text, query)` — wraps matched substring in styled `<span>`
-
-Each page that uses location search re-implements `showSuggestions()` — this is **intentionally duplicated** (no shared module system). Keep this pattern consistent.
-
-### Admin Mode
-
-`index.html` has a hidden admin mode activated by **triple-clicking** the NEXUS header. This reveals elements with class `admin-only`.
-
-### Navigation
-
-Bottom tab bar is present on most pages (Feed, Pulse, Desk, Profile, Network). Navigation uses plain `<a href>` links between HTML files. The active tab is styled inline with `text-[#003DA5]`.
-
-### Premium Gated Content
-
-`market.html` implements a blurred content pattern:
-- Content is blurred with `premium-blur` class
-- An overlay prompts RE/MAX Altitud CRM authentication
-- `unlockPremiumData()` removes the blur and shows content
-
-### No Build System
-
-There is **no bundler, no npm, no package.json**. All dependencies are loaded via CDN. Do not introduce a build step unless explicitly asked. Keep everything as plain HTML + inline JS.
-
-### Form Validation
-
-Forms use a manual validation approach:
-- Required fields get class `validate`
-- The `validateAndPost()` function checks for empty values and adds `field-error` class
-- Success is shown via modals, not page navigation
-
-## Deployment
-
-Hosted on Vercel as a static site. The `vercel.json` configures:
-- `cleanUrls: true` — URLs without `.html` extension
-- Security headers: `X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`
-
-## Testing
-
-Python Playwright scripts exist for browser testing. They run headless Chromium against local file paths. Run with:
-
-```bash
-python test-add.py
-```
-
-> **Note:** Test file paths may need updating — they reference `/Users/alejandracastro/Desktop/NEXUS/` which is not the current working path.
-
-## Important Rules
-
-1. **Always bilingual** — Every user-facing string must have both `lang-en` and `lang-es` variants
-2. **No build tools** — Keep it static HTML + CDN; do not add npm/webpack/vite
-3. **TailwindCSS via CDN only** — Do not install Tailwind locally
-4. **Inline JS per page** — Each page has its own `<script>` block; no shared JS modules except `locations.js`
-5. **Mobile-first design** — The UI targets phone screens; use mobile breakpoints and touch interactions
-6. **Maintain card-based UI** — Use `rounded-[32px]` cards with `border shadow-sm` consistently
-7. **RE/MAX brand colors** — Primary `#003DA5`, accent `#ED1C24`; do not deviate
-8. **Font Awesome for icons** — Do not mix icon libraries
-9. **Keep CLAUDE.md up to date** — After each chat interaction, append any new rules, conventions, or decisions discussed with the user to this file so it remains the single source of truth
+## Key Files
+| File | Purpose |
+|---|---|
+| `supabase-client.js` | Supabase client + 30+ CRUD helpers |
+| `supabase/schema.sql` | Full DB schema (8 tables, RLS, triggers, seed data) |
+| `locations.js` | Location database (cantons, districts, areas) |
+| `global-theme.js` | Dark mode, language toggle |
+| `vercel.json` | Vercel deployment config |
+| `WORKFLOW.md` | Feature planning, phase roadmap |

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEXUS - Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        remax: {
+                            blue: '#003DA5',
+                            red: '#ED1C24'
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="global-theme.js"></script>
+    <script src="supabase-client.js"></script>
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* Glassmorphism card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Custom Input Styling */
+        .float-input:focus ~ .float-label,
+        .float-input:not(:placeholder-shown) ~ .float-label {
+            transform: translateY(-1.5rem) scale(0.85);
+            color: #003DA5;
+        }
+        
+        .dark .float-input:focus ~ .float-label,
+        .dark .float-input:not(:placeholder-shown) ~ .float-label {
+            color: #60a5fa; /* blue-400 */
+        }
+
+        .input-glow:focus {
+            box-shadow: 0 0 0 2px rgba(0, 61, 165, 0.3);
+        }
+        .dark .input-glow:focus {
+            box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.3);
+        }
+    </style>
+</head>
+
+<body class="h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 overflow-hidden relative flex flex-col transition-colors duration-300">
+
+    <!-- Language & Theme Toggles (Top Right) -->
+    <div class="absolute top-6 right-6 z-50 flex items-center gap-4">
+        <div class="flex bg-white/50 dark:bg-slate-800/50 backdrop-blur-md p-1 rounded-full text-[10px] font-black border border-slate-200 dark:border-slate-700 shadow-sm">
+            <button onclick="setLanguage('en')" id="btn-en" class="px-3 py-1.5 rounded-full text-slate-600 dark:text-slate-400 transition">EN</button>
+            <button onclick="setLanguage('es')" id="btn-es" class="px-3 py-1.5 rounded-full bg-remax-blue text-white shadow-md transition">ES</button>
+        </div>
+        
+        <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-remax-blue dark:hover:text-amber-400 transition-colors shadow-sm">
+            <i class="fa-solid fa-moon dark:hidden"></i>
+            <i class="fa-solid fa-sun hidden dark:inline"></i>
+        </button>
+    </div>
+
+    <!-- Animated Background Elements -->
+    <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <!-- Cubes Pattern Overlay -->
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03] dark:opacity-[0.08] mix-blend-overlay"></div>
+        
+        <!-- Glowing Blobs -->
+        <div class="absolute top-0 -left-4 w-72 h-72 bg-remax-blue rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob dark:mix-blend-lighten dark:opacity-20"></div>
+        <div class="absolute top-0 -right-4 w-72 h-72 bg-amber-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000 dark:mix-blend-lighten dark:opacity-20"></div>
+        <div class="absolute -bottom-8 left-20 w-72 h-72 bg-remax-red rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000 dark:mix-blend-lighten dark:opacity-20"></div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex items-center justify-center p-4 relative z-10 w-full max-w-lg mx-auto">
+        <div class="w-full">
+            
+            <!-- Branding Header -->
+            <div class="text-center mb-10 opacity-0 animate-fade-in-up" style="animation-delay: 0.1s;">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-[28px] bg-white dark:bg-slate-800 shadow-2xl border border-slate-100 dark:border-slate-700 mb-6 relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-br from-remax-blue/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <i class="fa-solid fa-layer-group text-4xl text-remax-blue drop-shadow-md"></i>
+                </div>
+                <h1 class="text-4xl md:text-5xl font-black text-remax-blue dark:text-white italic tracking-tighter leading-none mb-2 drop-shadow-sm">NEXUS</h1>
+                <p class="text-xs uppercase tracking-[0.2em] font-bold text-slate-500 dark:text-slate-400">
+                    <span data-i18n="poweredBy">Powered by</span> <span class="text-remax-red">REMAX Altitud</span>
+                </p>
+            </div>
+
+            <!-- Login Card -->
+            <div class="glass-card rounded-[40px] p-8 md:p-10 shadow-2xl relative overflow-hidden opacity-0 animate-fade-in-up" style="animation-delay: 0.2s;">
+                
+                <!-- Inner decorative glow -->
+                <div class="absolute -top-24 -right-24 w-48 h-48 bg-amber-400 rounded-full blur-[80px] opacity-20 dark:opacity-10 pointer-events-none"></div>
+
+                <div class="mb-8">
+                    <h2 id="formTitle" class="text-2xl font-black italic text-slate-800 dark:text-white mb-2" data-i18n="welcomeBack">Welcome Back</h2>
+                    <p id="formSubtitle" class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1" data-i18n="enterDetails">Enter your credentials to access your workspace</p>
+                </div>
+
+                <!-- Error Message -->
+                <div id="authError" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs font-bold p-3 rounded-xl mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span id="authErrorText">Error</span>
+                </div>
+
+                <!-- Success Message -->
+                <div id="authSuccess" class="hidden bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 text-xs font-bold p-3 rounded-xl mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span id="authSuccessText">Success</span>
+                </div>
+
+                <form id="loginForm" class="space-y-6" onsubmit="handleAuth(event)">
+                    
+                    <!-- Full Name Input (only shown in signup mode) -->
+                    <div id="nameField" class="relative hidden">
+                        <input type="text" id="fullName" placeholder=" " 
+                            class="float-input input-glow w-full bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all placeholder-transparent"
+                        >
+                        <label for="fullName" class="float-label absolute left-5 top-4 text-xs font-black uppercase tracking-widest text-slate-400 transition-all pointer-events-none bg-white dark:bg-slate-900 px-1 rounded-md" data-i18n="fullName">
+                            Full Name
+                        </label>
+                        <i class="fa-solid fa-user absolute right-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    </div>
+
+                    <!-- Email Input -->
+                    <div class="relative">
+                        <input type="email" id="email" required placeholder=" " 
+                            class="float-input input-glow w-full bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all placeholder-transparent"
+                        >
+                        <label for="email" class="float-label absolute left-5 top-4 text-xs font-black uppercase tracking-widest text-slate-400 transition-all pointer-events-none bg-white dark:bg-slate-900 px-1 rounded-md" data-i18n="emailAddress">
+                            Email Address
+                        </label>
+                        <i class="fa-solid fa-envelope absolute right-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    </div>
+
+                    <!-- Password Input -->
+                    <div class="relative">
+                        <input type="password" id="password" required placeholder=" " 
+                            class="float-input input-glow w-full bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all placeholder-transparent"
+                        >
+                        <label for="password" class="float-label absolute left-5 top-4 text-xs font-black uppercase tracking-widest text-slate-400 transition-all pointer-events-none bg-white dark:bg-slate-900 px-1 rounded-md" data-i18n="password">
+                            Password
+                        </label>
+                        <button type="button" onclick="togglePassword()" class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                            <i id="eye-icon" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+
+                    <!-- Options Row -->
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center gap-2 cursor-pointer group">
+                            <div class="relative flex items-center justify-center w-5 h-5 rounded-[6px] border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 group-hover:border-remax-blue transition-colors">
+                                <input type="checkbox" id="remember" class="peer hidden" checked>
+                                <i class="fa-solid fa-check text-[10px] text-white opacity-0 peer-checked:opacity-100 transition-opacity absolute inset-0 peer-checked:bg-remax-blue rounded-[4px] flex items-center justify-center"></i>
+                            </div>
+                            <span class="text-[11px] font-bold text-slate-600 dark:text-slate-400 select-none group-hover:text-slate-900 dark:group-hover:text-white transition-colors" data-i18n="rememberMe">Remember me</span>
+                        </label>
+                        
+                        <a href="#" onclick="handleForgotPassword(event)" class="text-[11px] font-black text-remax-blue dark:text-amber-400 hover:underline hover:underline-offset-4 transition-all" data-i18n="forgotPassword">Forgot Password?</a>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-remax-blue to-blue-800 text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-[0_10px_40px_-10px_rgba(0,61,165,0.6)] hover:shadow-[0_15px_50px_-10px_rgba(0,61,165,0.8)] hover:-translate-y-1 active:translate-y-0 transition-all flex items-center justify-center gap-3 group">
+                        <span id="btnText" data-i18n="loginBtn">ACCESS WORKSPACE</span>
+                        <i id="btnIcon" class="fa-solid fa-arrow-right-to-bracket group-hover:translate-x-1 transition-transform"></i>
+                        <i id="loadingSpinner" class="fa-solid fa-circle-notch fa-spin hidden text-lg"></i>
+                    </button>
+                    
+                </form>
+
+                <!-- Create Account Link -->
+                <div class="mt-6 text-center text-xs font-bold text-slate-500">
+                    <span id="toggleText" data-i18n="noAccount">Don't have an account?</span> 
+                    <a href="#" onclick="toggleAuthMode(event)" id="toggleLink" class="text-remax-blue dark:text-amber-400 font-black hover:underline hover:underline-offset-4 ml-1" data-i18n="createAccount">Create Account</a>
+                </div>
+
+                <!-- Help Link -->
+                <div class="mt-6 text-center text-[10px] font-bold text-slate-400">
+                    <span data-i18n="needHelp">Need assistance? Contact</span> <a href="mailto:support@remax-altitud.cr" class="text-slate-600 dark:text-slate-300 hover:text-remax-blue dark:hover:text-amber-400 underline underline-offset-4">support@remax-altitud.cr</a>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Language specific translations
+        const dict = {
+            en: {
+                poweredBy: "Powered by",
+                welcomeBack: "Welcome Back",
+                createTitle: "Create Account",
+                enterDetails: "Enter your credentials to access your workspace",
+                createDetails: "Sign up to start using NEXUS",
+                emailAddress: "Email Address",
+                fullName: "Full Name",
+                password: "Password",
+                rememberMe: "Remember me",
+                forgotPassword: "Forgot Password?",
+                loginBtn: "ACCESS WORKSPACE",
+                signupBtn: "CREATE ACCOUNT",
+                noAccount: "Don't have an account?",
+                hasAccount: "Already have an account?",
+                createAccount: "Create Account",
+                backToLogin: "Sign In",
+                needHelp: "Need assistance? Contact",
+                loading: "AUTHENTICATING...",
+                resetSent: "Password reset email sent! Check your inbox.",
+                signupSuccess: "Account created! Check your email to confirm, then sign in.",
+                invalidCredentials: "Invalid email or password.",
+                emailRequired: "Please enter your email address."
+            },
+            es: {
+                poweredBy: "Impulsado por",
+                welcomeBack: "Bienvenido",
+                createTitle: "Crear Cuenta",
+                enterDetails: "Ingresa tus credenciales para acceder a tu espacio",
+                createDetails: "Regístrate para usar NEXUS",
+                emailAddress: "Correo Electrónico",
+                fullName: "Nombre Completo",
+                password: "Contraseña",
+                rememberMe: "Recordarme",
+                forgotPassword: "¿Olvidaste tu contraseña?",
+                loginBtn: "ACCEDER AL ESPACIO",
+                signupBtn: "CREAR CUENTA",
+                noAccount: "¿No tienes una cuenta?",
+                hasAccount: "¿Ya tienes una cuenta?",
+                createAccount: "Crear Cuenta",
+                backToLogin: "Iniciar Sesión",
+                needHelp: "¿Necesitas ayuda? Contacta a",
+                loading: "AUTENTICANDO...",
+                resetSent: "¡Email de recuperación enviado! Revisa tu bandeja.",
+                signupSuccess: "¡Cuenta creada! Revisa tu email para confirmar, luego inicia sesión.",
+                invalidCredentials: "Email o contraseña inválidos.",
+                emailRequired: "Por favor ingresa tu correo electrónico."
+            }
+        };
+
+        let currentLang = 'en';
+        let isSignupMode = false;
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            const btnEn = document.getElementById('btn-en');
+            const btnEs = document.getElementById('btn-es');
+            if(lang === 'en') {
+                btnEn.className = "px-3 py-1.5 rounded-full bg-remax-blue text-white shadow-md transition";
+                btnEs.className = "px-3 py-1.5 rounded-full text-slate-600 dark:text-slate-400 transition bg-transparent shadow-none";
+            } else {
+                btnEs.className = "px-3 py-1.5 rounded-full bg-remax-blue text-white shadow-md transition";
+                btnEn.className = "px-3 py-1.5 rounded-full text-slate-600 dark:text-slate-400 transition bg-transparent shadow-none";
+            }
+            const elements = document.querySelectorAll('[data-i18n]');
+            elements.forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if(dict[lang][key]) el.innerText = dict[lang][key];
+            });
+            // Re-apply mode-specific labels
+            updateModeLabels();
+        }
+
+        function updateModeLabels() {
+            const d = dict[currentLang];
+            document.getElementById('formTitle').innerText = isSignupMode ? d.createTitle : d.welcomeBack;
+            document.getElementById('formSubtitle').innerText = isSignupMode ? d.createDetails : d.enterDetails;
+            document.getElementById('btnText').innerText = isSignupMode ? d.signupBtn : d.loginBtn;
+            document.getElementById('toggleText').innerText = isSignupMode ? d.hasAccount : d.noAccount;
+            document.getElementById('toggleLink').innerText = isSignupMode ? d.backToLogin : d.createAccount;
+        }
+
+        function toggleAuthMode(e) {
+            e.preventDefault();
+            isSignupMode = !isSignupMode;
+            document.getElementById('nameField').classList.toggle('hidden', !isSignupMode);
+            if (isSignupMode) document.getElementById('fullName').required = true;
+            else document.getElementById('fullName').required = false;
+            hideMessages();
+            updateModeLabels();
+        }
+
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const icon = document.getElementById('eye-icon');
+            if(input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        function showError(msg) {
+            document.getElementById('authError').classList.remove('hidden');
+            document.getElementById('authErrorText').innerText = msg;
+            document.getElementById('authSuccess').classList.add('hidden');
+        }
+
+        function showSuccess(msg) {
+            document.getElementById('authSuccess').classList.remove('hidden');
+            document.getElementById('authSuccessText').innerText = msg;
+            document.getElementById('authError').classList.add('hidden');
+        }
+
+        function hideMessages() {
+            document.getElementById('authError').classList.add('hidden');
+            document.getElementById('authSuccess').classList.add('hidden');
+        }
+
+        function setLoading(loading) {
+            const btnText = document.getElementById('btnText');
+            const btnIcon = document.getElementById('btnIcon');
+            const spinner = document.getElementById('loadingSpinner');
+            const submitBtn = document.getElementById('submitBtn');
+            if (loading) {
+                btnText.innerText = dict[currentLang].loading;
+                btnIcon.classList.add('hidden');
+                spinner.classList.remove('hidden');
+                submitBtn.classList.add('opacity-90', 'cursor-not-allowed');
+                submitBtn.disabled = true;
+            } else {
+                btnText.innerText = isSignupMode ? dict[currentLang].signupBtn : dict[currentLang].loginBtn;
+                btnIcon.classList.remove('hidden');
+                spinner.classList.add('hidden');
+                submitBtn.classList.remove('opacity-90', 'cursor-not-allowed');
+                submitBtn.disabled = false;
+            }
+        }
+
+        async function handleAuth(e) {
+            e.preventDefault();
+            hideMessages();
+            setLoading(true);
+
+            const email = document.getElementById('email').value.trim().toLowerCase();
+            const password = document.getElementById('password').value;
+
+            try {
+                if (isSignupMode) {
+                    // SIGN UP
+                    const fullName = document.getElementById('fullName').value.trim();
+                    await signUp(email, password, fullName);
+                    setLoading(false);
+                    showSuccess(dict[currentLang].signupSuccess);
+                    // Switch back to login mode
+                    setTimeout(() => {
+                        isSignupMode = false;
+                        document.getElementById('nameField').classList.add('hidden');
+                        updateModeLabels();
+                    }, 3000);
+                } else {
+                    // SIGN IN
+                    const { user, session } = await signIn(email, password);
+
+                    // Fetch profile to get role
+                    const profile = await getCurrentProfile();
+
+                    // Store essentials in localStorage for quick access across pages
+                    localStorage.setItem('userEmail', email);
+                    localStorage.setItem('userName', profile?.full_name || '');
+                    localStorage.setItem('isPremium', profile?.is_premium ? 'true' : 'false');
+                    localStorage.setItem('userRole', profile?.role || 'agent');
+                    localStorage.setItem('isAdmin', profile?.role === 'mainadmin' ? 'true' : 'false');
+
+                    // Redirect
+                    window.location.href = 'index.html';
+                }
+            } catch (err) {
+                setLoading(false);
+                const msg = err.message || dict[currentLang].invalidCredentials;
+                showError(msg);
+            }
+        }
+
+        async function handleForgotPassword(e) {
+            e.preventDefault();
+            hideMessages();
+            const email = document.getElementById('email').value.trim();
+            if (!email) {
+                showError(dict[currentLang].emailRequired);
+                return;
+            }
+            try {
+                await resetPassword(email);
+                showSuccess(dict[currentLang].resetSent);
+            } catch (err) {
+                showError(err.message);
+            }
+        }
+
+        // Check if already logged in
+        document.addEventListener('DOMContentLoaded', async () => {
+            let savedLang = localStorage.getItem('nexus_lang');
+            if(!savedLang) savedLang = 'es';
+            setLanguage(savedLang);
+
+            // If Supabase is configured, check for existing session
+            if (isSupabaseConfigured() && supabase) {
+                try {
+                    const user = await getCurrentUser();
+                    if (user) {
+                        // Already logged in, redirect
+                        window.location.href = 'index.html';
+                    }
+                } catch (e) {
+                    // Not logged in, stay on login page
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>

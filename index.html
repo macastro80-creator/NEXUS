@@ -1,40 +1,187 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NEXUS FEED - REMAX Altitud</title>
+    <title>NEXUS MATCH BOARD - REMAX Altitud</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="global-theme.js"></script>
+    <script src="supabase-client.js"></script>
+    <script src="matchmaker.js"></script>
     <script src="locations.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .sidebar-transition { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .spider-card { border: 2px dashed #cbd5e1 !important; filter: grayscale(0.5); opacity: 0.8; }
-        .active-chip { background-color: #003DA5 !important; color: white !important; border-color: #003DA5 !important; }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .sidebar-transition {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .spider-card {
+            border: 1px solid #cbd5e1 !important;
+            background: linear-gradient(to bottom right, #f8fafc, #f1f5f9) !important;
+            opacity: 0.9;
+        }
+        .dark .spider-card {
+            border: 1px solid #334155 !important;
+            background: linear-gradient(to bottom right, #1e293b, #0f172a) !important;
+        }
+
+        .active-chip {
+            background-color: #003DA5 !important;
+            color: white !important;
+            border-color: #003DA5 !important;
+        }
+
+        .req-chip input[value="yes"]:checked+div {
+            background-color: #22c55e;
+            color: white;
+        }
+
+        .req-chip input[value="maybe"]:checked+div {
+            background-color: #f59e0b;
+            color: white;
+        }
+
+        .req-chip input[value="no"]:checked+div {
+            background-color: #ef4444;
+            color: white;
+        }
     </style>
 </head>
-<body class="bg-slate-50 font-sans pb-24 text-slate-800 overflow-x-hidden">
 
-    <div id="filterSidebar" class="fixed inset-y-0 left-0 w-80 bg-white z-[70] shadow-2xl p-6 sidebar-transition -translate-x-full overflow-y-auto">
+<body class="bg-slate-50 dark:bg-slate-900 font-sans pb-24 text-slate-800 dark:text-slate-200 overflow-x-hidden">
+
+    <!-- ONBOARDING OVERLAY (First Login) -->
+    <div id="onboardingOverlay"
+        class="fixed inset-0 bg-slate-900/80 z-[100] hidden flex-col transition-opacity duration-300 opacity-0">
+
+        <!-- Step 1: Add Search -->
+        <div id="onboardStep1"
+            class="absolute top-[160px] left-4 right-4 flex flex-col items-center animate-fade hidden">
+            <!-- Spotlight effect to cut out background -->
+            <div
+                class="absolute top-[-90px] w-full h-[65px] rounded-2xl ring-[2000px] ring-slate-900/80 mix-blend-destination z-0">
+            </div>
+            <!-- Modal Card -->
+            <div
+                class="bg-white dark:bg-slate-800 p-6 rounded-[32px] w-full max-w-sm shadow-2xl border border-blue-100 relative mb-4 z-10 mix-blend-normal">
+                <div
+                    class="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-white dark:bg-slate-800 rotate-45 border-l border-t border-blue-100">
+                </div>
+                <div class="relative z-10 flex flex-col items-center text-center">
+                    <div class="w-12 h-12 bg-blue-50 text-[#003DA5] rounded-full flex items-center justify-center mb-3">
+                        <i class="fa-solid fa-plus text-xl"></i>
+                    </div>
+                    <h3 class="font-black text-lg text-[#003DA5] mb-2 uppercase lang-en">1. Post a Search</h3>
+                    <h3 class="font-black text-lg text-[#003DA5] mb-2 uppercase lang-es hidden">1. Publicar Búsqueda
+                    </h3>
+                    <p class="text-xs text-slate-700 dark:text-slate-300 font-bold leading-relaxed mb-6 lang-en">Click here to broadcast
+                        your buyer's exact needs to all NEXUS agents.</p>
+                    <p class="text-xs text-slate-700 dark:text-slate-300 font-bold leading-relaxed mb-6 lang-es hidden">Haz clic aquí para
+                        transmitir las necesidades exactas de tu comprador a todos los agentes de NEXUS.</p>
+                    <button onclick="nextOnboardStep(2)"
+                        class="bg-[#003DA5] text-white px-8 py-3 rounded-2xl font-black text-xs uppercase shadow-lg w-full">Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Send Property -->
+        <div id="onboardStep2"
+            class="absolute top-[280px] left-4 right-4 flex flex-col items-center animate-fade hidden">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-[32px] w-full max-w-sm shadow-2xl border border-red-100 relative mb-4">
+                <div
+                    class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-white dark:bg-slate-800 rotate-45 border-r border-b border-red-100">
+                </div>
+                <div class="relative z-10 flex flex-col items-center text-center">
+                    <div class="w-12 h-12 bg-red-50 text-[#ED1C24] rounded-full flex items-center justify-center mb-3">
+                        <i class="fa-solid fa-paper-plane text-xl"></i>
+                    </div>
+                    <h3 class="font-black text-lg text-[#ED1C24] mb-2 uppercase lang-en">2. Send Matches</h3>
+                    <h3 class="font-black text-lg text-[#ED1C24] mb-2 uppercase lang-es hidden">2. Enviar Matches</h3>
+                    <p class="text-xs text-slate-700 dark:text-slate-300 font-bold leading-relaxed mb-6 lang-en">Scroll the feed to see what
+                        buyers want. If your listing matches, send it directly to the agent here.</p>
+                    <p class="text-xs text-slate-700 dark:text-slate-300 font-bold leading-relaxed mb-6 lang-es hidden">Desplázate por el
+                        feed para ver qué buscan los compradores. Si tu listado coincide, envíalo directamente al
+                        agente.</p>
+                    <button onclick="nextOnboardStep(3)"
+                        class="bg-[#ED1C24] text-white px-8 py-3 rounded-2xl font-black text-xs uppercase shadow-lg w-full">Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: My Desk / Inbox -->
+        <div id="onboardStep3" class="absolute top-[80px] right-4 flex flex-col items-end animate-fade hidden">
+            <!-- Spotlight effect -->
+            <div
+                class="absolute top-[-70px] right-0 w-[50px] h-[50px] rounded-full ring-[2000px] ring-slate-900/80 mix-blend-destination z-0">
+            </div>
+            <!-- Modal Card -->
+            <div
+                class="bg-white dark:bg-slate-800 p-6 rounded-[32px] w-64 shadow-2xl border border-blue-100 relative mb-4 z-10 mix-blend-normal">
+                <div class="absolute -top-3 right-6 w-6 h-6 bg-white dark:bg-slate-800 rotate-45 border-l border-t border-blue-100"></div>
+                <div class="relative z-10 flex flex-col items-center text-center">
+                    <div class="w-12 h-12 bg-blue-50 text-[#003DA5] rounded-full flex items-center justify-center mb-3">
+                        <i class="fa-solid fa-briefcase text-xl"></i>
+                    </div>
+                    <h3 class="font-black text-sm text-[#003DA5] mb-2 uppercase lang-en">3. Your Hub</h3>
+                    <h3 class="font-black text-sm text-[#003DA5] mb-2 uppercase lang-es hidden">3. Tu Escritorio</h3>
+                    <p class="text-[10px] text-slate-700 dark:text-slate-300 font-bold leading-relaxed mb-6 lang-en">Click your profile to
+                        view your active searches and review incoming property matches.</p>
+                    <p class="text-[10px] text-slate-700 dark:text-slate-300 font-bold leading-relaxed mb-6 lang-es hidden">Haz clic en tu
+                        perfil para ver tus búsquedas activas y revisar los matches entrantes.</p>
+                    <button onclick="endOnboarding()"
+                        class="bg-[#003DA5] text-white px-6 py-3 rounded-2xl font-black text-xs uppercase shadow-lg w-full lang-en">Start
+                        Using NEXUS</button>
+                    <button onclick="endOnboarding()"
+                        class="bg-[#003DA5] text-white px-6 py-3 rounded-2xl font-black text-xs uppercase shadow-lg w-full lang-es hidden">Empezar
+                        a Usar NEXUS</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="filterSidebar"
+        class="fixed inset-y-0 left-0 w-80 bg-white dark:bg-slate-800 z-[70] shadow-2xl p-6 sidebar-transition -translate-x-full overflow-y-auto">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-black text-[#003DA5] italic uppercase lang-en">Filter Feed</h2>
+            <h2 class="text-xl font-black text-[#003DA5] italic uppercase lang-en">Filter Match Board</h2>
             <h2 class="text-xl font-black text-[#003DA5] italic uppercase lang-es hidden">Filtrar Feed</h2>
-            <button onclick="toggleFilter()"><i class="fa-solid fa-xmark text-xl text-slate-400"></i></button>
+            <button onclick="toggleFilter()"><i class="fa-solid fa-xmark text-xl text-slate-600 dark:text-slate-400"></i></button>
         </div>
 
         <div class="space-y-6">
             <div class="space-y-2">
-                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1 lang-en">Location Focus</label>
-                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1 lang-es hidden">Enfoque de Ubicación</label>
-                
+                <label
+                    class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-1 lang-en">Location
+                    Focus</label>
+                <label
+                    class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-1 lang-es hidden">Enfoque
+                    de Ubicación</label>
+
                 <div class="relative w-full z-[80]">
-                    <input type="text" id="filterLocationEn" oninput="showFilterSuggestions(this.value)" autocomplete="off" placeholder="Search area (e.g. Uvita)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none pl-10 focus:ring-2 focus:ring-[#003DA5] transition-all lang-en">
-                    <input type="text" id="filterLocationEs" oninput="showFilterSuggestions(this.value)" autocomplete="off" placeholder="Buscar zona (ej. Uvita)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none pl-10 focus:ring-2 focus:ring-[#003DA5] transition-all lang-es hidden">
-                    <i class="fa-solid fa-location-dot absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                    
+                    <input type="text" id="filterLocationEn" oninput="showFilterSuggestions(this.value)"
+                        autocomplete="off" placeholder="Search area (e.g. Uvita)"
+                        class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-bold outline-none pl-10 focus:ring-2 focus:ring-[#003DA5] transition-all lang-en">
+                    <input type="text" id="filterLocationEs" oninput="showFilterSuggestions(this.value)"
+                        autocomplete="off" placeholder="Buscar zona (ej. Uvita)"
+                        class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-bold outline-none pl-10 focus:ring-2 focus:ring-[#003DA5] transition-all lang-es hidden">
+                    <i
+                        class="fa-solid fa-location-dot absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 dark:text-slate-400 text-sm"></i>
+
                     <!-- Suggestions Dropdown -->
-                    <div id="filterSuggestions" class="absolute z-[90] w-full bg-white border border-slate-200 mt-1 max-h-48 overflow-y-auto rounded-xl shadow-2xl hidden hidden-scrollbar text-[11px] font-bold text-slate-700"></div>
+                    <div id="filterSuggestions"
+                        class="absolute z-[90] w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 mt-1 max-h-48 overflow-y-auto rounded-xl shadow-2xl hidden hidden-scrollbar text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                    </div>
                 </div>
             </div>
 
@@ -43,349 +190,1109 @@
             <hr>
 
             <div>
-                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 lang-en">Property Type</label>
-                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 lang-es hidden">Tipo de Propiedad</label>
+                <label
+                    class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-en">Property
+                    Type</label>
+                <label
+                    class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-es hidden">Tipo
+                    de Propiedad</label>
                 <div class="grid grid-cols-2 gap-2">
-                    <button class="p-2 border rounded-xl text-[9px] font-black uppercase lang-en">House</button>
-                    <button class="p-2 border rounded-xl text-[9px] font-black uppercase lang-es hidden">Casa</button>
-                    <button class="p-2 border rounded-xl text-[9px] font-black uppercase lang-en">Finca</button>
-                    <button class="p-2 border rounded-xl text-[9px] font-black uppercase lang-es hidden">Finca</button>
+                    <button onclick="addFilterAreaValue('All Types')" class="p-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-[9px] font-black uppercase lang-en transition-colors">All Types</button>
+                    <button onclick="addFilterAreaValue('Todos los Tipos')" class="p-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-[9px] font-black uppercase lang-es hidden transition-colors">Todos los Tipos</button>
+                    
+                    <button onclick="addFilterAreaValue('House')" class="p-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-[9px] font-black uppercase lang-en transition-colors">House</button>
+                    <button onclick="addFilterAreaValue('Casa')" class="p-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-[9px] font-black uppercase lang-es hidden transition-colors">Casa</button>
+                    
+                    <button onclick="addFilterAreaValue('Condo')" class="p-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-[9px] font-black uppercase lang-en transition-colors">Condo</button>
+                    <button onclick="addFilterAreaValue('Condominio')" class="p-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-[9px] font-black uppercase lang-es hidden transition-colors">Condominio</button>
+
+                    <button onclick="addFilterAreaValue('Land/Lot')" class="p-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-[9px] font-black uppercase lang-en transition-colors">Land/Lot</button>
+                    <button onclick="addFilterAreaValue('Lote')" class="p-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-[9px] font-black uppercase lang-es hidden transition-colors">Lote</button>
+                    
+                    <button onclick="addFilterAreaValue('Commercial')" class="p-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-[9px] font-black uppercase lang-en transition-colors col-span-2">Commercial</button>
+                    <button onclick="addFilterAreaValue('Comercial')" class="p-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-[9px] font-black uppercase lang-es hidden transition-colors col-span-2">Comercial</button>
                 </div>
             </div>
 
-            <button onclick="toggleFilter()" class="w-full bg-[#003DA5] text-white py-4 rounded-2xl font-black uppercase text-xs shadow-lg mt-4 lang-en">Apply Filters</button>
-            <button onclick="toggleFilter()" class="w-full bg-[#003DA5] text-white py-4 rounded-2xl font-black uppercase text-xs shadow-lg mt-4 lang-es hidden">Aplicar Filtros</button>
+            <button onclick="applyFilters()" class="w-full bg-[#003DA5] text-white py-4 rounded-2xl font-black uppercase text-xs shadow-lg mt-4 lang-en">Apply Filters</button>
+            <button onclick="applyFilters()" class="w-full bg-[#003DA5] text-white py-4 rounded-2xl font-black uppercase text-xs shadow-lg mt-4 lang-es hidden">Aplicar Filtros</button>
+
+            <!-- Report / Suggest Link -->
+            <div class="mt-6 pt-4 border-t border-dashed border-slate-200 dark:border-slate-700">
+                <button onclick="toggleFilter(); document.getElementById('reportModal').classList.remove('hidden'); document.getElementById('reportModal').classList.add('flex');" class="w-full flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 transition-colors py-2">
+                    <i class="fa-solid fa-comment-dots"></i>
+                    <span class="lang-en">Report a Problem / Suggest Improvement</span>
+                    <span class="lang-es hidden">Reportar Problema / Sugerir Mejora</span>
+                </button>
+            </div>
         </div>
     </div>
-    <div id="overlay" onclick="toggleFilter()" class="fixed inset-0 bg-black/40 z-[60] hidden opacity-0 transition-opacity"></div>
+    <div id="overlay" onclick="toggleFilter()"
+        class="fixed inset-0 bg-black/40 z-[60] hidden opacity-0 transition-opacity"></div>
 
-    <nav class="bg-white border-b px-4 py-4 sticky top-0 z-50 flex justify-between items-center shadow-sm">
-        <div class="flex items-center gap-4">
-            <button onclick="toggleFilter()" class="text-[#003DA5]"><i class="fa-solid fa-bars-staggered text-xl"></i></button>
+    <!-- REPORT / SUGGEST MODAL -->
+    <div id="reportModal" class="fixed inset-0 bg-black/50 z-[100] hidden items-center justify-center p-6" onclick="if(event.target===this){this.classList.add('hidden');this.classList.remove('flex')}">
+        <div class="bg-white dark:bg-slate-800 rounded-[28px] p-6 max-w-sm w-full shadow-2xl animate-fade">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-comment-dots text-indigo-600 dark:text-indigo-400 text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider lang-en">Report / Suggest</h3>
+                        <h3 class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider lang-es hidden">Reportar / Sugerir</h3>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('reportModal').classList.add('hidden');document.getElementById('reportModal').classList.remove('flex')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="event.preventDefault(); submitQuickTicket();" class="space-y-3">
+                <select id="quickTicketType" class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-xl text-[11px] font-bold outline-none">
+                    <option value="bug">🐛 Bug / Error</option>
+                    <option value="feature">💡 Suggest Feature / Sugerir Mejora</option>
+                    <option value="question">❓ Question / Pregunta</option>
+                </select>
+                <textarea id="quickTicketBody" rows="4" required class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-xl text-[11px] font-bold outline-none resize-none">
+                </textarea>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span class="lang-en">Send</span>
+                    <span class="lang-es hidden">Enviar</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <nav class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-4 sticky top-0 z-[60] flex justify-between items-center shadow-sm transition-colors">
+        <div class="flex items-center gap-3 md:gap-4">
+            <button onclick="toggleFilter()" class="text-[#003DA5]"><i
+                    class="fa-solid fa-bars-staggered text-base md:text-xl"></i></button>
             <div class="flex flex-col items-start gap-0 cursor-pointer" onclick="toggleAdminMode()">
-                <h1 class="text-3xl font-black text-[#003DA5] italic tracking-tighter leading-none">NEXUS - FEED</h1>
-                <p class="text-[10px] uppercase tracking-widest text-[#ED1C24] font-bold mt-1">Powered by REMAX Altitud</p>
+                <h1 class="text-xl md:text-3xl font-black text-[#003DA5] italic tracking-tighter leading-none">NEXUS - MATCH BOARD</h1>
+                <p class="text-[8px] md:text-[10px] uppercase tracking-widest text-[#ED1C24] font-bold mt-0.5 md:mt-1">Powered by REMAX Altitud
+                </p>
             </div>
         </div>
         <div class="flex items-center gap-3">
-             <div class="flex bg-slate-100 p-1 rounded-full text-[9px] font-black border">
-                <button onclick="setLanguage('en')" id="btn-en" class="px-2 py-1 rounded-full bg-[#003DA5] text-white">EN</button>
-                <button onclick="setLanguage('es')" id="btn-es" class="px-2 py-1 rounded-full text-slate-400">ES</button>
+            <div class="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-full text-[9px] font-black border">
+                <button onclick="setLanguage('en')" id="btn-en"
+                    class="px-2 py-1 rounded-full bg-[#003DA5] text-white">EN</button>
+                <button onclick="setLanguage('es')" id="btn-es"
+                    class="px-2 py-1 rounded-full text-slate-600 dark:text-slate-400">ES</button>
             </div>
-            
-            <button onclick="toggleNotifications()" class="relative text-[#003DA5] text-xl px-1 hover:scale-110 transition-transform">
-                <i class="fa-solid fa-bell"></i>
-                <span class="absolute top-0 right-0 w-2.5 h-2.5 bg-[#ED1C24] rounded-full border-2 border-white animate-pulse"></span>
+
+            <button onclick="toggleDarkMode()" class="text-slate-400 hover:text-[#003DA5] dark:hover:text-yellow-400 transition-colors text-lg px-2">
+                <i class="fa-solid fa-moon dark:hidden"></i>
+                <i class="fa-solid fa-sun hidden dark:inline"></i>
             </button>
-            <a href="profile.html" class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-[#003DA5] font-black text-xs">JD</a>
+
+            <button onclick="toggleNotifications()"
+                class="relative text-[#003DA5] text-xl px-1 hover:scale-110 transition-transform">
+                <i class="fa-solid fa-bell"></i>
+                <span
+                    class="absolute top-0 right-0 w-2.5 h-2.5 bg-[#ED1C24] rounded-full border-2 border-white animate-pulse"></span>
+            </button>
+
+            <a href="login.html" onclick="localStorage.removeItem('userEmail')" class="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-95 transition-all shadow-sm" title="Log Out">
+                <i class="fa-solid fa-arrow-right-from-bracket text-[10px]"></i>
+            </a>
         </div>
     </nav>
 
+                            <!-- PREMIUM TOP NAV -->
+    <div id="premium-top-nav" class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-amber-500/30 flex justify-between items-center mt-2 mb-4 mx-4 rounded-2xl overflow-hidden shadow-2xl relative shadow-amber-500/10">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+        <a href="Mi_Oficina.html" id="nav-office" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
+            <i class="fa-solid fa-building mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Office</span>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Oficina</span>
+        </a>
+        <div class="w-[1px] h-8 bg-amber-500/20 relative z-10"></div>
+        <a href="my-business.html" id="nav-business" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
+            <i class="fa-solid fa-briefcase-medical mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Business</span>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Negocio</span>
+        </a>
+        <div class="w-[1px] h-8 bg-amber-500/20 relative z-10"></div>
+        <a href="#" id="nav-resources" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
+            <i class="fa-solid fa-book-open mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Resources</span>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Recursos</span>
+        </a>
+    </div>
+
     <!-- NOTIFICATIONS PANEL (Matchmaker) -->
-    <div id="notificationsPanel" class="fixed top-16 right-4 w-80 bg-white border border-slate-200 rounded-[24px] shadow-2xl z-[60] hidden flex-col overflow-hidden animate-fade">
-        <div class="bg-slate-900 text-white p-4 flex justify-between items-center rounded-t-[24px]">
+    <div id="notificationsPanel"
+        class="fixed top-16 right-4 w-80 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-[24px] shadow-2xl z-[60] hidden flex-col overflow-hidden animate-fade">
+        <div class="bg-slate-50 dark:bg-slate-900 text-white p-4 flex justify-between items-center rounded-t-[24px]">
             <h3 class="font-black italic uppercase tracking-widest text-sm flex items-center gap-2">
                 <div class="w-6 h-6 bg-amber-400/20 text-amber-400 rounded-full flex items-center justify-center">
                     <i class="fa-solid fa-bolt text-[10px]"></i>
                 </div>
                 Matchmaker
             </h3>
-            <button onclick="toggleNotifications()" class="text-white/50 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>
+            <button onclick="toggleNotifications()" class="text-white/50 hover:text-white transition"><i
+                    class="fa-solid fa-xmark"></i></button>
         </div>
-        <div class="p-4 space-y-3 max-h-96 overflow-y-auto bg-slate-50">
+        <div class="p-4 space-y-3 max-h-96 overflow-y-auto bg-slate-50 dark:bg-slate-900">
             <!-- Notification Item (Hot Match) -->
-            <div class="bg-white p-3 rounded-2xl border border-blue-100 shadow-sm flex gap-3 items-start relative overflow-hidden group hover:border-[#003DA5] transition-colors cursor-pointer">
+            <div
+                class="bg-white dark:bg-slate-800 p-3 rounded-2xl border border-blue-100 shadow-sm flex gap-3 items-start relative overflow-hidden group hover:border-[#003DA5] transition-colors cursor-pointer">
                 <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#ED1C24]"></div>
-                <div class="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center text-[#ED1C24] shrink-0 border border-red-100">
+                <div
+                    class="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center text-[#ED1C24] shrink-0 border border-red-100">
                     <i class="fa-solid fa-fire text-sm"></i>
                 </div>
                 <div>
-                    <p class="text-[10px] font-black text-[#003DA5] uppercase mb-0.5 tracking-widest">Hot Buyer Match</p>
-                    <p class="text-[10px] font-bold text-slate-500 leading-relaxed pr-2">New <span class="text-slate-800 font-black">$500k House</span> search posted in your Expert Zone: <span class="text-[#003DA5] font-black">Uvita</span>.</p>
-                    <p class="text-[8px] font-black text-slate-400 uppercase mt-2">Just now</p>
+                    <p class="text-[10px] font-black text-[#003DA5] uppercase mb-0.5 tracking-widest">Hot Buyer Match
+                    </p>
+                    <p class="text-[10px] font-bold text-slate-500 leading-relaxed pr-2">New <span
+                            class="text-slate-800 dark:text-slate-200 font-black">$500k House</span> search posted in your Expert Zone:
+                        <span class="text-[#003DA5] font-black">Uvita</span>.</p>
+                    <p class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase mt-2">Just now</p>
                 </div>
             </div>
-            
+
             <!-- Notification Item (System) -->
-            <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex gap-3 items-start cursor-pointer transition-colors hover:bg-slate-50">
-                <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-[#003DA5] shrink-0 border border-blue-100">
+            <div
+                class="bg-white dark:bg-slate-800 p-3 rounded-2xl border border-slate-200 dark:border-slate-600 shadow-sm flex gap-3 items-start cursor-pointer transition-colors hover:bg-slate-900">
+                <div
+                    class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-[#003DA5] shrink-0 border border-blue-100">
                     <i class="fa-solid fa-check-double text-sm"></i>
                 </div>
                 <div>
-                    <p class="text-[10px] font-black text-slate-400 uppercase mb-0.5 tracking-widest">Search Live</p>
-                    <p class="text-[10px] font-bold text-slate-500 leading-relaxed">Your client search in <span class="text-slate-700 font-black">Perez Zeledon</span> is now live on the entire NEXUS network.</p>
-                    <p class="text-[8px] font-black text-slate-400 uppercase mt-2">2h ago</p>
+                    <p class="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase mb-0.5 tracking-widest">Search Live</p>
+                    <p class="text-[10px] font-bold text-slate-500 leading-relaxed">Your client search in <span
+                            class="text-slate-700 dark:text-slate-300 font-black">Perez Zeledon</span> is now live on the entire NEXUS
+                        network.</p>
+                    <p class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase mt-2">2h ago</p>
                 </div>
             </div>
         </div>
-        <div class="p-4 bg-white border-t border-slate-100 text-center">
-            <button onclick="document.getElementById('notificationsPanel').classList.add('hidden')" class="text-[10px] font-black text-[#003DA5] uppercase tracking-widest hover:text-[#ED1C24] transition-colors w-full py-2 bg-blue-50 rounded-xl">Clear All Notifications</button>
+        <div class="p-4 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 text-center">
+            <button onclick="document.getElementById('notificationsPanel').classList.add('hidden')"
+                class="text-[10px] font-black text-[#003DA5] uppercase tracking-widest hover:text-[#ED1C24] transition-colors w-full py-2 bg-blue-50 rounded-xl">Clear
+                All Notifications</button>
         </div>
     </div>
 
     <div class="p-4 space-y-4">
-        <a href="add-search.html" class="flex items-center justify-center gap-2 bg-[#003DA5] text-white py-4 rounded-2xl font-black uppercase text-xs shadow-xl active:scale-95 transition">
-            <i class="fa-solid fa-plus"></i> <span class="lang-en">Post New Client Search</span><span class="lang-es hidden">Nueva Búsqueda de Cliente</span>
+        <a href="add-search.html"
+            class="flex items-center justify-center gap-2 bg-[#003DA5] text-white py-4 rounded-2xl font-black uppercase text-xs shadow-xl active:scale-95 transition">
+            <i class="fa-solid fa-plus"></i> <span class="lang-en">Post New Client Search</span><span
+                class="lang-es hidden">Nueva Búsqueda de Cliente</span>
         </a>
+
+        <!-- DYNAMIC SUPABASE SEARCHES -->
+        <div id="supabaseSearches" class="space-y-4"></div>
+
+        <!-- DEMO CARDS (shown when no Supabase data) -->
 
         <div class="swipe-card relative transition-transform duration-300">
             <!-- Hidden Watchlist Button (Admin Only) -->
-            <button class="admin-only hidden absolute -top-3 -right-3 bg-amber-400 text-white w-8 h-8 rounded-full shadow-lg items-center justify-center z-10" onclick="alert('Added to Watchlist!')">
+            <button
+                class="admin-only hidden absolute -top-3 -right-3 bg-amber-400 text-white w-8 h-8 rounded-full shadow-lg items-center justify-center z-10"
+                onclick="alert('Added to Watchlist!')">
                 <i class="fa-solid fa-star text-xs"></i>
             </button>
 
-            <div class="bg-white rounded-[32px] p-5 border shadow-sm space-y-4">
+            <div class="bg-white dark:bg-slate-800 rounded-[32px] p-5 border shadow-sm space-y-4">
                 <div class="flex justify-between items-start gap-3">
                     <div class="relative">
                         <!-- Avatar with Trust Ring -->
-                        <div class="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-[#003DA5] font-black text-lg ring-2 ring-green-500 ring-offset-2">RM</div>
+                        <div
+                            class="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-[#003DA5] font-black text-lg ring-2 ring-green-500 ring-offset-2">
+                            <i class="fa-solid fa-user-tie text-xl"></i></div>
                         <!-- Market Expert Badge -->
-                        <div class="absolute -bottom-2 -right-2 bg-yellow-400 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm" title="Market Expert">
+                        <div class="absolute -bottom-2 -right-2 bg-yellow-400 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm"
+                            title="Market Expert">
                             <i class="fa-solid fa-star text-[8px] text-white"></i>
                         </div>
                     </div>
-                    
+
                     <div class="flex-1">
                         <div class="flex items-center gap-2 mb-1">
-                            <span class="bg-blue-600 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase">NEW</span>
-                            <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest">• Finca / Farm</span>
+                            <span
+                                class="bg-blue-600 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase">NEW</span>
+                            <span class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">• Finca /
+                                Farm</span>
                         </div>
-                        <h3 class="font-black text-lg italic text-slate-900 leading-none">Roberto M.</h3>
-                        <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase">Pérez Zeledón • San Isidro de El General</p>
+                        <p class="text-[8px] font-black text-[#003DA5] dark:text-blue-400 uppercase tracking-widest mb-1"><i class="fa-solid fa-user-tag"></i> Buyer / Cliente</p>
+                            <h3 class="font-black text-xl text-slate-900 dark:text-slate-100 italic leading-none mb-2">Roberto M.</h3>
+                            <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-700/50 p-2 rounded-xl border border-slate-100 dark:border-slate-700">
+                                <div class="w-6 h-6 rounded-full bg-blue-100 text-[#003DA5] flex items-center justify-center text-[9px] font-black"><i class="fa-solid fa-headset"></i></div>
+                                <div>
+                                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Representing Agent</p>
+                                    <p class="text-[10px] font-bold text-slate-700 dark:text-slate-200 leading-tight">Alejandra Castro</p>
+                                </div>
+                            </div>
                     </div>
                     <div class="text-right flex flex-col items-end">
                         <!-- Matches Indicator -->
-                        <span class="bg-red-50 text-red-600 font-black text-[9px] px-2 py-1 rounded-lg flex items-center gap-1 mb-2">
+                        <span
+                            class="bg-red-50 text-red-600 font-black text-[9px] px-2 py-1 rounded-lg flex items-center gap-1 mb-2">
                             <i class="fa-solid fa-fire text-[8px]"></i> 14 Matches
                         </span>
                         <div class="flex flex-col items-center">
                             <i class="fa-solid fa-money-bill-1-wave text-blue-600 text-xl"></i>
-                            <p class="text-[7px] font-black text-slate-400 uppercase mt-1 lang-en">Cash</p>
-                            <p class="text-[7px] font-black text-slate-400 uppercase mt-1 lang-es hidden">Efectivo</p>
+                            <p class="text-[7px] font-black text-slate-600 dark:text-slate-400 uppercase mt-1 lang-en">Cash</p>
+                            <p class="text-[7px] font-black text-slate-600 dark:text-slate-400 uppercase mt-1 lang-es hidden">Efectivo</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-2 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <div class="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
                     <div>
-                        <p class="text-[8px] font-black text-slate-400 uppercase lang-en">Budget</p>
-                        <p class="text-[8px] font-black text-slate-400 uppercase lang-es hidden">Presupuesto</p>
-                        <p class="text-xs font-black text-slate-900">$250k — $450k</p>
+                        <p class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase lang-en">Budget</p>
+                        <p class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase lang-es hidden">Presupuesto</p>
+                        <p class="text-xs font-black text-slate-900 dark:text-slate-100">$250k — $450k</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-[8px] font-black text-slate-400 uppercase lang-en">Timing</p>
-                        <p class="text-[8px] font-black text-slate-400 uppercase lang-es hidden">Plazo</p>
+                        <p class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase lang-en">Timing</p>
+                        <p class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase lang-es hidden">Plazo</p>
                         <p class="text-xs font-black text-blue-600 italic lang-en">ASAP</p>
                         <p class="text-xs font-black text-blue-600 italic lang-es hidden">Inmediato</p>
                     </div>
-                </div>
+                    </div>
 
-                <div class="flex gap-2">
-                    <button onclick="openSendPropertyModal()" class="flex-1 bg-[#ED1C24] text-white py-4 rounded-2xl font-black uppercase text-xs shadow-lg lang-en active:scale-95 transition-transform">Send Property</button>
-                    <button onclick="openSendPropertyModal()" class="flex-1 bg-[#ED1C24] text-white py-4 rounded-2xl font-black uppercase text-xs shadow-lg lang-es hidden active:scale-95 transition-transform">Enviar Propiedad</button>
+                    <!-- Client Must Haves -->
+                    <div class="pt-3 border-t border-slate-100 dark:border-slate-700">
+                        <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2"><i class="fa-solid fa-list-check"></i> Must Haves / Indispensable</p>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="bg-blue-50 dark:bg-blue-900/20 text-[#003DA5] dark:text-blue-400 border border-blue-100 dark:border-blue-800 text-[8px] font-black uppercase px-2 py-1 rounded w-max">Ocean View</span>
+                            <span class="bg-blue-50 dark:bg-blue-900/20 text-[#003DA5] dark:text-blue-400 border border-blue-100 dark:border-blue-800 text-[8px] font-black uppercase px-2 py-1 rounded w-max">Pool</span>
+                            <span class="bg-blue-50 dark:bg-blue-900/20 text-[#003DA5] dark:text-blue-400 border border-blue-100 dark:border-blue-800 text-[8px] font-black uppercase px-2 py-1 rounded w-max">Turnkey</span>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 mt-4">
+                        <button onclick="openSendPropertyModal('Alejandra Castro', 'For Buyer: Roberto M. (Pérez Zeledón • Finca / Farm)')"
+                            class="flex-1 bg-[#ED1C24] text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-lg lang-en active:scale-95 transition-transform">Send
+                            a Match for this Search</button>
+                        <button onclick="openSendPropertyModal('Alejandra Castro', 'Comprador: Roberto M. (Pérez Zeledón • Finca / Farm)')"
+                            class="flex-1 bg-[#ED1C24] text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-lg lang-es hidden active:scale-95 transition-transform">Enviar
+                            un Match para esta Búsqueda</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STALE SEARCH CARD EXAMPLE -->
+            <div class="swipe-card relative transition-transform duration-300 opacity-75 grayscale-[0.5]">
+                <!-- Spider Web Watermark Background -->
+                    <svg class="absolute -bottom-10 -right-10 w-[200px] h-[200px] text-slate-900 dark:text-slate-100 opacity-20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="m13.62 13.28l1.64 2.26c.03-.54.12-1.07.3-1.61c.18-.56.44-1.07.74-1.52zM17.77 19c-.02-1.32.18-2.73.64-4.15c.47-1.43 1.15-2.71 1.95-3.76l-2.04.66c-.78.51-1.45 1.39-1.82 2.48c-.33 1.06-.32 2.13 0 2.99zm1.48 2q-.75.69-1.62 1.2l-.32-.44C15.9 21 14.04 20.5 12 20.5s-3.9.5-5.31 1.26l-.32.44q-.87-.51-1.62-1.2l.25-.31c.33-1.61.22-3.57-.42-5.55c-.64-1.95-1.68-3.58-2.87-4.68l-.44-.14c.15-.66.36-1.32.62-1.91l.4.13c1.63-.17 3.45-.89 5.14-2.11c1.66-1.21 2.89-2.7 3.57-4.17v-.47l1-.04l1 .04v.42c.67 1.5 1.91 3.02 3.6 4.24c1.66 1.21 3.46 1.92 5.07 2.11l.44-.15c.26.59.47 1.25.62 1.91l-.5.18c-1.19 1.08-2.23 2.71-2.86 4.66c-.63 1.93-.75 3.84-.45 5.41zM11 11.37V8.5c-.34.42-.74.82-1.22 1.17c-.49.33-1.01.62-1.53.83zm0-7.15c-.75 1.09-1.76 2.13-3 3.02c-1.22.9-2.54 1.54-3.82 1.92l1.97.64c.96.08 2.07-.24 3.04-.94c.94-.68 1.57-1.59 1.81-2.5zm2 7.15l2.74-.87c-.51-.2-1.02-.47-1.49-.81c-.49-.36-.91-.77-1.25-1.19zm6.8-2.21c-1.27-.38-2.57-1.01-3.8-1.9c-1.23-.9-2.24-1.95-3-3.06v2.07c.22.94.86 1.9 1.84 2.61c.93.68 1.99.99 2.93.94zm-9.42 4.12l-2.74-.89c.31.45.56.96.74 1.52c.19.59.28 1.15.3 1.71zm-6.8-2.21c.8 1.05 1.48 2.33 1.95 3.76c.47 1.46.67 2.91.64 4.25l1.21-1.67c.38-.91.42-2.05.05-3.19c-.36-1.1-1.03-1.98-1.82-2.49zM12 14.45l-1.65 2.27a6.3 6.3 0 0 1 3.3 0zm-4.16 5.73c1.24-.43 2.66-.68 4.16-.68s2.92.25 4.16.68l-1.28-1.76c-.72-.57-1.75-.92-2.88-.92s-2.16.35-2.88.92z"/></svg>
+
+                <div class="bg-white dark:bg-slate-800 rounded-[32px] p-5 border border-slate-300 dark:border-slate-500 shadow-sm space-y-4 relative z-10">
+                    <!-- Stale Banner -->
+                    <div
+                        class="absolute -top-3 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-800 text-white text-[9px] font-black px-4 py-1 rounded-full uppercase tracking-widest flex items-center gap-2 shadow-lg">
+                        <svg class="w-3 h-3 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="m13.62 13.28l1.64 2.26c.03-.54.12-1.07.3-1.61c.18-.56.44-1.07.74-1.52zM17.77 19c-.02-1.32.18-2.73.64-4.15c.47-1.43 1.15-2.71 1.95-3.76l-2.04.66c-.78.51-1.45 1.39-1.82 2.48c-.33 1.06-.32 2.13 0 2.99zm1.48 2q-.75.69-1.62 1.2l-.32-.44C15.9 21 14.04 20.5 12 20.5s-3.9.5-5.31 1.26l-.32.44q-.87-.51-1.62-1.2l.25-.31c.33-1.61.22-3.57-.42-5.55c-.64-1.95-1.68-3.58-2.87-4.68l-.44-.14c.15-.66.36-1.32.62-1.91l.4.13c1.63-.17 3.45-.89 5.14-2.11c1.66-1.21 2.89-2.7 3.57-4.17v-.47l1-.04l1 .04v.42c.67 1.5 1.91 3.02 3.6 4.24c1.66 1.21 3.46 1.92 5.07 2.11l.44-.15c.26.59.47 1.25.62 1.91l-.5.18c-1.19 1.08-2.23 2.71-2.86 4.66c-.63 1.93-.75 3.84-.45 5.41zM11 11.37V8.5c-.34.42-.74.82-1.22 1.17c-.49.33-1.01.62-1.53.83zm0-7.15c-.75 1.09-1.76 2.13-3 3.02c-1.22.9-2.54 1.54-3.82 1.92l1.97.64c.96.08 2.07-.24 3.04-.94c.94-.68 1.57-1.59 1.81-2.5zm2 7.15l2.74-.87c-.51-.2-1.02-.47-1.49-.81c-.49-.36-.91-.77-1.25-1.19zm6.8-2.21c-1.27-.38-2.57-1.01-3.8-1.9c-1.23-.9-2.24-1.95-3-3.06v2.07c.22.94.86 1.9 1.84 2.61c.93.68 1.99.99 2.93.94zm-9.42 4.12l-2.74-.89c.31.45.56.96.74 1.52c.19.59.28 1.15.3 1.71zm-6.8-2.21c.8 1.05 1.48 2.33 1.95 3.76c.47 1.46.67 2.91.64 4.25l1.21-1.67c.38-.91.42-2.05.05-3.19c-.36-1.1-1.03-1.98-1.82-2.49zM12 14.45l-1.65 2.27a6.3 6.3 0 0 1 3.3 0zm-4.16 5.73c1.24-.43 2.66-.68 4.16-.68s2.92.25 4.16.68l-1.28-1.76c-.72-.57-1.75-.92-2.88-.92s-2.16.35-2.88.92z"/></svg> Stale Search (60+ Days)
+                    </div>
+
+                    <div class="flex justify-between items-start gap-3 pt-2">
+                        <div class="relative opacity-70">
+                            <div
+                                class="w-12 h-12 bg-rose-100 dark:bg-rose-900/30 rounded-2xl flex items-center justify-center text-rose-500 font-black text-lg ring-2 ring-slate-300 ring-offset-2">
+                                <i class="fa-solid fa-user text-xl"></i></div>
+                        </div>
+
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span
+                                    class="bg-slate-300 text-slate-600 dark:text-slate-400 text-[8px] font-black px-2 py-0.5 rounded uppercase">OLD</span>
+                                <span class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">• Lote /
+                                    Lot</span>
+                            </div>
+                            <p class="text-[8px] font-black text-[#003DA5] dark:text-blue-400 uppercase tracking-widest mb-1"><i class="fa-solid fa-user-tag"></i> Buyer / Cliente</p>
+                            <h3 class="font-black text-xl text-slate-600 dark:text-slate-400 italic leading-none mb-2">Ana L.</h3>
+                            <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-700/50 p-2 rounded-xl border border-slate-100 dark:border-slate-700">
+                                <div class="w-6 h-6 rounded-full bg-blue-100 text-[#003DA5] flex items-center justify-center text-[9px] font-black"><i class="fa-solid fa-headset"></i></div>
+                                <div>
+                                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Representing Agent</p>
+                                    <p class="text-[10px] font-bold text-slate-700 dark:text-slate-200 leading-tight">Cesar Vargas</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right flex flex-col items-end">
+                            <span
+                                class="bg-slate-100 dark:bg-slate-700 text-slate-500 font-black text-[9px] px-2 py-1 rounded-lg flex items-center gap-1 mb-2">
+                                <i class="fa-solid fa-fire text-[8px] text-slate-600 dark:text-slate-400"></i> 47 Matches
+                            </span>
+                            <div class="flex flex-col items-center opacity-50">
+                                <i class="fa-solid fa-landmark text-slate-600 dark:text-slate-400 text-xl"></i>
+                                <p class="text-[7px] font-black text-slate-600 dark:text-slate-400 uppercase mt-1 lang-en">Finance</p>
+                                <p class="text-[7px] font-black text-slate-600 dark:text-slate-400 uppercase mt-1 lang-es hidden">Crédito
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-600">
+                        <div>
+                            <p class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase lang-en">Budget</p>
+                            <p class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase lang-es hidden">Presupuesto</p>
+                            <p class="text-xs font-black text-slate-600 dark:text-slate-400">$100k — $150k</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase lang-en">Timing</p>
+                            <p class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase lang-es hidden">Plazo</p>
+                            <p class="text-xs font-black text-slate-500 italic lang-en">3-6 Months</p>
+                            <p class="text-xs font-black text-slate-500 italic lang-es hidden">3-6 Meses</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button onclick="openSendPropertyModal('Cesar Vargas', 'For Buyer: Ana L. (Dominical/Uvita • Lote / Lot)')"
+                            class="flex-1 bg-slate-200 dark:bg-slate-600 text-slate-500 py-4 rounded-2xl font-black uppercase text-[10px] shadow-inner cursor-not-allowed">
+                            <i class="fa-solid fa-lock mr-1"></i> <span class="lang-en">Search Inactive</span><span
+                                class="lang-es hidden">Búsqueda Inactiva</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t py-4 px-8 flex justify-between items-center text-slate-400 z-40 shadow-xl">
-        <div class="flex flex-col items-center gap-1 text-[#003DA5]"><i class="fa-solid fa-magnifying-glass text-xl"></i><span class="text-[10px] font-black uppercase lang-en">Feed</span><span class="text-[10px] font-black uppercase lang-es hidden">Feed</span></div>
-        <a href="market.html" class="flex flex-col items-center gap-1"><i class="fa-solid fa-chart-line text-xl"></i><span class="text-[10px] font-black uppercase lang-en">Pulse</span><span class="text-[10px] font-black uppercase lang-es hidden">Pulso</span></a>
-        <a href="my-desk.html" class="flex flex-col items-center gap-1"><i class="fa-solid fa-briefcase text-xl"></i><span class="text-[10px] font-black uppercase lang-en">Desk</span><span class="text-[10px] font-black uppercase lang-es hidden">Escritorio</span></a>
-        <a href="profile.html" class="flex flex-col items-center gap-1"><i class="fa-solid fa-user text-xl"></i><span class="text-[10px] font-black uppercase lang-en">Profile</span><span class="text-[10px] font-black uppercase lang-es hidden">Perfil</span></a>
-    </div>
-
-    <!-- SEND PROPERTY MODAL -->
-    <div id="sendPropertyModal" class="fixed inset-0 bg-slate-900/60 z-[100] hidden flex-col items-center justify-center p-6 backdrop-blur-sm animate-fade">
-        <div id="sendPropertyFormContent" class="bg-white rounded-[32px] p-6 max-w-sm w-full shadow-2xl flex flex-col transform transition-all scale-100">
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h2 class="text-xl font-black text-[#003DA5] italic uppercase tracking-widest lang-en">Send Property</h2>
-                    <h2 class="text-xl font-black text-[#003DA5] italic uppercase tracking-widest lang-es hidden">Enviar Propiedad</h2>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase mt-1 lang-en">To: Roberto M.</p>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase mt-1 lang-es hidden">Para: Roberto M.</p>
-                </div>
-                <button onclick="closeSendPropertyModal()" class="w-8 h-8 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center hover:bg-slate-200 transition"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 lang-en">Property Link / MLS ID</label>
-                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 lang-es hidden">Enlace / ID de MLS</label>
-                    <input type="text" id="propLink" placeholder="https://..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-[13px] font-bold outline-none focus:border-[#003DA5]">
-                </div>
-                <div>
-                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 lang-en">Message (Optional)</label>
-                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 lang-es hidden">Mensaje (Opcional)</label>
-                    <textarea rows="2" placeholder="Hi Roberto, I have the perfect match..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-[13px] font-bold outline-none focus:border-[#003DA5]"></textarea>
-                </div>
-            </div>
-            
-            <button onclick="submitSendProperty()" class="w-full mt-6 bg-[#ED1C24] text-white py-4 rounded-2xl font-black uppercase text-xs shadow-lg active:scale-95 transition-transform lang-en">Send Now</button>
-            <button onclick="submitSendProperty()" class="w-full mt-6 bg-[#ED1C24] text-white py-4 rounded-2xl font-black uppercase text-xs shadow-lg active:scale-95 transition-transform lang-es hidden">Enviar Ahora</button>
+        <!-- FLOATING ACTION BUTTONS -->
+        <div class="fixed bottom-24 right-4 flex flex-col gap-3 z-30">
+            <!-- Support / Feedback Button -->
+            <button onclick="window.location.href='mailto:support@remax-altitud.cr?subject=NEXUS%20Feedback'"
+                class="w-12 h-12 bg-white dark:bg-slate-800 text-white rounded-full shadow-2xl flex items-center justify-center text-lg hover:scale-110 active:scale-95 transition-all group relative">
+                <i class="fa-solid fa-headset flex"></i>
+                <span
+                    class="absolute right-14 bg-slate-50 dark:bg-slate-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 shadow-lg">
+                    <span class="lang-en">Support & Feedback</span>
+                    <span class="lang-es hidden">Soporte y Comentarios</span>
+                    <!-- Small pointer triangle -->
+                    <div class="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-50 dark:bg-slate-900 rotate-45"></div>
+                </span>
+            </button>
         </div>
+
+                                <!-- BOTTOM NAVIGATION -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t py-4 px-6 flex justify-between items-center text-slate-600 dark:text-slate-400 z-50 shadow-xl pb-6 overflow-x-auto no-scrollbar gap-4">
+        <a href="index.html" data-nav="index.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
+            <i class="fa-solid fa-house mb-1 text-xl hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-bold" data-i18n="navFeed">Match Board</span>
+        </a>
+        <a href="my-desk.html" data-nav="my-desk.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
+            <i class="fa-solid fa-briefcase mb-1 text-xl hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-bold" data-i18n="navMyDesk">My Hub</span>
+        </a>
         
-        <!-- Success State -->
-        <div id="sendPropertySuccess" class="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl flex-col items-center text-center hidden transform transition-all scale-100">
-            <div class="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mb-6 border-4 border-green-100 mx-auto">
-                <i class="fa-solid fa-check text-4xl"></i>
-            </div>
-            <h2 class="text-2xl font-black text-[#003DA5] mb-2 leading-tight tracking-tighter italic lang-en">Sent!</h2>
-            <h2 class="text-2xl font-black text-[#003DA5] mb-2 leading-tight tracking-tighter italic lang-es hidden">¡Enviado!</h2>
-            <p class="text-xs font-bold text-slate-500 mb-8 leading-relaxed lang-en">Roberto M. has been notified about your property.</p>
-            <p class="text-xs font-bold text-slate-500 mb-8 leading-relaxed lang-es hidden">Roberto M. ha sido notificado sobre tu propiedad.</p>
-            
-            <button onclick="closeSendPropertyModal()" class="w-full bg-[#003DA5] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-200 transition-transform active:scale-95 block lang-en">Done</button>
-            <button onclick="closeSendPropertyModal()" class="w-full bg-[#003DA5] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-200 transition-transform active:scale-95 block lang-es hidden">Listo</button>
-        </div>
+        <!-- Premium Links -->
+        <a href="market.html" data-nav="market.html" id="nav-market" class="flex flex-col items-center justify-center min-w-[3.5rem] text-amber-500 hover:text-amber-400 transition-all relative group premium-only">
+            <div class="absolute inset-0 bg-amber-500/10 blur-xl rounded-full group-hover:bg-amber-500/20 transition"></div>
+            <i class="fa-solid fa-chart-line mb-1 text-xl drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] group-hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-black uppercase tracking-widest lang-en">Market</span>
+            <span class="text-[10px] font-black uppercase tracking-widest lang-es hidden" data-i18n="navMarket">Mercado</span>
+        </a>
+
+        <!-- Universal Link -->
+        <a href="profile.html" data-nav="profile.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
+            <i class="fa-solid fa-user mb-1 text-xl hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-bold" data-i18n="navProfile">Profile</span>
+        </a>
     </div>
-
     <script>
-        // --- FILTER AUTOCOMPLETE LOGIC ---
-        function showFilterSuggestions(val) {
-            const sugBox = document.getElementById('filterSuggestions');
-            sugBox.innerHTML = '';
-            if (!val) {
-                sugBox.classList.add('hidden');
-                return;
-            }
-            
-            const normVal = normalizeStr(val);
-            const matches = LOCATION_DB.filter(loc => normalizeStr(loc).includes(normVal)).slice(0, 15);
-            if (matches.length === 0) {
-                sugBox.classList.add('hidden');
-                return;
-            }
-
-            matches.forEach(match => {
-                const div = document.createElement('div');
-                div.className = "p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0 text-xs";
-                div.innerHTML = highlightMatch(match, val);
-                
-                div.onpointerdown = function(e) {
-                    e.preventDefault();
-                    document.getElementById('filterLocationEn').value = '';
-                    document.getElementById('filterLocationEs').value = '';
-                    sugBox.classList.add('hidden');
-                    addFilterAreaValue(match);
-                };
-                sugBox.appendChild(div);
-            });
-            sugBox.classList.remove('hidden');
-        }
-
-        document.addEventListener('pointerdown', function(e) {
-            const sugBox = document.getElementById('filterSuggestions');
-            const searchEn = document.getElementById('filterLocationEn');
-            const searchEs = document.getElementById('filterLocationEs');
-            if (sugBox && e.target !== searchEn && e.target !== searchEs && !sugBox.contains(e.target)) {
-                sugBox.classList.add('hidden');
+    (function(){
+        var page = location.pathname.split('/').pop() || 'index.html';
+        var links = document.querySelectorAll('[data-nav]');
+        links.forEach(function(a){
+            if(a.getAttribute('data-nav') === page){
+                a.classList.remove('text-slate-400','text-amber-500');
+                a.classList.add('text-[#003DA5]');
+                var dot = document.createElement('div');
+                dot.className = 'absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full';
+                a.appendChild(dot);
             }
         });
-
-        // --- SEND PROPERTY MODAL ---
-        function openSendPropertyModal() {
-            document.getElementById('sendPropertyModal').classList.remove('hidden');
-            document.getElementById('sendPropertyModal').classList.add('flex');
-            document.getElementById('sendPropertyFormContent').classList.remove('hidden');
-            document.getElementById('sendPropertyFormContent').classList.add('flex');
-            document.getElementById('sendPropertySuccess').classList.add('hidden');
-            document.getElementById('sendPropertySuccess').classList.remove('flex');
-            document.getElementById('propLink').value = ""; // reset
-        }
-        function closeSendPropertyModal() {
-            document.getElementById('sendPropertyModal').classList.add('hidden');
-            document.getElementById('sendPropertyModal').classList.remove('flex');
-        }
-        function submitSendProperty() {
-            const link = document.getElementById('propLink');
-            if(!link.value) {
-                link.classList.add('border-red-500');
-                return;
+    })();
+    </script>
+    <script>
+    (function(){
+        var page = location.pathname.split('/').pop() || 'index.html';
+        var links = document.querySelectorAll('[data-nav]');
+        links.forEach(function(a){
+            if(a.getAttribute('data-nav') === page){
+                a.classList.remove('text-slate-400','text-amber-500');
+                a.classList.add('text-[#003DA5]');
+                var dot = document.createElement('div');
+                dot.className = 'absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full';
+                a.appendChild(dot);
             }
-            link.classList.remove('border-red-500');
-            document.getElementById('sendPropertyFormContent').classList.add('hidden');
-            document.getElementById('sendPropertyFormContent').classList.remove('flex');
-            document.getElementById('sendPropertySuccess').classList.remove('hidden');
-            document.getElementById('sendPropertySuccess').classList.add('flex');
-        }
+        });
+    })();
+    </script>
 
-        // --- FILTER CHIPS ---
-        let filters = [];
-        function addFilterAreaValue(val) {
-            if(!val) return;
-            if(!filters.includes(val)) {
-                filters.push(val);
-                renderFilters();
-            }
-        }
+        <!-- OKR PROMPT MODAL (NEW) -->
+        <div id="okrPromptModal" class="fixed inset-0 z-[100] bg-slate-900/60 hidden flex items-center justify-center p-6 backdrop-blur-sm">
+            <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-[35px] p-8 shadow-2xl relative text-center">
+                <h3 class="text-2xl font-black text-slate-900 dark:text-white italic tracking-tighter mb-2 lang-en">Great Job!</h3>
+                <h3 class="text-2xl font-black text-slate-900 dark:text-white italic tracking-tighter mb-2 lang-es hidden">¡Buen Trabajo!</h3>
+                
+                <p class="text-[11px] font-bold text-slate-500 mb-6 lang-en">Do you want to report this new activity to the office for your OKRs?</p>
+                <p class="text-[11px] font-bold text-slate-500 mb-6 lang-es hidden">¿Quieres reportar esta nueva actividad a la oficina para tus OKRs?</p>
+                
+                <div class="flex flex-col gap-3">
+                    <button onclick="reportToOffice()" class="w-full bg-[#003DA5] text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-blue-200 transition-transform active:scale-95 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span class="lang-en">Yes, Report It</span>
+                        <span class="lang-es hidden">Sí, Reportarlo</span>
+                    </button>
+                    <button onclick="document.getElementById('okrPromptModal').classList.add('hidden')" class="w-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 py-3 rounded-2xl font-bold text-[10px] uppercase tracking-widest transition-transform active:scale-95">
+                        <span class="lang-en">Remind me tomorrow</span>
+                        <span class="lang-es hidden">Recordarme mañana</span>
+                    </button>
+                </div>
+            </div>
+        </div>
 
-        function renderFilters() {
-            const container = document.getElementById('filterChips');
-            container.innerHTML = '';
-            filters.forEach((f, i) => {
-                container.innerHTML += `<div class="bg-blue-100 text-[#003DA5] px-2 py-1 rounded-lg text-[10px] font-black flex items-center gap-2">${f} <i class="fa-solid fa-xmark cursor-pointer" onclick="filters.splice(${i},1);renderFilters()"></i></div>`;
-            });
-        }
+        <!-- SEND PROPERTY MODAL -->
+        <div id="sendPropertyModal"
+            class="fixed inset-0 bg-slate-900/60 z-[100] hidden flex-col items-center justify-center p-6 backdrop-blur-sm animate-fade">
+            <div id="sendPropertyFormContent"
+                class="bg-white dark:bg-slate-800 rounded-[32px] p-6 max-w-sm w-full shadow-2xl flex flex-col transform transition-all scale-100">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-xl font-black text-[#003DA5] italic uppercase tracking-widest lang-en">Send
+                            Property</h2>
+                        <h2 class="text-xl font-black text-[#003DA5] italic uppercase tracking-widest lang-es hidden">
+                            Enviar Propiedad</h2>
+                        <p id="sendPropertyTargetBuyer" class="text-[12px] font-bold text-slate-600 dark:text-slate-400 uppercase mt-1">To: Roberto M.</p>
+                        <p id="sendPropertyTargetDetails" class="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-0.5">Pérez Zeledón • Finca / Farm • $250k - $450k</p>
+                        <p id="sendPropertyTargetProperty" class="text-[10px] font-bold text-[#ED1C24] uppercase mt-2 hidden">Property: <span></span></p>
+                    </div>
+                    <button onclick="closeSendPropertyModal()"
+                        class="w-8 h-8 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-full flex items-center justify-center hover:bg-slate-600 transition"><i
+                            class="fa-solid fa-xmark"></i></button>
+                </div>
 
-        function toggleFilter() {
-            const sidebar = document.getElementById('filterSidebar');
-            const overlay = document.getElementById('overlay');
-            sidebar.classList.toggle('-translate-x-full');
-            overlay.classList.toggle('hidden');
-            setTimeout(() => overlay.classList.toggle('opacity-100'), 10);
-        }
+                <div class="space-y-4">
+                    <div>
+                        <label
+                            class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-en">Property
+                            Link / MLS ID</label>
+                        <label
+                            class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-es hidden">Enlace
+                            / ID de MLS</label>
+                        <input type="text" id="propLink" placeholder="https://..."
+                            class="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-2xl text-[13px] font-bold outline-none focus:border-[#003DA5]">
+                    </div>
 
-        // --- LANGUAGE TOGGLE (The Feed Fix) ---
-        function setLanguage(lang) {
-            const en = document.querySelectorAll('.lang-en');
-            const es = document.querySelectorAll('.lang-es');
-            document.getElementById('btn-en').className = lang === 'en' ? 'px-2 py-1 rounded-full bg-[#003DA5] text-white' : 'px-2 py-1 rounded-full text-slate-400';
-            document.getElementById('btn-es').className = lang === 'es' ? 'px-2 py-1 rounded-full bg-[#003DA5] text-white' : 'px-2 py-1 rounded-full text-slate-400';
-            
-            en.forEach(el => lang === 'en' ? el.classList.remove('hidden') : el.classList.add('hidden'));
-            es.forEach(el => lang === 'es' ? el.classList.remove('hidden') : el.classList.add('hidden'));
-        }
-        // --- ADMIN MODE ---
-        let adminClicks = 0;
-        let adminTimeout;
-        function toggleAdminMode() {
-            adminClicks++;
-            clearTimeout(adminTimeout);
-            adminTimeout = setTimeout(() => adminClicks = 0, 1000);
-            if(adminClicks >= 3) {
-                adminClicks = 0;
-                document.querySelectorAll('.admin-only').forEach(el => {
-                    el.classList.toggle('hidden');
-                    el.classList.toggle('flex');
+                    <!-- MUST HAVES CHECKLIST -->
+                    <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                        <label
+                            class="text-[9px] font-black text-[#003DA5] uppercase tracking-widest block mb-3 flex items-center gap-1 lang-en"><i
+                                class="fa-solid fa-list-check"></i> Must-Haves Checklist</label>
+                        <label
+                            class="text-[9px] font-black text-[#003DA5] uppercase tracking-widest block mb-3 flex items-center gap-1 lang-es hidden"><i
+                                class="fa-solid fa-list-check"></i> Checklist de Requisitos</label>
+
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Ocean View</span>
+                                <div class="flex gap-1 bg-white dark:bg-slate-800 rounded-lg p-0.5 border shadow-sm">
+                                    <label class="cursor-pointer req-chip">
+                                        <input type="radio" name="req1" value="yes" class="hidden">
+                                        <div
+                                            class="w-8 h-8 rounded-md flex items-center justify-center text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-800 hover:bg-slate-900 transition-colors text-[10px]">
+                                            <i class="fa-solid fa-check"></i></div>
+                                    </label>
+                                    <label class="cursor-pointer req-chip">
+                                        <input type="radio" name="req1" value="maybe" class="hidden">
+                                        <div
+                                            class="w-8 h-8 rounded-md flex items-center justify-center text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-800 hover:bg-slate-900 transition-colors text-[10px] font-black">
+                                            ?</div>
+                                    </label>
+                                    <label class="cursor-pointer req-chip">
+                                        <input type="radio" name="req1" value="no" class="hidden">
+                                        <div
+                                            class="w-8 h-8 rounded-md flex items-center justify-center text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-800 hover:bg-slate-900 transition-colors text-[10px]">
+                                            <i class="fa-solid fa-xmark"></i></div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Pool</span>
+                                <div class="flex gap-1 bg-white dark:bg-slate-800 rounded-lg p-0.5 border shadow-sm">
+                                    <label class="cursor-pointer req-chip">
+                                        <input type="radio" name="req2" value="yes" class="hidden">
+                                        <div
+                                            class="w-8 h-8 rounded-md flex items-center justify-center text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-800 hover:bg-slate-900 transition-colors text-[10px]">
+                                            <i class="fa-solid fa-check"></i></div>
+                                    </label>
+                                    <label class="cursor-pointer req-chip">
+                                        <input type="radio" name="req2" value="maybe" class="hidden">
+                                        <div
+                                            class="w-8 h-8 rounded-md flex items-center justify-center text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-800 hover:bg-slate-900 transition-colors text-[10px] font-black">
+                                            ?</div>
+                                    </label>
+                                    <label class="cursor-pointer req-chip">
+                                        <input type="radio" name="req2" value="no" class="hidden">
+                                        <div
+                                            class="w-8 h-8 rounded-md flex items-center justify-center text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-800 hover:bg-slate-900 transition-colors text-[10px]">
+                                            <i class="fa-solid fa-xmark"></i></div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label
+                            class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-en">Message
+                            (Optional)</label>
+                        <label
+                            class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-es hidden">Mensaje
+                            (Opcional)</label>
+                        <textarea rows="2" placeholder="Hi Roberto, I have the perfect match..."
+                            class="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-2xl text-[13px] font-bold outline-none focus:border-[#003DA5]"></textarea>
+                    </div>
+                </div>
+
+                <button onclick="submitSendProperty()"
+                    class="w-full mt-6 bg-[#ED1C24] text-white py-4 rounded-2xl font-black uppercase text-xs shadow-lg active:scale-95 transition-transform lang-en">Send
+                    Now</button>
+                <button onclick="submitSendProperty()"
+                    class="w-full mt-6 bg-[#ED1C24] text-white py-4 rounded-2xl font-black uppercase text-xs shadow-lg active:scale-95 transition-transform lang-es hidden">Enviar
+                    Ahora</button>
+            </div>
+
+            <!-- Success State -->
+            <div id="sendPropertySuccess"
+                class="bg-white dark:bg-slate-800 rounded-[32px] p-8 max-w-sm w-full shadow-2xl flex-col items-center text-center hidden transform transition-all scale-100">
+                <div
+                    class="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mb-6 border-4 border-green-100 mx-auto">
+                    <i class="fa-solid fa-check text-4xl"></i>
+                </div>
+                <h2 class="text-2xl font-black text-[#003DA5] mb-2 leading-tight tracking-tighter italic lang-en">Sent!
+                </h2>
+                <h2
+                    class="text-2xl font-black text-[#003DA5] mb-2 leading-tight tracking-tighter italic lang-es hidden">
+                    ¡Enviado!</h2>
+                <p id="successNotifiedTextEn" class="text-xs font-bold text-slate-500 mb-8 leading-relaxed lang-en"><span id="successAgentNameEn">The agent</span> has been notified about your property.</p>
+                <p id="successNotifiedTextEs" class="text-xs font-bold text-slate-500 mb-8 leading-relaxed lang-es hidden"><span id="successAgentNameEs">El agente</span> ha sido notificado sobre tu propiedad.</p>
+
+                <button onclick="closeSendPropertyModal()"
+                    class="w-full bg-[#003DA5] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-200 transition-transform active:scale-95 block lang-en">Done</button>
+                <button onclick="closeSendPropertyModal()"
+                    class="w-full bg-[#003DA5] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-200 transition-transform active:scale-95 block lang-es hidden">Listo</button>
+            </div>
+        </div>
+
+        <script>
+            // --- FILTER AUTOCOMPLETE LOGIC ---
+            function showFilterSuggestions(val) {
+                const sugBox = document.getElementById('filterSuggestions');
+                sugBox.innerHTML = '';
+                if (!val) {
+                    sugBox.classList.add('hidden');
+                    return;
+                }
+
+                const normVal = normalizeStr(val);
+                const matches = LOCATION_DB.filter(loc => normalizeStr(loc).includes(normVal)).slice(0, 15);
+                if (matches.length === 0) {
+                    sugBox.classList.add('hidden');
+                    return;
+                }
+
+                matches.forEach(match => {
+                    const div = document.createElement('div');
+                    div.className = "p-3 hover:bg-slate-900 cursor-pointer border-b border-slate-700 last:border-0 text-xs";
+                    div.innerHTML = highlightMatch(match, val);
+
+                    div.onpointerdown = function (e) {
+                        e.preventDefault();
+                        document.getElementById('filterLocationEn').value = '';
+                        document.getElementById('filterLocationEs').value = '';
+                        sugBox.classList.add('hidden');
+                        addFilterAreaValue(match);
+                    };
+                    sugBox.appendChild(div);
                 });
-                alert("🕵️‍♂️ Admin Mode Toggled");
+                sugBox.classList.remove('hidden');
+            }
+
+            document.addEventListener('pointerdown', function (e) {
+                const sugBox = document.getElementById('filterSuggestions');
+                const searchEn = document.getElementById('filterLocationEn');
+                const searchEs = document.getElementById('filterLocationEs');
+                if (sugBox && e.target !== searchEn && e.target !== searchEs && !sugBox.contains(e.target)) {
+                    sugBox.classList.add('hidden');
+                }
+            });
+
+            // --- SEND PROPERTY MODAL ---
+            let currentActiveNotification = null; // Track which notification triggered the modal
+
+            function openSendPropertyModal(buyerName = "Roberto M.", searchDetails = "Pérez Zeledón • Finca / Farm • $250k - $450k", propertyUrl = "", propertyTitle = "", sourceElement = null) {
+                currentActiveNotification = sourceElement; // Store the reference
+                
+                document.getElementById('sendPropertyTargetBuyer').innerText = "To: " + buyerName;
+                document.getElementById('sendPropertyTargetDetails').innerText = searchDetails;
+                
+                const propDisplay = document.getElementById('sendPropertyTargetProperty');
+                if (propertyTitle) {
+                    propDisplay.querySelector('span').innerText = propertyTitle;
+                    propDisplay.classList.remove('hidden');
+                } else {
+                    propDisplay.classList.add('hidden');
+                }
+
+                document.getElementById('sendPropertyModal').classList.remove('hidden');
+                document.getElementById('sendPropertyModal').classList.add('flex');
+                document.getElementById('sendPropertyFormContent').classList.remove('hidden');
+                document.getElementById('sendPropertyFormContent').classList.add('flex');
+                document.getElementById('sendPropertySuccess').classList.add('hidden');
+                document.getElementById('sendPropertySuccess').classList.remove('flex');
+                
+                const input = document.getElementById('propLink');
+                input.value = propertyUrl;
+                input.classList.remove('ring-2', 'ring-amber-400', 'bg-amber-50', 'dark:bg-amber-900/20'); // Reset premium styling
+            }
+            function closeSendPropertyModal() {
+                document.getElementById('sendPropertyModal').classList.add('hidden');
+                document.getElementById('sendPropertyModal').classList.remove('flex');
+            }
+            function reportToOffice() {
+            closeModals();
+            
+            // Assuming this OKR prompt in the feed index is for a NEW LISTING since you are dealing with matches/active searching.
+            // In a real app, you would pass the type ('listing' or 'reserva') into this function. Defaulting to Listing for Index:
+            // Google Form Link for New Listing (Formulario de Nueva Propiedad)
+            window.open("https://docs.google.com/forms/d/e/1FAIpQLSd788bL1fT5r6FHzn89eR2B84D3W21g_m0N5P7A41tE2w56Q/viewform?usp=header", "_blank");
+            
+            // Clear any pending OKR reminders for listings since they did it
+            localStorage.removeItem('pendingOkrListing');
+        }
+
+        function setOkrReminder(type) {
+            closeModals();
+            // Store that they need a reminder tomorrow (we will use a fake date or flag)
+            localStorage.setItem('pendingOkr' + type, 'true');
+            showNotification(currentLang === 'en' ? 'Reminder Set' : 'Recordatorio Configurado', currentLang === 'en' ? "We'll remind you tomorrow to report your OKR." : "Te recordaremos mañana reportar tu OKR.");
+        }
+            function submitSendProperty() {
+                const link = document.getElementById('propLink');
+                if (!link.value) {
+                    link.classList.add('border-red-500');
+                    return;
+                }
+                link.classList.remove('border-red-500');
+                
+                // Get the agent name from the "To: " string
+                let agentName = document.getElementById('sendPropertyTargetBuyer').innerText.replace('To: ', '');
+                document.getElementById('successAgentNameEn').innerText = agentName;
+                document.getElementById('successAgentNameEs').innerText = agentName;
+                
+                // Show standard success, no OKR for a match
+                document.getElementById('sendPropertyModal').classList.remove('hidden');
+                document.getElementById('sendPropertyModal').classList.add('flex');
+                document.getElementById('sendPropertySuccess').classList.remove('hidden');
+                document.getElementById('sendPropertySuccess').classList.add('flex');
+                document.getElementById('sendPropertyFormContent').classList.add('hidden');
+                document.getElementById('sendPropertyFormContent').classList.remove('flex');
+                
+                // If this was triggered from a notification card, mark it as Sent
+                if (currentActiveNotification) {
+                    const btn = currentActiveNotification;
+                    btn.classList.remove('bg-amber-400', 'text-amber-900', 'hover:bg-amber-500');
+                    btn.classList.add('bg-green-500', 'text-white', 'opacity-50', 'pointer-events-none');
+                    btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Match Sent';
+                    
+                    // Also style the parent card to show it's completed
+                    const card = btn.closest('.bg-gradient-to-r');
+                    if(card) {
+                        card.classList.add('opacity-70', 'grayscale-[0.5]');
+                        card.querySelector('.bg-amber-400').classList.replace('bg-amber-400', 'bg-green-500'); // Change the left border stripe
+                    }
+                    currentActiveNotification = null; // reset
+                }
+            }
+
+            // --- FILTER CHIPS ---
+            let filters = [];
+            function addFilterAreaValue(val) {
+                if (!val) return;
+                if (!filters.includes(val)) {
+                    filters.push(val);
+                    renderFilters();
+                }
+            }
+
+            function renderFilters() {
+                const container = document.getElementById('filterChips');
+                container.innerHTML = '';
+                filters.forEach((f, i) => {
+                    container.innerHTML += `<div class="bg-blue-100 text-[#003DA5] px-2 py-1 rounded-lg text-[10px] font-black flex items-center gap-2">${f} <i class="fa-solid fa-xmark cursor-pointer" onclick="filters.splice(${i},1);renderFilters()"></i></div>`;
+                });
+            }
+
+            
+            function submitQuickTicket() {
+                const type = document.getElementById('quickTicketType').value;
+                const body = document.getElementById('quickTicketBody').value.trim();
+                if (!body) return;
+
+                const tickets = JSON.parse(localStorage.getItem('nexusTickets')) || [];
+                tickets.unshift({
+                    id: Date.now(),
+                    type: type,
+                    from: localStorage.getItem('userName') || 'Agent',
+                    email: localStorage.getItem('nexusEmail') || localStorage.getItem('userEmail') || 'unknown',
+                    date: new Date().toISOString().split('T')[0],
+                    status: 'open',
+                    subject: body.substring(0, 60) + (body.length > 60 ? '...' : ''),
+                    body: body
+                });
+                localStorage.setItem('nexusTickets', JSON.stringify(tickets));
+
+                // Clear and close
+                document.getElementById('quickTicketBody').value = '';
+                document.getElementById('quickTicketType').selectedIndex = 0;
+                document.getElementById('reportModal').classList.add('hidden');
+                document.getElementById('reportModal').classList.remove('flex');
+
+                // Quick toast
+                const toast = document.createElement('div');
+                toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl z-[200] animate-fade';
+                toast.innerHTML = '<i class="fa-solid fa-check-circle mr-2"></i>' + (localStorage.getItem('nexusLang') === 'es' ? 'Ticket enviado ✅' : 'Ticket submitted ✅');
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 2500);
+            }
+
+            function applyFilters() {
+                toggleFilter(); // Hide the sidebar
+                
+                const cards = document.querySelectorAll('.feed-viewport > div, .swipe-card'); // Target Feed posts
+                
+                if (filters.length === 0 || filters.includes('All Types') || filters.includes('Todos los Tipos')) {
+                    // Show all
+                    cards.forEach(card => card.style.display = '');
+                    return;
+                }
+                
+                // Otherwise, check if the card contains any of the filter keywords
+                cards.forEach(card => {
+                    if (card.id === 'filterSidebar' || card.id === 'overlay') return; // Skip non-cards
+                    
+                    const text = card.innerText.toLowerCase();
+                    const matches = filters.some(f => {
+                        const term = f.toLowerCase();
+                        // Handle Spanish/English equivalents to ensure it works in both UI modes
+                        if (term === 'house' || term === 'casa') return text.includes('house') || text.includes('casa');
+                        if (term === 'condo' || term === 'condominio') return text.includes('condo') || text.includes('apartment') || text.includes('condominio');
+                        if (term === 'finca' || term === 'farm') return text.includes('finca') || text.includes('farm');
+                        if (term === 'land/lot' || term === 'lote') return text.includes('lot') || text.includes('lote') || text.includes('land');
+                        if (term === 'commercial' || term === 'comercial') return text.includes('commercial') || text.includes('comercial');
+                        
+                        // Default general text match
+                        return text.includes(term); 
+                    });
+                    
+                    if (matches) {
+                        card.style.display = '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+
+            function toggleFilter() {
+                const sidebar = document.getElementById('filterSidebar');
+                const overlay = document.getElementById('overlay');
+                sidebar.classList.toggle('-translate-x-full');
+                overlay.classList.toggle('hidden');
+                setTimeout(() => overlay.classList.toggle('opacity-100'), 10);
+            }
+
+            function toggleNotifications() {
+                const panel = document.getElementById('notificationsPanel');
+                panel.classList.toggle('hidden');
+                panel.classList.toggle('flex');
+                
+                // Remove pulse if opening
+                if (!panel.classList.contains('hidden')) {
+                    const bellBadge = document.querySelector('.fa-bell').nextElementSibling;
+                    if(bellBadge) {
+                        bellBadge.classList.add('hidden');
+                        bellBadge.classList.remove('animate-pulse');
+                        bellBadge.style.backgroundColor = '';
+                    }
+                }
+            }
+
+            // --- LANGUAGE TOGGLE (The Feed Fix) ---
+            function setLanguage(lang) {
+                const en = document.querySelectorAll('.lang-en');
+                const es = document.querySelectorAll('.lang-es');
+                document.getElementById('btn-en').className = lang === 'en' ? 'px-2 py-1 rounded-full bg-[#003DA5] text-white' : 'px-2 py-1 rounded-full text-slate-400';
+                document.getElementById('btn-es').className = lang === 'es' ? 'px-2 py-1 rounded-full bg-[#003DA5] text-white' : 'px-2 py-1 rounded-full text-slate-400';
+
+                en.forEach(el => lang === 'en' ? el.classList.remove('hidden') : el.classList.add('hidden'));
+                es.forEach(el => lang === 'es' ? el.classList.remove('hidden') : el.classList.add('hidden'));
+            }
+
+            // --- ONBOARDING LOGIC ---
+            window.addEventListener('load', () => {
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('onboard') === 'true') {
+                    startOnboarding();
+                }
+            });
+
+            function startOnboarding() {
+                const overlay = document.getElementById('onboardingOverlay');
+                overlay.classList.remove('hidden');
+                setTimeout(() => {
+                    overlay.classList.remove('opacity-0');
+                    nextOnboardStep(1);
+                }, 50);
+            }
+
+            function nextOnboardStep(step) {
+                document.getElementById('onboardStep1').classList.add('hidden');
+                document.getElementById('onboardStep2').classList.add('hidden');
+                document.getElementById('onboardStep3').classList.add('hidden');
+                document.getElementById(`onboardStep${step}`).classList.remove('hidden');
+            }
+
+            function endOnboarding() {
+                const overlay = document.getElementById('onboardingOverlay');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    // Clean up URL safely without reloading
+                    if (history.pushState) {
+                        var newurl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                        window.history.pushState({ path: newurl }, '', newurl);
+                    }
+                }, 300);
+            }
+            // --- ADMIN MODE ---
+            let adminClicks = 0;
+            let adminTimeout;
+            function toggleAdminMode() {
+                adminClicks++;
+                clearTimeout(adminTimeout);
+                adminTimeout = setTimeout(() => adminClicks = 0, 1000);
+                if (adminClicks >= 3) {
+                    adminClicks = 0;
+                    document.querySelectorAll('.admin-only').forEach(el => {
+                        el.classList.toggle('hidden');
+                        el.classList.toggle('flex');
+                    });
+                    alert("🕵️‍♂️ Admin Mode Toggled");
+                }
+            }
+
+            // --- SWIPE TO DISMISS ---
+            document.querySelectorAll('.swipe-card').forEach(card => {
+                let startX = 0;
+                let currentX = 0;
+                card.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+                card.addEventListener('touchmove', e => {
+                    currentX = e.touches[0].clientX - startX;
+                    if (currentX < 0) { // Only swipe left
+                        card.style.transform = `translateX(${currentX}px)`;
+                    }
+                });
+                card.addEventListener('touchend', e => {
+                    if (currentX < -100) {
+                        card.style.transition = 'transform 0.3s ease-out';
+                        card.style.transform = 'translateX(-100%)';
+                        setTimeout(() => card.style.display = 'none', 300);
+                    } else {
+                        card.style.transition = 'transform 0.3s ease-out';
+                        card.style.transform = 'translateX(0)';
+                    }
+                    setTimeout(() => card.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 300);
+                });
+            });
+        </script>
+    <script>
+        // ===== DYNAMIC SUPABASE SEARCH CARDS =====
+        async function loadSupabaseSearches() {
+            if (!isSupabaseConfigured() || !supabase) return;
+
+            try {
+                const { data, error } = await supabase
+                    .from('searches')
+                    .select('*, profiles:agent_id(full_name, role)')
+                    .eq('status', 'active')
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+
+                if (error) throw error;
+                if (!data || data.length === 0) return;
+
+                const container = document.getElementById('supabaseSearches');
+                if (!container) return;
+
+                // Hide demo cards since we have real data
+                const demoCards = container.parentElement.querySelectorAll('.swipe-card');
+                demoCards.forEach(c => c.style.display = 'none');
+
+                container.innerHTML = data.map(s => renderSearchCard(s)).join('');
+
+                // Apply current language
+                const lang = localStorage.getItem('nexusLang') || 'en';
+                container.querySelectorAll('.lang-en').forEach(el => lang === 'en' ? el.classList.remove('hidden') : el.classList.add('hidden'));
+                container.querySelectorAll('.lang-es').forEach(el => lang === 'es' ? el.classList.remove('hidden') : el.classList.add('hidden'));
+
+            } catch (e) {
+                console.warn('Could not load Supabase searches:', e.message);
             }
         }
 
-        // --- SWIPE TO DISMISS ---
-        document.querySelectorAll('.swipe-card').forEach(card => {
-            let startX = 0;
-            let currentX = 0;
-            card.addEventListener('touchstart', e => startX = e.touches[0].clientX);
-            card.addEventListener('touchmove', e => {
-                currentX = e.touches[0].clientX - startX;
-                if(currentX < 0) { // Only swipe left
-                    card.style.transform = `translateX(${currentX}px)`;
+        function renderSearchCard(s) {
+            const agentName = s.profiles?.full_name || 'Unknown Agent';
+            const initials = agentName.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
+            const clientInit = (s.client_name || '?').substring(0,1).toUpperCase();
+            const propType = (s.property_type || 'any').split(',')[0].trim();
+            const propLabel = propType.charAt(0).toUpperCase() + propType.slice(1);
+            const budgetMin = s.budget_min ? formatBudget(s.budget_min) : '—';
+            const budgetMax = s.budget_max ? formatBudget(s.budget_max) : '—';
+            const timing = s.timing || 'Flexible';
+            const payment = s.payment_method || 'Unknown';
+            const daysSince = Math.floor((Date.now() - new Date(s.created_at).getTime()) / 86400000);
+            const isNew = daysSince <= 7;
+            const isStale = daysSince > 60;
+
+            const paymentIcons = {
+                'Cash': 'fa-money-bill-1-wave text-green-600',
+                'Mortgage Approved': 'fa-building-columns text-blue-600',
+                'Needs Seller Financing': 'fa-handshake text-amber-600',
+                'Unknown': 'fa-circle-question text-slate-400'
+            };
+            const payIcon = paymentIcons[payment] || paymentIcons['Unknown'];
+
+            const staleClass = isStale ? 'opacity-75 grayscale-[0.3]' : '';
+            const badgeColor = isNew ? 'bg-blue-600 text-white' : isStale ? 'bg-slate-300 text-slate-600' : 'bg-green-500 text-white';
+            const badgeText = isNew ? 'NEW' : isStale ? 'OLD' : `${daysSince}d`;
+
+            return `
+            <div class="swipe-card relative transition-transform duration-300 ${staleClass}">
+                <div class="bg-white dark:bg-slate-800 rounded-[32px] p-5 border shadow-sm space-y-4">
+                    <div class="flex justify-between items-start gap-3">
+                        <div class="relative">
+                            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-[#003DA5] font-black text-lg ring-2 ${isStale?'ring-slate-300':'ring-green-500'} ring-offset-2">
+                                <i class="fa-solid fa-user-tie text-xl"></i>
+                            </div>
+                            ${!isStale ? '<div class="absolute -bottom-2 -right-2 bg-yellow-400 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm"><i class="fa-solid fa-star text-[8px] text-white"></i></div>' : ''}
+                        </div>
+
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="${badgeColor} text-[8px] font-black px-2 py-0.5 rounded uppercase">${badgeText}</span>
+                                <span class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">• ${propLabel}</span>
+                            </div>
+                            <p class="text-[8px] font-black text-[#003DA5] dark:text-blue-400 uppercase tracking-widest mb-1"><i class="fa-solid fa-user-tag"></i> <span class="lang-en">Buyer</span><span class="lang-es hidden">Cliente</span></p>
+                            <h3 class="font-black text-xl text-slate-900 dark:text-slate-100 italic leading-none mb-2">${s.client_name || 'Private'}</h3>
+                            <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-700/50 p-2 rounded-xl border border-slate-100 dark:border-slate-700">
+                                <div class="w-6 h-6 rounded-full bg-blue-100 text-[#003DA5] flex items-center justify-center text-[9px] font-black"><i class="fa-solid fa-headset"></i></div>
+                                <div>
+                                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none lang-en">Representing Agent</p>
+                                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none lang-es hidden">Agente</p>
+                                    <p class="text-[10px] font-bold text-slate-700 dark:text-slate-200 leading-tight">${agentName}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right flex flex-col items-end">
+                            <div class="flex flex-col items-center">
+                                <i class="fa-solid ${payIcon} text-xl"></i>
+                                <p class="text-[7px] font-black text-slate-600 dark:text-slate-400 uppercase mt-1">${payment}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+                        <div>
+                            <p class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase lang-en">Budget</p>
+                            <p class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase lang-es hidden">Presupuesto</p>
+                            <p class="text-xs font-black text-slate-900 dark:text-slate-100">${budgetMin} — ${budgetMax}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase lang-en">Timing</p>
+                            <p class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase lang-es hidden">Plazo</p>
+                            <p class="text-xs font-black text-blue-600 italic">${timing}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button onclick="openSendPropertyModal('${agentName.replace(/'/g, "\\'")}', 'For Buyer: ${(s.client_name||'').replace(/'/g, "\\'")} (${(s.location||'').replace(/'/g, "\\'")} • ${propLabel})')"
+                            class="flex-1 bg-[#ED1C24] text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-lg lang-en active:scale-95 transition-transform">Send a Match for this Search</button>
+                        <button onclick="openSendPropertyModal('${agentName.replace(/'/g, "\\'")}', 'Comprador: ${(s.client_name||'').replace(/'/g, "\\'")} (${(s.location||'').replace(/'/g, "\\'")} • ${propLabel})')"
+                            class="flex-1 bg-[#ED1C24] text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-lg lang-es hidden active:scale-95 transition-transform">Enviar un Match para esta B\u00fasqueda</button>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function formatBudget(n) {
+            if (n >= 1000000) return '$' + (n/1000000).toFixed(1) + 'M';
+            if (n >= 1000) return '$' + Math.round(n/1000) + 'k';
+            return '$' + n;
+        }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Load real searches from Supabase (wrapped in try/catch so premium locking always runs)
+            try { await loadSupabaseSearches(); } catch(e) { console.warn('Search load error:', e); }
+
+            const isPremium = localStorage.getItem('isPremium') === 'true';
+            const isAdmin = localStorage.getItem('isAdmin') === 'true';
+
+            // Hide Admin feature
+            if (!isAdmin) {
+                const broker = document.getElementById('nav-broker');
+                if (broker) broker.style.display = 'none';
+            }
+
+            // Premium Access Control - Visible to all, but restricted access
+            // PHASE 1 LAUNCH LOCK (Hardcoded for ALL users)
+            const launchLockedElements = [
+                document.getElementById('nav-market'),
+                document.getElementById('nav-office'),
+                document.getElementById('nav-business'),
+                document.getElementById('nav-resources'),
+                ...Array.from(document.querySelectorAll('.premium-only')),
+                ...Array.from(document.querySelectorAll('a[href="office.html"]')),
+                ...Array.from(document.querySelectorAll('a[href="my-business.html"]')),
+                ...Array.from(document.querySelectorAll('a[href="resources.html"]')),
+                ...Array.from(document.querySelectorAll('a[href="market.html"]'))
+            ];
+            
+            // Remove nulls and apply locks unconditionally for everyone
+            launchLockedElements.filter(Boolean).forEach(el => {
+                if (el && el.tagName === 'A' || el.tagName === 'BUTTON' || el.tagName === 'DIV' && el.getAttribute('onclick')) {
+                    // Apply visual lock and make it a group for hover effects
+                    el.classList.add('grayscale', 'opacity-60', 'relative', 'group');
+                    
+                    // Don't add duplicate lock icons if it already has one
+                    if (!el.innerHTML.includes('fa-lock')) {
+                        el.insertAdjacentHTML('beforeend', '<div class="absolute top-1 right-1 lg:top-2 lg:right-2 bg-slate-900 border border-[#003DA5] rounded-full w-4 h-4 flex items-center justify-center shadow-lg z-20"><i class="fa-solid fa-lock text-[8px] text-white"></i></div>');
+                        
+                        // Add the hover tooltip
+                        el.insertAdjacentHTML('beforeend', `
+                            <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-xl border border-slate-700">
+                                <span class="lang-en inline" style="display: var(--lang-en-display, inline);">Premium Feature</span>
+                                <span class="lang-es hidden" style="display: var(--lang-es-display, none);">Función Premium</span>
+                            </div>
+                        `);
+                    }
+
+                    // Remove existing hrefs or onclicks to disable it natively
+                    if (el.tagName === 'A') el.removeAttribute('href');
+                    if (el.hasAttribute('onclick')) el.removeAttribute('onclick');
+                    
+                    // Prevent default click gracefully without alert
+                    el.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
                 }
-            });
-            card.addEventListener('touchend', e => {
-                if(currentX < -100) {
-                    card.style.transition = 'transform 0.3s ease-out';
-                    card.style.transform = 'translateX(-100%)';
-                    setTimeout(() => card.style.display = 'none', 300);
-                } else {
-                    card.style.transition = 'transform 0.3s ease-out';
-                    card.style.transform = 'translateX(0)';
-                }
-                setTimeout(() => card.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 300);
             });
         });
     </script>
 </body>
+
 </html>

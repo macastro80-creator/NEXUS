@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REMAX App Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <!-- Confetti Library for the Party Effect -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f1f5f9;
+            padding-bottom: 120px;
+        }
+
+        /* BARRA DE META CON SHADOW DE RESERVADO */
+        .progress-container {
+            height: 40px;
+            background: #e2e8f0;
+            border-radius: 99px;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid #fff;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        #bar-real {
+            height: 100%;
+            background: #003DA5;
+            border-radius: 99px;
+            position: absolute;
+            z-index: 3;
+            transition: width 1s ease;
+        }
+
+        #bar-shadow {
+            height: 100%;
+            background: rgba(0, 61, 165, 0.25);
+            position: absolute;
+            z-index: 2;
+            transition: width 1s ease, opacity 0.5s ease;
+        }
+
+        /* BOTÓN OKR ANIMADO */
+        @keyframes pulse-okr {
+            0% {
+                transform: scale(.98);
+                box-shadow: 0 0 0 0 rgba(225, 27, 34, 0.5);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(225, 27, 34, 0);
+            }
+
+            100% {
+                transform: scale(.98);
+                box-shadow: 0 0 0 0 rgba(225, 27, 34, 0);
+            }
+        }
+
+        .btn-okr {
+            background-color: #64748b !important; /* Slate 500 Default */
+            color: white !important;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-okr.btn-okr-active {
+            animation: pulse-okr 2s infinite;
+            background-color: #E11B22 !important; /* Red */
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(8px);
+            color: white;
+            padding: 16px;
+        }
+
+        /* Language Toggle */
+        .lang-toggle {
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 900;
+            background: #e2e8f0;
+            padding: 4px 8px;
+            border-radius: 12px;
+            color: #64748b;
+            border: none;
+        }
+
+        .lang-toggle.active {
+            background: #003DA5;
+            color: white;
+        }
+    </style>
+</head>
+
+<body class="p-4">
+
+    <!-- Modal Cierre -->
+    <div id="modal-cierre" class="overlay" onclick="this.style.display='none'">
+        <div class="text-center max-w-sm">
+            <h1 class="text-6xl mb-4">🥂</h1>
+            <h2 class="text-4xl font-black italic uppercase text-green-400" data-i18n="sold">¡VENDIDO!</h2>
+            <p class="mt-4 font-bold text-lg leading-tight" data-i18n="soldSub">¡Felicidades! Un paso más que te acerca
+                a tu meta. Disfruta este triunfo, eres imparable.</p>
+            <p class="mt-4 text-xs opacity-70 italic" data-i18n="soldNote">La facturación se ha movido al Logro Real.
+            </p>
+        </div>
+    </div>
+
+    <!-- Modal Caída -->
+    <div id="modal-caida" class="overlay">
+        <div class="bg-slate-900 p-8 rounded-[40px] w-full max-w-sm border border-white/10 text-center relative overflow-hidden">
+            
+            <!-- MI VISIÓN REMINDER -->
+            <div id="caida-vision-container" class="bg-red-900/40 border border-red-500/30 p-5 rounded-3xl mb-6 relative hidden overflow-hidden shadow-inner">
+                <i class="fa-solid fa-bullseye absolute -right-3 -bottom-3 text-red-500/20 text-6xl rotate-12"></i>
+                <h3 class="text-[10px] font-black uppercase tracking-widest mb-2 text-red-400 flex justify-center items-center gap-1.5 relative z-10">
+                    <i class="fa-solid fa-eye"></i> <span class="lang-en">My Vision</span><span class="lang-es hidden">Mi Visión</span>
+                </h3>
+                <p class="text-xs font-black leading-relaxed text-slate-200 italic relative z-10" id="caida-vision-text"></p>
+            </div>
+
+            <h2 class="text-xl font-black text-red-500 uppercase italic mb-2" data-i18n="learning">Cuando pierdas, no pierdas el aprendizaje</h2>
+            <p class="text-[10px] text-slate-300 italic mb-6 leading-relaxed" data-i18n="learningSub">Esto también es
+                parte del negocio. Haz algo lindo por ti hoy, respira, y mañana vuelve a empezar con más fuerza.</p>
+            <textarea id="txt-fail"
+                class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-xs mb-4 italic outline-none placeholder-white/50"
+                data-i18n-placeholder="learningPlaceholder"
+                placeholder="¿Qué aprendimos de este cierre fallido?"></textarea>
+
+            <!-- Guardamos el ID de la reserva que falló temporalmente -->
+            <input type="hidden" id="current-failed-reserva-id" value="">
+
+            <button onclick="confirmarBorrado()"
+                class="w-full py-4 bg-white text-black rounded-full font-black uppercase text-[10px] hover:bg-slate-200 transition"
+                data-i18n="archive">Archivar y Seguir Adelante</button>
+        </div>
+    </div>
+
+    </div>
+
+    <!-- OKR TRACKER MODAL (DAILY INPUT) -->
+    <div id="okrTrackerModal" class="fixed inset-0 bg-slate-900/80 z-[100] hidden flex-col items-center p-6 backdrop-blur-sm overflow-y-auto no-scrollbar">
+        <div class="bg-slate-50 dark:bg-slate-900 w-full max-w-sm rounded-[35px] p-6 shadow-2xl relative my-auto border border-slate-200 dark:border-slate-800">
+            
+            <button onclick="document.getElementById('okrTrackerModal').classList.add('hidden')" class="absolute right-6 top-6 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+
+            <h3 class="text-2xl font-black text-slate-900 dark:text-white italic tracking-tighter mb-1 mt-2 lang-en">Daily OKRs</h3>
+            <h3 class="text-2xl font-black text-slate-900 dark:text-white italic tracking-tighter mb-1 mt-2 lang-es hidden">OKRs Diarios</h3>
+            
+            <p class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest lang-en">Log your daily activity</p>
+            <p class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest lang-es hidden">Registra tu actividad diaria</p>
+
+            <!-- STREAK TRACKER -->
+            <div class="bg-[#003DA5] text-white p-4 rounded-3xl shadow-lg mb-6 flex justify-between items-center relative overflow-hidden">
+                <div class="z-10">
+                    <p class="text-[9px] font-black uppercase tracking-widest text-blue-200 lang-en">Consistency Streak</p>
+                    <p class="text-[9px] font-black uppercase tracking-widest text-blue-200 lang-es hidden">Racha de Consistencia</p>
+                    <p class="text-2xl font-black italic tracking-tighter mt-1">14 <span class="text-sm font-bold text-blue-300">/ 30</span> <span class="text-[10px] uppercase ml-1 lang-en">Days</span><span class="text-[10px] uppercase ml-1 lang-es hidden">Días</span></p>
+                </div>
+                <div class="text-right z-10">
+                    <div class="w-14 h-14 rounded-full border-4 border-blue-400/30 flex items-center justify-center bg-blue-800/50 backdrop-blur-sm">
+                        <span class="text-sm font-black">46%</span>
+                    </div>
+                </div>
+                <i class="fa-solid fa-fire absolute -right-4 -bottom-4 text-6xl opacity-10 blur-[2px]"></i>
+            </div>
+
+            <div class="space-y-6">
+                <!-- CAPTACIÓN -->
+                <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm">
+                    <h4 class="text-xs font-black text-blue-900 dark:text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-bullhorn"></i> <span class="lang-en">Capture (5)</span><span class="lang-es hidden">Captación (5)</span>
+                    </h4>
+                    
+                    <div class="space-y-3">
+                        <!-- Calls -->
+                        <div class="flex justify-between items-center text-[10px] font-bold">
+                            <span class="text-slate-500 lang-en uppercase">Calls</span>
+                            <span class="text-slate-500 lang-es hidden uppercase">Llamados</span>
+                            <div class="flex items-center gap-3">
+                                <button onclick="updateOkr('calls', -1)" class="w-7 h-7 rounded-full bg-slate-50 border border-slate-200 dark:bg-slate-700 dark:border-slate-600 flex items-center justify-center text-slate-500 active:scale-95 transition"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                <span id="val-calls" class="text-slate-800 dark:text-slate-200 font-black text-sm w-4 text-center">0</span>
+                                <button onclick="updateOkr('calls', 1)" class="w-7 h-7 rounded-full bg-blue-50 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-800 flex items-center justify-center text-[#003DA5] dark:text-blue-400 active:scale-95 transition"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                            </div>
+                        </div>
+                        
+                        <!-- Entrevista PL -->
+                        <div class="flex justify-between items-center text-[10px] font-bold">
+                            <span class="text-slate-500 uppercase">Entrevista PL</span>
+                            <div class="flex items-center gap-3">
+                                <button onclick="updateOkr('pl', -1)" class="w-7 h-7 rounded-full bg-slate-50 border border-slate-200 dark:bg-slate-700 dark:border-slate-600 flex items-center justify-center text-slate-500 active:scale-95 transition"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                <span id="val-pl" class="text-slate-800 dark:text-slate-200 font-black text-sm w-4 text-center">0</span>
+                                <button onclick="updateOkr('pl', 1)" class="w-7 h-7 rounded-full bg-blue-50 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-800 flex items-center justify-center text-[#003DA5] dark:text-blue-400 active:scale-95 transition"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                            </div>
+                        </div>
+                        
+                        <!-- ACM -->
+                        <div class="flex justify-between items-center text-[10px] font-bold">
+                            <span class="text-slate-500 uppercase">ACM</span>
+                            <div class="flex items-center gap-3">
+                                <button onclick="updateOkr('acm', -1)" class="w-7 h-7 rounded-full bg-slate-50 border border-slate-200 dark:bg-slate-700 dark:border-slate-600 flex items-center justify-center text-slate-500 active:scale-95 transition"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                <span id="val-acm" class="text-slate-800 dark:text-slate-200 font-black text-sm w-4 text-center">0</span>
+                                <button onclick="updateOkr('acm', 1)" class="w-7 h-7 rounded-full bg-blue-50 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-800 flex items-center justify-center text-[#003DA5] dark:text-blue-400 active:scale-95 transition"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Entrevista Listing -->
+                        <div class="flex justify-between items-center text-[10px] font-bold">
+                            <span class="text-slate-500 uppercase">Entrevista Listing</span>
+                            <div class="flex items-center gap-3">
+                                <button onclick="updateOkr('listing', -1)" class="w-7 h-7 rounded-full bg-slate-50 border border-slate-200 dark:bg-slate-700 dark:border-slate-600 flex items-center justify-center text-slate-500 active:scale-95 transition"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                <span id="val-listing" class="text-slate-800 dark:text-slate-200 font-black text-sm w-4 text-center">0</span>
+                                <button onclick="updateOkr('listing', 1)" class="w-7 h-7 rounded-full bg-blue-50 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-800 flex items-center justify-center text-[#003DA5] dark:text-blue-400 active:scale-95 transition"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Captaciones Exclusivas -->
+                        <div class="flex flex-col">
+                            <div class="flex justify-between items-center text-[10px] font-bold">
+                                <span class="text-slate-500 uppercase">Captaciones Exclusivas</span>
+                                <div class="flex items-center gap-3">
+                                    <button onclick="updateOkr('exclusiva', -1)" class="w-7 h-7 rounded-full bg-slate-50 border border-slate-200 dark:bg-slate-700 dark:border-slate-600 flex items-center justify-center text-slate-500 active:scale-95 transition"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                    <span id="val-exclusiva" class="text-slate-800 dark:text-slate-200 font-black text-sm w-4 text-center">0</span>
+                                    <button onclick="updateOkr('exclusiva', 1)" class="w-7 h-7 rounded-full bg-emerald-50 border border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400 active:scale-95 transition"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                                </div>
+                            </div>
+                            <!-- Prompt for Reporting -->
+                            <div id="prompt-exclusiva" class="mt-2 bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800 hidden animate-fade">
+                                <p class="text-[9px] font-black text-emerald-700 dark:text-emerald-400 uppercase mb-2 lang-en tracking-widest text-center">Report listing to office?</p>
+                                <p class="text-[9px] font-black text-emerald-700 dark:text-emerald-400 uppercase mb-2 lang-es hidden tracking-widest text-center">¿Reportar propiedad a la oficina?</p>
+                                <div class="flex gap-2">
+                                    <button onclick="window.location.href='Mi_Oficina.html#agenda-recursos'" class="flex-1 bg-emerald-500 hover:bg-emerald-600 shadow-md shadow-emerald-500/30 text-white text-[9px] font-black uppercase py-2 rounded-lg transition active:scale-95">
+                                        <span class="lang-en">Yes</span><span class="lang-es hidden">Sí</span>
+                                    </button>
+                                    <button onclick="document.getElementById('prompt-exclusiva').classList.add('hidden')" class="flex-1 bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-[9px] font-black uppercase py-2 rounded-lg transition hover:bg-emerald-50 dark:hover:bg-emerald-900/40 active:scale-95">
+                                        <span class="lang-en">Later</span><span class="lang-es hidden">Luego</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VENTAS -->
+                <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm">
+                    <h4 class="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-handshake"></i> <span class="lang-en">Sales (6)</span><span class="lang-es hidden">Ventas (6)</span>
+                    </h4>
+                    
+                    <div class="space-y-3">
+                        <!-- Contrato de Búsqueda -->
+                        <div class="flex justify-between items-center text-[10px] font-bold">
+                            <span class="text-slate-500 uppercase">Contrato de Búsqueda</span>
+                            <div class="flex items-center gap-3">
+                                <button onclick="updateOkr('search', -1)" class="w-7 h-7 rounded-full bg-slate-50 border border-slate-200 dark:bg-slate-700 dark:border-slate-600 flex items-center justify-center text-slate-500 active:scale-95 transition"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                <span id="val-search" class="text-slate-800 dark:text-slate-200 font-black text-sm w-4 text-center">0</span>
+                                <button onclick="updateOkr('search', 1)" class="w-7 h-7 rounded-full bg-emerald-50 border border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400 active:scale-95 transition"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Consultas -->
+                        <div class="flex justify-between items-center text-[10px] font-bold">
+                            <span class="text-slate-500 uppercase">Consultas</span>
+                            <div class="flex items-center gap-3">
+                                <button onclick="updateOkr('consults', -1)" class="w-7 h-7 rounded-full bg-slate-50 border border-slate-200 dark:bg-slate-700 dark:border-slate-600 flex items-center justify-center text-slate-500 active:scale-95 transition"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                <span id="val-consults" class="text-slate-800 dark:text-slate-200 font-black text-sm w-4 text-center">0</span>
+                                <button onclick="updateOkr('consults', 1)" class="w-7 h-7 rounded-full bg-emerald-50 border border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400 active:scale-95 transition"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Muestras -->
+                        <div class="flex justify-between items-center text-[10px] font-bold">
+                            <span class="text-slate-500 uppercase">Muestras</span>
+                            <div class="flex items-center gap-3">
+                                <button onclick="updateOkr('shows', -1)" class="w-7 h-7 rounded-full bg-slate-50 border border-slate-200 dark:bg-slate-700 dark:border-slate-600 flex items-center justify-center text-slate-500 active:scale-95 transition"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                <span id="val-shows" class="text-slate-800 dark:text-slate-200 font-black text-sm w-4 text-center">0</span>
+                                <button onclick="updateOkr('shows', 1)" class="w-7 h-7 rounded-full bg-emerald-50 border border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400 active:scale-95 transition"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Reservas -->
+                        <div class="flex flex-col">
+                            <div class="flex justify-between items-center text-[10px] font-bold">
+                                <span class="text-slate-500 uppercase">Reservas</span>
+                                <div class="flex items-center gap-3">
+                                    <button onclick="updateOkr('reservas', -1)" class="w-7 h-7 rounded-full bg-slate-50 border border-slate-200 dark:bg-slate-700 dark:border-slate-600 flex items-center justify-center text-slate-500 active:scale-95 transition"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                    <span id="val-reservas" class="text-slate-800 dark:text-slate-200 font-black text-sm w-4 text-center">0</span>
+                                    <button onclick="updateOkr('reservas', 1)" class="w-7 h-7 rounded-full bg-emerald-50 border border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400 active:scale-95 transition"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                                </div>
+                            </div>
+                            <!-- Prompt for Reporting -->
+                            <div id="prompt-reservas" class="mt-2 bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800 hidden animate-fade">
+                                <p class="text-[9px] font-black text-emerald-700 dark:text-emerald-400 uppercase mb-2 lang-en tracking-widest text-center">Report reservation to office?</p>
+                                <p class="text-[9px] font-black text-emerald-700 dark:text-emerald-400 uppercase mb-2 lang-es hidden tracking-widest text-center">¿Reportar reserva a la oficina?</p>
+                                <div class="flex gap-2">
+                                    <button onclick="window.location.href='Mi_Oficina.html#agenda-recursos'" class="flex-1 bg-emerald-500 hover:bg-emerald-600 shadow-md shadow-emerald-500/30 text-white text-[9px] font-black uppercase py-2 rounded-lg transition active:scale-95">
+                                        <span class="lang-en">Yes</span><span class="lang-es hidden">Sí</span>
+                                    </button>
+                                    <button onclick="document.getElementById('prompt-reservas').classList.add('hidden')" class="flex-1 bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-[9px] font-black uppercase py-2 rounded-lg transition hover:bg-emerald-50 dark:hover:bg-emerald-900/40 active:scale-95">
+                                        <span class="lang-en">Later</span><span class="lang-es hidden">Luego</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Transacciones -->
+                        <div class="flex justify-between items-center text-[10px] font-bold">
+                            <span class="text-slate-500 uppercase">Transacciones</span>
+                            <div class="flex items-center gap-3">
+                                <button onclick="updateOkr('transactions', -1)" class="w-7 h-7 rounded-full bg-slate-50 border border-slate-200 dark:bg-slate-700 dark:border-slate-600 flex items-center justify-center text-slate-500 active:scale-95 transition"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                <span id="val-transactions" class="text-slate-800 dark:text-slate-200 font-black text-sm w-4 text-center">0</span>
+                                <button onclick="updateOkr('transactions', 1)" class="w-7 h-7 rounded-full bg-emerald-50 border border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400 active:scale-95 transition"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Cierres $$$ -->
+                        <div class="flex justify-between items-center text-[10px] font-bold">
+                            <span class="text-slate-500 uppercase">Cierres $$$</span>
+                            <div class="flex items-center gap-3">
+                                <button onclick="updateOkr('cierres', -1)" class="w-7 h-7 rounded-full bg-slate-50 border border-slate-200 dark:bg-slate-700 dark:border-slate-600 flex items-center justify-center text-slate-500 active:scale-95 transition"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                <span id="val-cierres" class="text-slate-800 dark:text-slate-200 font-black text-sm w-4 text-center">0</span>
+                                <button onclick="updateOkr('cierres', 1)" class="w-7 h-7 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center text-amber-500 active:scale-95 transition"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="submitDailyOkr()" class="w-full mt-6 bg-[#003DA5] text-white py-4 rounded-xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-blue-200 transition-transform active:scale-95 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span class="lang-en">Send Daily OKR</span>
+                <span class="lang-es hidden">Enviar OKR Diario</span>
+            </button>
+            <button onclick="document.getElementById('okrTrackerModal').classList.add('hidden')" class="w-full mt-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-transform active:scale-95">
+                <span class="lang-en">Cancel</span>
+                <span class="lang-es hidden">Cancelar</span>
+            </button>
+        </div>
+    </div>
+
+    <header class="mb-4">
+        <a href="index.html" class="inline-flex gap-2 items-center text-[10px] font-black uppercase text-slate-400 mb-2 hover:text-blue-900 transition mt-2">
+            <i class="fa-solid fa-arrow-left"></i> <span data-i18n="backNexus">Volver a NEXUS</span>
+        </a>
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-black italic uppercase">REMAX <span class="text-slate-400 font-light">Altitud</span></h1>
+            </div>
+            <div class="flex gap-2 mt-1">
+                <button id="btn-es" class="lang-toggle active" onclick="setLanguage('es')">ES</button>
+                <button id="btn-en" class="lang-toggle" onclick="setLanguage('en')">EN</button>
+                <button onclick="document.documentElement.classList.toggle('dark')" class="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition active:scale-95 shadow-inner">
+                    <i class="fa-solid fa-moon text-[10px]"></i>
+                </button>
+            </div>
+        </div>
+        <button onclick="document.getElementById('okrTrackerModal').classList.remove('hidden')" class="btn-okr text-[9px] font-black px-5 py-2 rounded-full uppercase italic" data-i18n="completeOkr">Completar OKR</button>
+    </header>
+
+                            <!-- PREMIUM TOP NAV -->
+    <div id="premium-top-nav" class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-amber-500/30 flex justify-between items-center mt-2 mb-4 mx-4 rounded-2xl overflow-hidden shadow-2xl relative shadow-amber-500/10">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+        <a href="Mi_Oficina.html" id="nav-office" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
+            <i class="fa-solid fa-building mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Office</span>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Oficina</span>
+        </a>
+        <div class="w-[1px] h-8 bg-amber-500/20 relative z-10"></div>
+        <a href="my-business.html" id="nav-business" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
+            <i class="fa-solid fa-briefcase-medical mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Business</span>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Negocio</span>
+        </a>
+        <div class="w-[1px] h-8 bg-amber-500/20 relative z-10"></div>
+        <a href="#" id="nav-resources" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
+            <i class="fa-solid fa-book-open mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Resources</span>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Recursos</span>
+        </a>
+    </div>
+
+    <section class="mb-8">
+        <div class="bg-white p-6 rounded-[35px] border border-slate-100 shadow-xl relative overflow-hidden">
+            <div class="flex justify-between items-end mb-3 px-1">
+                <div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase italic" data-i18n="realAchievement">Logro
+                        Real</p>
+                    <p class="text-2xl font-black text-blue-900 italic tracking-tighter leading-none">$<span
+                            id="label-real">42,000</span></p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[9px] font-black text-red-600 uppercase italic" data-i18n="goal2026">Meta 2026</p>
+                    <p class="text-lg font-black text-slate-300 italic tracking-tighter leading-none">$120,000</p>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div id="bar-real" style="width: 35%;">
+                    <div class="absolute right-0 top-0 bottom-0 flex items-center pr-2 text-xl">✈️</div>
+                </div>
+                <div id="bar-shadow" style="width: 35%;"></div>
+            </div>
+
+            <!-- PARA QUÉ SECTION -->
+            <div class="mt-5 pt-4 border-t border-slate-100 flex items-start gap-3 relative group">
+                <div
+                    class="w-8 h-8 rounded-full bg-blue-50 text-blue-900 flex items-center justify-center font-black text-xs flex-shrink-0">
+                    💡
+                </div>
+                <div class="flex-1 cursor-text" onclick="editarParaQue()">
+                    <h4 class="text-[9px] font-black uppercase text-blue-900 mb-1 tracking-wider flex justify-between items-center"
+                        data-i18n="agentWhyTitle">
+                        <span>Mi Visión</span>
+                        <span class="text-slate-300 opacity-0 group-hover:opacity-100 transition duration-300"
+                            data-i18n="editHint">(Click para editar)</span>
+                    </h4>
+                    <p id="label-para-que" class="text-[10px] text-slate-500 font-medium italic leading-relaxed">"Llevar
+                        a mi familia de viaje a Europa en el verano de 2026 y remodelar la cocina."</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Premium Kanban Board: Mi Negocio Tracking -->
+    <section class="mb-8">
+        <h3 class="text-[10px] font-black text-slate-400 uppercase italic mb-4 px-2" data-i18n="boardTitle">Deal Pipeline</h3>
+        
+        <!-- Board Container -->
+        <div class="flex gap-4 overflow-x-auto pb-6 px-2 custom-scrollbar snap-x snap-mandatory h-[600px] items-start">
+            <!-- Col 1: Under Contract -->
+            <div class="w-72 sm:w-80 flex-shrink-0 bg-slate-100 dark:bg-slate-800 rounded-[24px] p-4 flex flex-col gap-3 border border-slate-200 dark:border-slate-700 h-full snap-start shadow-inner">
+                <div class="sticky top-0 bg-slate-100 dark:bg-slate-800 z-10 pb-2 mb-1 border-b border-slate-200 dark:border-slate-700">
+                    <h4 class="text-[10px] font-black text-blue-500 uppercase flex items-center justify-between">
+                        <span><i class="fa-solid fa-file-signature mr-1"></i> <span data-i18n="colContract">Under Contract</span></span>
+                        <span id="count-contract" class="bg-blue-100 text-blue-600 rounded-full px-2 py-0.5 text-[9px]">0</span>
+                    </h4>
+                </div>
+                <div id="colContract" class="flex flex-col gap-3 overflow-y-auto hidden-scrollbar pb-2"></div>
+            </div>
+
+            <!-- Col 2: DD -->
+            <div class="w-72 sm:w-80 flex-shrink-0 bg-slate-100 dark:bg-slate-800 rounded-[24px] p-4 flex flex-col gap-3 border border-slate-200 dark:border-slate-700 h-full snap-start shadow-inner">
+                <div class="sticky top-0 bg-slate-100 dark:bg-slate-800 z-10 pb-2 mb-1 border-b border-slate-200 dark:border-slate-700">
+                    <h4 class="text-[10px] font-black text-amber-500 uppercase flex items-center justify-between">
+                        <span><i class="fa-solid fa-magnifying-glass mr-1"></i> <span data-i18n="colDD">DD (Due Diligence)</span></span>
+                        <span id="count-dd" class="bg-amber-100 text-amber-600 rounded-full px-2 py-0.5 text-[9px]">0</span>
+                    </h4>
+                </div>
+                <div id="colDD" class="flex flex-col gap-3 overflow-y-auto hidden-scrollbar pb-2"></div>
+            </div>
+
+            <!-- Col 3: Sold -->
+            <div class="w-72 sm:w-80 flex-shrink-0 bg-slate-100 dark:bg-slate-800 rounded-[24px] p-4 flex flex-col gap-3 border border-slate-200 dark:border-slate-700 h-full snap-start shadow-inner">
+                <div class="sticky top-0 bg-slate-100 dark:bg-slate-800 z-10 pb-2 mb-1 border-b border-slate-200 dark:border-slate-700">
+                    <h4 class="text-[10px] font-black text-green-500 uppercase flex items-center justify-between">
+                        <span><i class="fa-solid fa-check mr-1"></i> <span data-i18n="colSold">Sold</span></span>
+                        <span id="count-sold" class="bg-green-100 text-green-600 rounded-full px-2 py-0.5 text-[9px]">0</span>
+                    </h4>
+                </div>
+                <div id="colSold" class="flex flex-col gap-3 overflow-y-auto hidden-scrollbar pb-2"></div>
+            </div>
+            
+             <!-- Col 5: Fallen / Archived -->
+            <div class="w-72 sm:w-80 flex-shrink-0 bg-slate-100 dark:bg-slate-800 rounded-[24px] p-4 flex flex-col gap-3 border border-slate-200 dark:border-slate-700 h-full snap-start opacity-70 hover:opacity-100 transition shadow-inner">
+                <div class="sticky top-0 bg-slate-100 dark:bg-slate-800 z-10 pb-2 mb-1 border-b border-slate-200 dark:border-slate-700">
+                    <h4 class="text-[10px] font-black text-red-500 uppercase flex items-center justify-between">
+                        <span><i class="fa-solid fa-xmark mr-1"></i> <span data-i18n="history">Archived / Fallen</span></span>
+                        <span id="count-fallen" class="bg-red-100 text-red-600 rounded-full px-2 py-0.5 text-[9px]">0</span>
+                    </h4>
+                </div>
+                <div id="colFallen" class="flex flex-col gap-3 overflow-y-auto hidden-scrollbar pb-2"></div>
+            </div>
+        </div>
+    </section>
+    <!-- BOTÓN PARA ABRIR ROOKIE CHECKLIST MODAL -->
+    <section class="mb-8">
+        <div onclick="document.getElementById('modal-rookie').style.display='flex'" class="cursor-pointer bg-white p-6 rounded-[35px] border border-slate-100 shadow-xl flex items-center justify-between group hover:shadow-2xl transition duration-300">
+            <div>
+                <h3 class="text-xs font-black text-blue-900 uppercase italic mb-1 flex items-center gap-2" data-i18n="rookieTitle">
+                    <span class="w-8 h-8 bg-blue-50 text-blue-900 rounded-full flex items-center justify-center text-lg">✅</span>
+                    Checklist para Rookies
+                </h3>
+                <p class="text-[10px] text-slate-500 font-bold" data-i18n="rookieSubtitle">Completa estas tareas para arrancar con éxito.</p>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-blue-900 group-hover:bg-blue-900 group-hover:text-white transition duration-300 font-black">
+                <i class="fa-solid fa-arrow-right"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- MODAL ROOKIE CHECKLIST -->
+    <div id="modal-rookie" class="overlay">
+        <div class="bg-white w-full max-w-md max-h-[85vh] rounded-[35px] relative overflow-hidden shadow-2xl flex flex-col">
+            <button onclick="document.getElementById('modal-rookie').style.display='none'"
+                class="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-500 w-8 h-8 rounded-full flex items-center justify-center font-bold z-20 transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="p-6 pb-2 border-b border-slate-100">
+                <h3 class="text-lg font-black text-blue-900 uppercase italic mb-2 mt-2" data-i18n="rookieTitle">✅ Checklist para Rookies – REMAX Altitud</h3>
+                <p class="text-[10px] text-slate-500 font-bold" data-i18n="rookieSubtitle">PRIMER MES. Completa estas tareas para arrancar con éxito.</p>
+            </div>
+            <div class="p-6 overflow-y-auto hidden-scrollbar space-y-6 flex-1">
+                <!-- Group 1 -->
+                <div>
+                    <h4 class="text-[10px] font-black text-slate-700 uppercase mb-3 border-b border-slate-100 pb-1" data-i18n="rookieG1">1. Altas y accesos iniciales</h4>
+                    <div class="space-y-3">
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Leer y aceptar <a href="https://docs.google.com/document/d/1LOLgEhG-SN9YsTn4XOERnUcODAn3ouJBExPwDs-Z7gA/edit?usp=sharing" target="_blank" class="text-blue-500 font-bold underline" onclick="event.stopPropagation()">manual de normas y procedimientos</a></span>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Firma del acuerdo con REMAX Altitud</span>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Alta en REconnect</span>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Alta en MAX/Center</span>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Alta Registro de la Propiedad <a href="https://www.rnpdigital.com/shopping/login.jspx" target="_blank" class="text-blue-500 font-bold underline" onclick="event.stopPropagation()">ingresar</a></span>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Creación del correo institucional (@remax-altitud.cr)</span>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Acceso a Google Workspace (Drive, Calendario, etc.)</span>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Acceso al grupo de WhatsApp del equipo y de RCR</span>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Reunión con la psicóloga Maia</span>
+                        </label>
+                    </div>
+                </div>
+                <!-- Group 2 -->
+                <div>
+                    <h4 class="text-[10px] font-black text-slate-700 uppercase mb-3 border-b border-slate-100 pb-1" data-i18n="rookieG2">2. Identidad profesional</h4>
+                    <div class="space-y-3">
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Foto profesional</span>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Bio profesional en inglés y español</span>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Nicho de mercado <a href="https://remax-costa-rica.com/niche" target="_blank" class="text-blue-500 font-bold underline" onclick="event.stopPropagation()">remax-costa-rica.com/niche</a></span>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Firma de correo</span>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Tarjetas de presentación</span>
+                        </label>
+                    </div>
+                </div>
+                <!-- Group 3 -->
+                <div>
+                    <h4 class="text-[10px] font-black text-slate-700 uppercase mb-3 border-b border-slate-100 pb-1" data-i18n="rookieG3">3. Presencia en línea</h4>
+                    <div class="space-y-3">
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Perfil en redes sociales actualizado (Instagram, Facebook, LinkedIn)</span>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Publicación del video de presentación personal</span>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Primer reel de propiedad o zona</span>
+                        </label>
+                    </div>
+                </div>
+                <!-- Group 4 -->
+                <div>
+                    <h4 class="text-[10px] font-black text-slate-700 uppercase mb-3 border-b border-slate-100 pb-1" data-i18n="rookieG4">4. Capacitación obligatoria</h4>
+                    <div class="space-y-3">
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Onboarding interno REMAX Altitud (inducción)</span>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Lectura del Manual de Normas y Código de Ética</span>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Ver capacitación básica en Learning Center</span>
+                        </label>
+                    </div>
+                </div>
+                <!-- Group 5 -->
+                <div>
+                    <h4 class="text-[10px] font-black text-slate-700 uppercase mb-3 border-b border-slate-100 pb-1" data-i18n="rookieG5">5. Herramientas y productividad</h4>
+                    <div class="space-y-3">
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Conocimiento de herramientas: Canva, ChatGPT, CapCut, etc.</span>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Agregar Calendario compartido: <a href="https://calendar.google.com/calendar/u/0?cid=Y19lMGE4ZjhkYTEyNTFlMWI2ZjRkZjE2OTBkMDQyMjY2NDJiYzNjZTNkYzFkMjdkNWU2OWM5YjcyMTY4YjlkZDM4QGdyb3VwLmNhbGVuZGFyLmdvb2dsZS5jb20" target="_blank" class="text-blue-500 font-bold underline" onclick="event.stopPropagation()">hacer click aquí</a></span>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Carpeta prelisting personalizada</span>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Hacer 1 ACM (aunque sea de prueba)</span>
+                        </label>
+                    </div>
+                </div>
+                <!-- Group 6 -->
+                <div>
+                    <h4 class="text-[10px] font-black text-slate-700 uppercase mb-3 border-b border-slate-100 pb-1" data-i18n="rookieG6">6. Objetivos y planificación</h4>
+                    <div class="space-y-3">
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Definir metas trimestrales y plan de negocio (tareas semanales a alcanzar)</span>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" onchange="promptTaskComplete(this)" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 w-4 h-4 outline-none">
+                            <span class="text-[10px] text-slate-600 font-medium leading-tight group-hover:text-blue-900 transition">Tener primer funnel activo (al menos 1 cliente activo o 1 propiedad en prospección)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Fila de Embudos (Captación y Ventas) -->
+    <div class="grid grid-cols-2 gap-4 mb-8">
+
+        <!-- 1- Embudo de Captación -->
+        <div class="bg-white p-4 rounded-[25px] border border-slate-100 shadow-sm flex flex-col justify-between">
+            <h4 class="text-[9px] font-black uppercase text-blue-900 mb-3 border-b pb-1 italic" data-i18n="capture">
+                Captación (5)</h4>
+
+            <div class="space-y-3 text-[7px] font-bold text-slate-400 uppercase italic">
+                <!-- Llamados -->
+                <div class="flex justify-between"><span data-i18n="calls">Llamados</span><span>45/80</span></div>
+                <div class="h-1 bg-slate-50 rounded-full overflow-hidden">
+                    <div class="bg-blue-600 h-full w-[56%]"></div>
+                </div>
+
+                <!-- Entrevista PL -->
+                <div class="flex justify-between"><span data-i18n="interviewPl">Entrevista PL</span><span>12/20</span>
+                </div>
+                <div class="h-1 bg-slate-50 rounded-full overflow-hidden">
+                    <div class="bg-blue-500 h-full w-[60%]"></div>
+                </div>
+
+                <!-- ACM -->
+                <div class="flex justify-between"><span data-i18n="acm">ACM</span><span>8/10</span></div>
+                <div class="h-1 bg-slate-50 rounded-full overflow-hidden">
+                    <div class="bg-blue-400 h-full w-[80%]"></div>
+                </div>
+
+                <!-- Entrevista Listing -->
+                <div class="flex justify-between"><span data-i18n="interviewListing">Entrevista
+                        Listing</span><span>4/5</span></div>
+                <div class="h-1 bg-slate-50 rounded-full overflow-hidden">
+                    <div class="bg-blue-300 h-full w-[80%]"></div>
+                </div>
+
+                <!-- Captaciones Exclusivas -->
+                <div class="flex justify-between text-blue-900 font-black pt-1 border-t border-slate-50"><span
+                        data-i18n="exclusive">Captaciones Exclusivas</span><span>1/2</span></div>
+                <div class="h-1 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="bg-blue-800 h-full w-[50%]"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2- Embudo de Ventas -->
+        <div class="bg-white p-4 rounded-[25px] border border-slate-100 shadow-sm flex flex-col justify-between">
+            <h4 class="text-[9px] font-black uppercase text-red-900 mb-3 border-b pb-1 italic" data-i18n="sales">Ventas
+                (6)</h4>
+
+            <div class="space-y-[11px] text-[7px] font-bold text-slate-400 uppercase italic">
+
+                <!-- Contrato de Busqueda -->
+                <div class="flex justify-between"><span data-i18n="searchContract">Contrato de
+                        Búsqueda</span><span>5/8</span></div>
+                <div class="h-1 bg-slate-50 rounded-full overflow-hidden mt-[-8px]">
+                    <div class="bg-red-300 h-full w-[62%]"></div>
+                </div>
+
+                <!-- Consultas -->
+                <div class="flex justify-between"><span data-i18n="consults">Consultas</span><span>28/40</span></div>
+                <div class="h-1 bg-slate-50 rounded-full overflow-hidden mt-[-8px]">
+                    <div class="bg-red-400 h-full w-[70%]"></div>
+                </div>
+
+                <!-- Muestras -->
+                <div class="flex justify-between"><span data-i18n="showings">Muestras</span><span>6/10</span></div>
+                <div class="h-1 bg-slate-50 rounded-full overflow-hidden mt-[-8px]">
+                    <div class="bg-red-500 h-full w-[60%]"></div>
+                </div>
+
+                <!-- Reservas -->
+                <div class="flex justify-between"><span data-i18n="reserves">Reservas</span><span
+                        id="lb-reservas-count">3/3</span></div>
+                <div class="h-1 bg-slate-50 rounded-full overflow-hidden mt-[-8px]">
+                    <div class="bg-red-600 h-full w-[100%]"></div>
+                </div>
+
+                <!-- Transacciones -->
+                <div class="flex justify-between"><span data-i18n="transactions">Transacciones</span><span>1/2</span>
+                </div>
+                <div class="h-1 bg-slate-50 rounded-full overflow-hidden mt-[-8px]">
+                    <div class="bg-red-700 h-full w-[50%]"></div>
+                </div>
+
+                <!-- Cierres $$$ -->
+                <div class="flex justify-between text-green-600 font-black pt-1 border-t border-slate-50"><span
+                        data-i18n="closings">Cierres $$$</span><span id="lb-cierres-count">1/1</span></div>
+                <div class="h-1 bg-slate-100 rounded-full overflow-hidden mt-[-8px]">
+                    <div class="bg-green-500 h-full w-[100%] shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Cierres del Mes (Footer) -->
+    <footer class="bg-slate-900 p-6 rounded-[35px] text-white flex justify-between items-center shadow-2xl mx-1">
+        <div>
+            <p class="text-[8px] font-black uppercase text-blue-400 italic mb-1" data-i18n="closedThisMonth">Cerrado
+                este Mes</p>
+            <p class="text-3xl font-black italic tracking-tighter leading-none">$<span id="label-mes">5,500</span></p>
+        </div>
+        <p class="text-[8px] font-black text-green-500 italic uppercase" data-i18n="achievementPlus">Logro +15%</p>
+    </footer>
+
+                            <!-- BOTTOM NAVIGATION -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t py-4 px-6 flex justify-between items-center text-slate-600 dark:text-slate-400 z-50 shadow-xl pb-6 overflow-x-auto no-scrollbar gap-4">
+        <a href="index.html" data-nav="index.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
+            <i class="fa-solid fa-house mb-1 text-xl hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-bold" data-i18n="navFeed">Match Board</span>
+        </a>
+        <a href="my-desk.html" data-nav="my-desk.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
+            <i class="fa-solid fa-briefcase mb-1 text-xl hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-bold" data-i18n="navMyDesk">My Hub</span>
+        </a>
+        
+        <!-- Premium Links -->
+        <a href="market.html" data-nav="market.html" id="nav-market" class="flex flex-col items-center justify-center min-w-[3.5rem] text-amber-500 hover:text-amber-400 transition-all relative group premium-only">
+            <div class="absolute inset-0 bg-amber-500/10 blur-xl rounded-full group-hover:bg-amber-500/20 transition"></div>
+            <i class="fa-solid fa-chart-line mb-1 text-xl drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] group-hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-black uppercase tracking-widest lang-en">Market</span>
+            <span class="text-[10px] font-black uppercase tracking-widest lang-es hidden" data-i18n="navMarket">Mercado</span>
+        </a>
+
+        <!-- Universal Link -->
+        <a href="profile.html" data-nav="profile.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
+            <i class="fa-solid fa-user mb-1 text-xl hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-bold" data-i18n="navProfile">Profile</span>
+        </a>
+    </div>
+    <script>
+    (function(){
+        var page = location.pathname.split('/').pop() || 'index.html';
+        var links = document.querySelectorAll('[data-nav]');
+        links.forEach(function(a){
+            if(a.getAttribute('data-nav') === page){
+                a.classList.remove('text-slate-400','text-amber-500');
+                a.classList.add('text-[#003DA5]');
+                var dot = document.createElement('div');
+                dot.className = 'absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full';
+                a.appendChild(dot);
+            }
+        });
+    })();
+    </script>
+    <script>
+    (function(){
+        var page = location.pathname.split('/').pop() || 'index.html';
+        var links = document.querySelectorAll('[data-nav]');
+        links.forEach(function(a){
+            if(a.getAttribute('data-nav') === page){
+                a.classList.remove('text-slate-400','text-amber-500');
+                a.classList.add('text-[#003DA5]');
+                var dot = document.createElement('div');
+                dot.className = 'absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full';
+                a.appendChild(dot);
+            }
+        });
+    })();
+    </script>
+
+    <script>
+        let realAnual = 42000;
+        let realMes = 5500;
+        const meta2026 = 120000;
+        let currentLang = 'es';
+
+        // 3 MOCK RESERVATIONS
+        let reservas = [
+            {
+                id: 'res-1',
+                title: 'Sky View Penthouse 4B',
+                details: 'U$D 250,000 | 2 Puntas | Ref: 10%',
+                commission: 7500,
+                date: '01 ENE 2026',
+                status: 'CONTRACT', // CONTRACT / DD / SOLD / CAIDA
+                isVisible: true,
+                updatedAt: 0 // Store timestamp for sorting history
+            },
+            {
+                id: 'res-2',
+                title: 'Lote Bosque Real Dominical',
+                details: 'U$D 85,000 | 1 Punta | Ref: 5%',
+                commission: 4250,
+                date: '15 FEB 2026',
+                status: 'CONTRACT',
+                isVisible: true,
+                updatedAt: 0
+            },
+            {
+                id: 'res-3',
+                title: 'Villa Mariposa Estate',
+                details: 'U$D 650,000 | 2 Puntas | Ref: 5%',
+                commission: 16250,
+                date: '28 MAR 2026',
+                status: 'DD',
+                isVisible: true,
+                updatedAt: 0
+            }
+        ];
+
+        // Translation Dictionary
+        const translations = {
+            es: {
+                backNexus: "Volver a NEXUS",
+                sold: "¡VENDIDO!",
+                soldSub: "¡Felicidades! Un paso más que te acerca a tu meta. Disfruta este triunfo, eres imparable.",
+                soldNote: "La facturación se ha movido al Logro Real.",
+                learning: "Cuando pierdas, no pierdas el aprendizaje",
+                learningSub: "Esto también es parte del negocio. Haz algo lindo por ti hoy, respira, y mañana vuelve a empezar con más fuerza.",
+                learningPlaceholder: "¿Qué aprendimos de este cierre fallido?",
+                archive: "Archivar y Seguir Adelante",
+                completeOkr: "COMPLETAR OKR",
+                realAchievement: "LOGRO REAL",
+                goal2026: "META 2026",
+                activeReserve: "RESERVAS ACTIVAS",
+                closeDate: "CIERRE: ",
+                statusConformada: "CONFORMADA (DD)",
+                statusCerrada: "✅ CERRADA (FACTURAR)",
+                statusCaida: "❌ CAÍDA (ARCHIVAR)",
+
+                // Embudos
+                capture: "CAPTACIÓN (5)",
+                calls: "Llamados",
+                interviewPl: "Entrevista PL",
+                acm: "ACM",
+                interviewListing: "Entrevista Listing",
+                exclusive: "Captaciones Exclusivas",
+
+                sales: "VENTAS (6)",
+                searchContract: "Contrato de Búsqueda",
+                consults: "Consultas",
+                showings: "Muestras",
+                reserves: "Reservas",
+                transactions: "Transacciones",
+                closings: "Cierres $$$",
+
+                closedThisMonth: "CERRADO ESTE MES",
+                achievementPlus: "LOGRO +15%",
+                newDatePrompt: "Nueva fecha (Ej: 15 MAR 2026):",
+                history: "HISTORIAL DE CIERRES Y CAÍDAS",
+                undoBtn: "DESHACER",
+                valCerrada: "✅ CERRADA",
+                navFeed: "Feed",
+                navMyDesk: "Escritorio",
+                navMarket: "Mercado",
+                navOffice: "Mi Oficina",
+                navBusiness: "MI NEGOCIO",
+                navResources: "RECURSOS",
+                navBroker: "Broker",
+                navProfile: "Perfil",
+
+                // Agent Goal
+                agentWhyTitle: "MI VISIÓN",
+                editHint: "(Click para editar)",
+
+                // Rookie Checklist
+                rookieTitle: "✅ Checklist para Rookies – REMAX Altitud",
+                rookieSubtitle: "PRIMER MES. Completa estas tareas para arrancar con éxito.",
+                rookieG1: "1. Altas y accesos iniciales",
+                rookieG2: "2. Identidad profesional",
+                rookieG3: "3. Presencia en línea",
+                rookieG4: "4. Capacitación obligatoria",
+                rookieG5: "5. Herramientas y productividad",
+                rookieG6: "6. Objetivos y planificación"
+            },
+            en: {
+                backNexus: "Back to NEXUS",
+                sold: "SOLD!",
+                soldSub: "Congratulations! One more step bringing you closer to your goal. Enjoy this triumph, you are unstoppable.",
+                soldNote: "Billing has been moved to Real Achievement.",
+                learning: "When you lose, don't lose the lesson",
+                learningSub: "This is also part of the business. Do something nice for yourself today, breathe, and tomorrow start again with more strength.",
+                learningPlaceholder: "What did we learn from this failed closing?",
+                archive: "Archive and Move Forward",
+                completeOkr: "COMPLETE OKR",
+                realAchievement: "REAL ACHIEVEMENT",
+                goal2026: "2026 GOAL",
+                activeReserve: "ACTIVE RESERVES",
+                closeDate: "CLOSE: ",
+                statusConformada: "AGREED (DD)",
+                statusCerrada: "✅ CLOSED (BILL)",
+                statusCaida: "❌ FALLEN (ARCHIVE)",
+
+                // Funnels
+                capture: "CAPTURE (5)",
+                calls: "Calls",
+                interviewPl: "PL Interview",
+                acm: "CMA",
+                interviewListing: "Listing Interview",
+                exclusive: "Exclusive Captures",
+
+                sales: "SALES (6)",
+                searchContract: "Search Contract",
+                consults: "Consultations",
+                showings: "Showings",
+                reserves: "Reserves",
+                transactions: "Transactions",
+                closings: "Closings $$$",
+
+                closedThisMonth: "CLOSED THIS MONTH",
+                achievementPlus: "ACHIEVEMENT +15%",
+                newDatePrompt: "New date (Ex: MAR 15 2026):",
+                history: "CLOSINGS AND FALLEN HISTORY",
+                undoBtn: "UNDO",
+                // Navigation Menu
+                navFeed: "Match Board",
+                navMyDesk: "Hub",
+                navMarket: "Market",
+                navOffice: "My Office",
+                navBusiness: "MY BUSINESS",
+                navResources: "RESOURCES",
+                navBroker: "Broker",
+                navProfile: "Profile",
+
+                // Agent Goal
+                agentWhyTitle: "MY VISION",
+                editHint: "(Click to edit)",
+
+                // Rookie Checklist
+                rookieTitle: "✅ Rookie Checklist – REMAX Altitud",
+                rookieSubtitle: "FIRST MONTH. Complete these tasks to start successfully.",
+                rookieG1: "1. Initial setups and access",
+                rookieG2: "2. Professional identity",
+                rookieG3: "3. Online presence",
+                rookieG4: "4. Mandatory training",
+                rookieG5: "5. Tools and productivity",
+                rookieG6: "6. Goals and planning"
+            }
+        };
+
+        // Initialize UI texts
+        document.addEventListener("DOMContentLoaded", () => {
+            renderReservas();
+            setLanguage('es');
+            updateTopBarDisplay();
+        });
+
+        // RE-RENDER LA LISTA DE RESERVAS EN FORMATO KANBAN
+        function renderReservas() {
+            const cols = {
+                'CONTRACT': document.getElementById('colContract'),
+                'DD': document.getElementById('colDD'),
+                'SOLD': document.getElementById('colSold'),
+                'CAIDA': document.getElementById('colFallen')
+            };
+
+            const counts = { 'CONTRACT': 0, 'DD': 0, 'SOLD': 0, 'CAIDA': 0 };
+
+            // Clear all columns
+            Object.values(cols).forEach(col => { if(col) col.innerHTML = ''; });
+
+            reservas.forEach(r => {
+                if (!r.isVisible) return;
+                
+                // Map old status to new if necessary
+                let colId = r.status;
+                if(!cols[colId]) colId = 'CONTRACT'; // fallback
+
+                counts[colId]++;
+                
+                const closeDateStr = translations[currentLang].closeDate || 'CIERRE: ';
+                const isClosedOrFallen = (colId === 'SOLD' || colId === 'CAIDA');
+                const opacityClass = isClosedOrFallen ? 'opacity-70' : '';
+
+                const cardHtml = `
+                <div id="card-${r.id}" class="bg-white p-4 rounded-[20px] border border-slate-100 shadow-sm transition-all duration-300 ${opacityClass}">
+                    <div class="flex justify-between items-start mb-3 border-b pb-3 border-slate-50">
+                        <div>
+                            <h4 class="text-[11px] font-black text-blue-900 uppercase italic leading-tight">${r.title}</h4>
+                            <p class="text-[9px] font-bold text-slate-400 mt-0.5 bg-slate-50 px-2 py-0.5 rounded inline-block">${r.details}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-black text-slate-900 italic tracking-tighter">$${r.commission.toLocaleString()}</p>
+                            <button onclick="editarFecha('${r.id}')" class="text-[8px] font-black text-red-600 uppercase mt-1 bg-red-50 px-2 py-1 rounded-lg transition active:scale-95">
+                                <span>${closeDateStr}</span><span id="date-${r.id}">${r.date}</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="relative z-10">
+                        <select onchange="cambioEstado(this, '${r.id}')" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-3 pr-8 text-[9px] font-black text-blue-900 uppercase italic outline-none appearance-none cursor-pointer">
+                            <option value="CONTRACT" ${colId === 'CONTRACT' ? 'selected' : ''}>${translations[currentLang].colContract || 'Under Contract'}</option>
+                            <option value="DD" ${colId === 'DD' ? 'selected' : ''}>${translations[currentLang].colDD || 'DD (Due Diligence)'}</option>
+                            <option value="SOLD" ${colId === 'SOLD' ? 'selected' : ''}>${translations[currentLang].colSold || 'Sold'}</option>
+                            <option value="CAIDA" ${colId === 'CAIDA' ? 'selected' : ''}>${translations[currentLang].history || 'Archived / Fallen'}</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-3 top-2.5 text-blue-900 text-[9px] pointer-events-none"></i>
+                    </div>
+
+                    ${colId === 'SOLD' || colId === 'CAIDA' ? `
+                    <div class="mt-3 pt-3 border-t border-slate-50">
+                        <button onclick="deshacer('${r.id}')" class="w-full bg-slate-100 text-[8px] font-black uppercase italic text-slate-600 py-2 rounded-lg hover:bg-slate-200 transition active:scale-95">
+                            ${translations[currentLang].undoBtn || 'DESHACER'}
+                        </button>
+                    </div>` : ''}
+                </div>
+                `;
+                if(cols[colId]) cols[colId].insertAdjacentHTML('beforeend', cardHtml);
+            });
+
+            // Update counts
+            document.getElementById('count-contract').innerText = counts['CONTRACT'];
+            document.getElementById('count-dd').innerText = counts['DD'];
+            document.getElementById('count-sold').innerText = counts['SOLD'];
+            document.getElementById('count-fallen').innerText = counts['CAIDA'];
+        }
+
+        function updateTopBarDisplay() {
+            // Update labels
+            document.getElementById('label-real').innerText = realAnual.toLocaleString();
+            document.getElementById('label-mes').innerText = realMes.toLocaleString();
+
+            const pct = Math.min((realAnual / meta2026) * 100, 100);
+            const bar = document.getElementById('bar-real');
+            const shadowBar = document.getElementById('bar-shadow');
+
+            if (bar) bar.style.width = pct + '%';
+
+            // Sum active commissions to see future potential
+            let activeReservationsValue = 0;
+            reservas.forEach(r => {
+                if (['CONTRACT', 'DD'].includes(r.status) && r.isVisible) {
+                    activeReservationsValue += r.commission;
+                }
+            });
+
+            if (shadowBar) {
+                if (activeReservationsValue > 0) {
+                    // Update shadow to show current real + total pendings
+                    const hoverPct = Math.min(((realAnual + activeReservationsValue) / meta2026) * 100, 100);
+                    shadowBar.style.width = hoverPct + '%';
+                    shadowBar.style.opacity = '1';  // Visible when pending
+                } else {
+                    shadowBar.style.width = pct + '%'; // Collapses back to main bar
+                    shadowBar.style.opacity = '0';     // Invisible when there's no pending items
+                }
+            }
+        }
+
+        function deshacer(idReserva) {
+            // Find in overall reservas array
+            const r = reservas.find(res => res.id === idReserva);
+
+            if (r) {
+                // Si estaba finalizada (Sumó dinero) revertimos las barras
+                if (r.status === 'CERRADA') {
+                    realAnual -= r.commission;
+                    realMes -= r.commission;
+                }
+
+                // Restore to DD (Start of funnel)
+                r.status = 'DD';
+                r.isVisible = true;
+
+                // Refresh UI components
+                updateTopBarDisplay();
+                renderReservas();
+            }
+        }
+
+        function renderHistory() {
+            // Deprecated - history is now natively sorted into the 'CAIDA' (Archived / Fallen) Kanban column.
+        }
+    </script>
+    
+    <!-- SUCCESS MODAL (OKR) -->
+    <div id="successModal" class="overlay flex hidden z-[1000]">
+        <div class="bg-white dark:bg-slate-800 w-11/12 max-w-sm rounded-[32px] p-8 text-center shadow-2xl animate-scale-up relative overflow-hidden">
+            <!-- Confetti abstract shapes -->
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-emerald-400 rounded-full blur-3xl opacity-20"></div>
+            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-blue-500 rounded-full blur-3xl opacity-20"></div>
+            
+            <div class="relative z-10 flex flex-col items-center">
+                <div class="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                    <i class="fa-solid fa-check text-4xl text-emerald-500 drop-shadow-sm animate-bounce"></i>
+                </div>
+                <h3 class="font-black text-2xl italic text-slate-900 dark:text-slate-100 uppercase mb-2" id="successModalTitle">Success!</h3>
+                <p class="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-8" id="successModalMessage">Your action was completed successfully.</p>
+                
+                <button onclick="closeSuccessModal()" class="w-full bg-slate-900 text-white dark:bg-slate-700 font-black uppercase tracking-widest text-xs py-4 rounded-2xl hover:bg-slate-800 transition shadow-lg active:scale-95">
+                    <span class="lang-en">Got it</span><span class="lang-es hidden">Entendido</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // FUNCIÓN: CAMBIO DE ESTADO (Dropdown in Card)
+        function cambioEstado(el, idReserva) {
+            const accion = el.value;
+            const tarjeta = document.getElementById(`card-${idReserva}`);
+            const r = reservas.find(res => res.id === idReserva);
+
+            if (accion === 'SOLD') {
+                document.getElementById('modal-cierre').style.display = 'flex';
+                triggerConfetti();
+
+                // Real values bump up & update the state internally
+                realAnual += r.commission;
+                realMes += r.commission;
+                r.status = 'SOLD';
+                r.updatedAt = Date.now();
+
+                updateTopBarDisplay();
+
+                // Animate card removal then update HTML
+                tarjeta.style.opacity = '0';
+                tarjeta.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    renderReservas();
+                    renderHistory();
+                }, 500);
+
+            } else if (accion === 'CAIDA') {
+                // Pass the ID to the hidden input so the modal knows who
+                document.getElementById('current-failed-reserva-id').value = idReserva;
+
+                // Inject Mi Vision Text dynamically
+                const savedWhy = localStorage.getItem('agentWhy');
+                const visionTextContainer = document.getElementById('caida-vision-text');
+                const visionBox = document.getElementById('caida-vision-container');
+                if(savedWhy && savedWhy.trim() !== '') {
+                    visionTextContainer.innerText = `"${savedWhy}"`;
+                    visionBox.classList.remove('hidden');
+                } else {
+                    visionBox.classList.add('hidden');
+                }
+
+                document.getElementById('modal-caida').style.display = 'flex';
+                // Reset select locally so canceling/closing modal doesn't leave dropdown broken
+                setTimeout(() => el.value = 'DD', 100);
+            }
+        }
+
+        function confirmarBorrado() {
+            document.getElementById('modal-caida').style.display = 'none';
+            const reservaFallida = document.getElementById('current-failed-reserva-id').value;
+            const tarjeta = document.getElementById(`card-${reservaFallida}`);
+            const r = reservas.find(res => res.id === reservaFallida);
+
+            r.status = 'CAIDA';
+            r.updatedAt = Date.now();
+            updateTopBarDisplay(); // Re-calculates shadows immediately
+
+            if (tarjeta) {
+                tarjeta.style.opacity = '0';
+                tarjeta.style.transform = 'scale(0.95)';
+            }
+
+            setTimeout(() => {
+                renderReservas();
+                renderHistory();
+            }, 500);
+        }
+
+        // Close logic for modals
+        document.getElementById('modal-rookie').addEventListener('click', function(e) {
+            if (e.target === this) this.style.display = 'none';
+        });
+
+        // Prompt user on task completion
+        function promptTaskComplete(checkbox) {
+            const label = checkbox.closest('label');
+            if (checkbox.checked) {
+                const q = currentLang === 'en' ? "Task completed?" : "¿Tarea completada?";
+                if (confirm(q)) {
+                    label.classList.add('line-through', 'opacity-40');
+                } else {
+                    checkbox.checked = false;
+                }
+            } else {
+                label.classList.remove('line-through', 'opacity-40');
+            }
+        }
+
+        // --- DAILY OKR LOGIC ---
+        function updateOkr(metric, change) {
+            const el = document.getElementById('val-' + metric);
+            if (!el) return;
+            let current = parseInt(el.innerText) || 0;
+            let val = current + change;
+            if (val < 0) val = 0;
+            el.innerText = val;
+
+            // Handle conditional prompts
+            if (metric === 'exclusiva') {
+                const prompt = document.getElementById('prompt-exclusiva');
+                if (val > 0) {
+                    prompt.classList.remove('hidden');
+                } else {
+                    prompt.classList.add('hidden');
+                }
+            } else if (metric === 'reservas') {
+                const prompt = document.getElementById('prompt-reservas');
+                if (val > 0) {
+                    prompt.classList.remove('hidden');
+                } else {
+                    prompt.classList.add('hidden');
+                }
+            }
+        }
+
+        function submitDailyOkr() {
+            // Reset counters
+            const metrics = ['calls', 'pl', 'acm', 'listing', 'exclusiva', 'search', 'consults', 'shows', 'reservas', 'transactions', 'cierres'];
+            metrics.forEach(m => {
+                const el = document.getElementById('val-' + m);
+                if (el) el.innerText = '0';
+            });
+            
+            // Hide prompts
+            const pExclusiva = document.getElementById('prompt-exclusiva');
+            const pReservas = document.getElementById('prompt-reservas');
+            pExclusiva.classList.add('hidden');
+            pReservas.classList.add('hidden');
+
+            document.getElementById('okrTrackerModal').classList.add('hidden');
+            
+            showSuccessModal(
+                currentLang === 'en' ? "Daily OKR Sent!" : "¡OKR Diario Enviado!", 
+                currentLang === 'en' ? "Amazing! Your daily tracking is building your consistency streak." : "¡Increíble! Tu seguimiento diario asegura tu éxito y racha."
+            );
+        }
+
+        function showSuccessModal(title, message) {
+            document.getElementById('successModalTitle').innerText = title;
+            document.getElementById('successModalMessage').innerText = message;
+            document.getElementById('successModal').classList.remove('hidden');
+            document.getElementById('successModal').classList.add('flex');
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.remove('flex');
+            document.getElementById('successModal').classList.add('hidden');
+        }
+
+        // --- BUTTON TIMING LOGIC (Costa Rica Time) ---
+        function checkOkrTime() {
+            const now = new Date();
+            // Get UTC hour and convert to CR time (UTC-6)
+            let crHour = now.getUTCHours() - 6;
+            if (crHour < 0) crHour += 24;
+            
+            const btnOkr = document.querySelector('.btn-okr');
+            if (btnOkr) {
+                // At/after 5:00 PM (17:00) CR Time
+                if (crHour >= 17) {
+                    btnOkr.classList.add('btn-okr-active');
+                } else {
+                    btnOkr.classList.remove('btn-okr-active');
+                }
+            }
+        }
+        
+        // Check immediately and then every minute
+        checkOkrTime();
+        setInterval(checkOkrTime, 60000);
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const isPremium = localStorage.getItem('isPremium') === 'true';
+            const isAdmin = localStorage.getItem('isAdmin') === 'true';
+
+            // Hide Admin feature
+            if (!isAdmin) {
+                const broker = document.getElementById('nav-broker');
+                if (broker) broker.style.display = 'none';
+            }
+
+            // Premium Access Control - Visible to all, but restricted access
+            if (!isPremium) {
+                const premiumElements = [
+                    document.getElementById('nav-market'),
+                    document.getElementById('nav-office'),
+                    document.getElementById('nav-business'),
+                    document.getElementById('nav-resources'),
+                    ...Array.from(document.querySelectorAll('.premium-only'))
+                ];
+                
+                                premiumElements.forEach(el => {
+                    if (el && el.tagName === 'A') {
+                        // Apply visual lock
+                        el.classList.add('grayscale', 'opacity-60', 'relative');
+                        el.insertAdjacentHTML('beforeend', '<div class="absolute top-1 right-1 lg:top-2 lg:right-2 bg-slate-900 border border-slate-700 rounded-full w-4 h-4 flex items-center justify-center shadow-lg z-20"><i class="fa-solid fa-lock text-[8px] text-slate-400"></i></div>');
+
+                        el.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            alert(currentLang === 'es' ? '💎 ¡Esta es una función Premium! Actualiza tu cuenta para acceder a increíbles herramientas de Productores Top.' : '💎 This is a Premium feature! Upgrade tu cuenta para acceder a increíbles herramientas de Productores Top.');
+                        });
+                    }
+                });
+            }
+        });
+    </script>
+    
+    <!-- BOTTOM NAVIGATION -->
+    <div
+        class="fixed bottom-4 left-4 right-4 bg-white/90 backdrop-blur-xl border border-white/20 rounded-[30px] shadow-2xl z-50 overflow-hidden text-[#003DA5]">
+        <div class="flex justify-around items-center h-20 px-2 max-w-lg mx-auto relative">
+            
+            <a href="index.html" class="flex flex-col items-center justify-center w-full h-full relative group transition-all">
+                <i class="fa-solid fa-house text-xl mb-1 group-hover:-translate-y-1 transition-transform"></i>
+                <span class="text-[10px] font-bold" data-i18n="navFeed">Feed</span>
+            </a>
+
+            <a href="my-desk.html" class="flex flex-col items-center justify-center w-full h-full relative group transition-all">
+                <i class="fa-solid fa-briefcase text-xl mb-1 group-hover:-translate-y-1 transition-transform"></i>
+                <span class="text-[10px] font-bold" data-i18n="navMyDesk">Desk</span>
+            </a>
+
+            <!-- Central MARKET Button -->
+            <div class="relative -top-6">
+                <a href="market.html" class="flex flex-col items-center justify-center relative group">
+                    <div class="w-16 h-16 bg-gradient-to-tr from-slate-900 to-slate-700 rounded-full flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.3)] border-4 border-[#f1f5f9] relative z-10 transition-transform hover:scale-105">
+                        <i class="fa-solid fa-globe text-2xl text-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]"></i>
+                    </div>
+                    <span class="text-[10px] font-black text-slate-800 mt-2 tracking-widest uppercase transition-all" data-i18n="navMarket">Market</span>
+                </a>
+            </div>
+
+            <!-- Fake Premium Links -->
+            <a href="Mi_Oficina.html" class="flex flex-col items-center justify-center w-full h-full relative group transition-all premium-only">
+                <i class="fa-solid fa-building text-xl mb-1 text-slate-400 group-hover:-translate-y-1 transition-transform"></i>
+                <span class="text-[10px] font-bold text-slate-500" data-i18n="navOffice">Office</span>
+            </a>
+
+            <a href="broker-dashboard.html" id="nav-broker" class="flex flex-col items-center justify-center w-full h-full relative group transition-all opacity-50">
+                <i class="fa-solid fa-chart-line text-xl mb-1 group-hover:-translate-y-1 transition-transform"></i>
+                <span class="text-[10px] font-bold">Broker</span>
+            </a>
+
+            <a href="#" class="flex flex-col items-center justify-center w-full h-full relative group transition-all">
+                <i class="fa-solid fa-user text-xl mb-1 group-hover:-translate-y-1 transition-transform"></i>
+                <span class="text-[10px] font-bold" data-i18n="navProfile">Profile</span>
+            </a>
+        </div>
+    </div>
+</body>
+
+</html>

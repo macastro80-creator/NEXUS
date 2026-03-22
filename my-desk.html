@@ -3,8 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Desk - NEXUS</title>
+    <title>My Hub - NEXUS</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="global-theme.js"></script>
+    <script src="supabase-client.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -12,147 +21,832 @@
         .property-inbox.show { transform: translateX(0); }
         .dropdown-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; }
         .modal-blur { backdrop-filter: blur(4px); background-color: rgba(0,0,0,0.4); }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 6px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
     </style>
 </head>
-<body class="bg-slate-50 font-sans pb-24 text-slate-800">
+<body class="bg-slate-50 dark:bg-slate-900 font-sans pb-24 text-slate-800 dark:text-slate-200">
 
-    <nav class="bg-white border-b px-4 py-4 sticky top-0 z-30 shadow-sm flex items-center justify-between">
-        <div class="flex items-center gap-4">
-            <a href="index.html" class="text-slate-400 text-lg"><i class="fa-solid fa-arrow-left"></i></a>
+    <nav class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-4 sticky top-0 z-[60] flex items-center justify-between shadow-sm transition-colors">
+        <div class="flex items-center gap-3 md:gap-4">
+            <a href="index.html" class="text-slate-400 text-base md:text-lg"><i class="fa-solid fa-arrow-left"></i></a>
             <div class="flex flex-col items-start gap-0">
-                <h1 class="text-3xl font-black text-[#003DA5] leading-none">NEXUS - My Desk</h1>
-                <p class="text-[10px] uppercase tracking-widest text-[#ED1C24] font-bold mt-1">Powered by REMAX Altitud</p>
+                <h1 class="text-xl md:text-3xl font-black text-[#003DA5] leading-none">NEXUS - My Hub</h1>
+                <p class="text-[8px] md:text-[10px] uppercase tracking-widest text-[#ED1C24] font-bold mt-0.5 md:mt-1">Powered by REMAX Altitud</p>
             </div>
         </div>
-        <div class="bg-blue-50 text-blue-600 text-[10px] font-black px-3 py-1 rounded-full uppercase italic">Active Searches</div>
+        <div class="flex items-center gap-4">
+            <div class="bg-blue-50 text-blue-600 text-[8px] sm:text-[10px] font-black px-3 py-1 rounded-full uppercase italic hidden sm:block">
+                <span class="lang-en">Active Searches</span><span class="lang-es hidden">Búsquedas Activas</span>
+            </div>
+            <button id="langToggleBtn" onclick="toggleLanguage()" class="text-slate-400 font-black text-xs hover:text-[#003DA5] transition-colors uppercase">EN</button>
+            <button onclick="toggleNotifications()" class="relative text-slate-400 hover:text-[#003DA5] text-lg px-1 hover:scale-110 transition-transform">
+                <i class="fa-solid fa-bell"></i>
+                <span class="absolute top-0 right-0 w-2.5 h-2.5 bg-[#ED1C24] rounded-full border-2 border-white animate-pulse"></span>
+            </button>
+            <button onclick="toggleDarkMode()" class="text-slate-400 hover:text-[#003DA5] dark:hover:text-yellow-400 transition-colors text-lg">
+                <i class="fa-solid fa-moon dark:hidden"></i>
+                <i class="fa-solid fa-sun hidden dark:inline"></i>
+            </button>
+            
+
+            <a href="login.html" onclick="localStorage.removeItem('userEmail')" class="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-95 transition-all shadow-sm" title="Log Out">
+                <i class="fa-solid fa-arrow-right-from-bracket text-sm"></i>
+            </a>
+        </div>
     </nav>
 
+                            <!-- PREMIUM TOP NAV -->
+    <div id="premium-top-nav" class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-amber-500/30 flex justify-between items-center mt-2 mb-4 mx-4 rounded-2xl overflow-hidden shadow-2xl relative shadow-amber-500/10">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+        <a href="Mi_Oficina.html" id="nav-office" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
+            <i class="fa-solid fa-building mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Office</span>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Oficina</span>
+        </a>
+        <div class="w-[1px] h-8 bg-amber-500/20 relative z-10"></div>
+        <a href="my-business.html" id="nav-business" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
+            <i class="fa-solid fa-briefcase-medical mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Business</span>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Negocio</span>
+        </a>
+        <div class="w-[1px] h-8 bg-amber-500/20 relative z-10"></div>
+        <a href="#" id="nav-resources" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
+            <i class="fa-solid fa-book-open mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Resources</span>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Recursos</span>
+        </a>
+    </div>
     <div class="p-4 space-y-4">
         
-        <div class="bg-white p-6 rounded-[32px] border shadow-sm space-y-4">
-            <div onclick="openPropertyInbox()" class="cursor-pointer active:opacity-70 transition">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="bg-blue-600 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase">FOR BUY</span>
-                            <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest">• Land / Finca</span>
-                        </div>
-                        <h3 class="font-black text-xl italic text-slate-900 leading-none">Roberto M.</h3>
-                        <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Pérez Zeledón • $250k - $450k</p>
-                    </div>
-                    <div class="bg-blue-600 text-white text-[10px] font-black px-3 py-1 rounded-full">4 NEW BIDS</div>
-                </div>
-
-                <div class="flex gap-1 border-t border-b py-4 my-4">
-                    <div class="flex-1 text-center">
-                        <p class="text-[16px] font-black text-red-500">1</p>
-                        <p class="text-[7px] font-black text-slate-400 uppercase">Rejected</p>
-                    </div>
-                    <div class="flex-1 text-center border-x">
-                        <p class="text-[16px] font-black text-blue-600">1</p>
-                        <p class="text-[7px] font-black text-slate-400 uppercase">Visit</p>
-                    </div>
-                    <div class="flex-1 text-center border-r">
-                        <p class="text-[16px] font-black text-amber-500">1</p>
-                        <p class="text-[7px] font-black text-slate-400 uppercase">Contract</p>
-                    </div>
-                    <div class="flex-1 text-center">
-                        <p class="text-[16px] font-black text-slate-300">1</p>
-                        <p class="text-[7px] font-black text-slate-400 uppercase">New</p>
-                    </div>
+        <!-- TOP LEVEL METRICS -->
+        <div class="grid grid-cols-2 gap-3 mb-2 w-full">
+            <div class="bg-gradient-to-br from-blue-600 to-[#003DA5] p-4 rounded-2xl text-white shadow-lg relative overflow-hidden">
+                <i class="fa-solid fa-chart-pie absolute -bottom-4 -right-4 text-5xl opacity-10"></i>
+                <p class="text-[8px] font-black uppercase tracking-widest opacity-80 mb-1">
+                    <span class="lang-en">Pipeline Potential</span><span class="lang-es hidden">Potencial del Embudo</span>
+                </p>
+                <p id="metricPipelinePotential" class="text-xl font-black">$48,500</p>
+            </div>
+            <div onclick="switchDeskTab('deals')" class="cursor-pointer bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl shadow-sm relative overflow-hidden transition hover:bg-amber-50 dark:hover:bg-amber-900/20 group">
+                <i class="fa-solid fa-file-signature absolute -bottom-4 -right-4 text-5xl text-slate-900 dark:text-slate-100 opacity-[0.03] group-hover:text-amber-500 group-hover:opacity-10 transition-all"></i>
+                <p class="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-1 group-hover:text-amber-600 transition-colors">
+                    <span class="lang-en">Under Contract</span><span class="lang-es hidden">Bajo Contrato</span>
+                </p>
+                <p id="metricUnderContract" class="text-xl font-black text-slate-800 dark:text-slate-200 group-hover:text-amber-700 transition-colors">$12,000</p>
+            </div>
+            <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl shadow-sm flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-blue-50 dark:bg-slate-700 text-blue-600 flex items-center justify-center"><i class="fa-solid fa-users"></i></div>
+                <div>
+                    <p class="text-[8px] font-black uppercase tracking-widest text-slate-400">
+                        <span class="lang-en">Searches</span><span class="lang-es hidden">Búsquedas</span>
+                    </p>
+                    <p id="metricBuyers" class="text-sm font-black text-slate-800 dark:text-slate-200">
+                        12 <span class="lang-en">Active</span><span class="lang-es hidden">Activas</span>
+                    </p>
                 </div>
             </div>
-
-            <div class="flex justify-between items-center bg-slate-50 p-3 rounded-2xl">
-                <div class="flex gap-4">
-                    <a href="add-search.html" class="text-blue-600 text-[10px] font-black uppercase flex items-center gap-1.5">
-                        <i class="fa-solid fa-pen-to-square"></i> Edit
-                    </a>
-                    <button class="text-slate-400 text-[10px] font-black uppercase flex items-center gap-1.5">
-                        <i class="fa-solid fa-pause"></i> Pause
-                    </button>
-                </div>
-                <div class="flex items-center gap-1">
-                    <i class="fa-solid fa-money-bill-1-wave text-blue-600 text-xs"></i>
-                    <span class="text-[8px] font-black text-slate-400 uppercase">Cash</span>
+            <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl shadow-sm flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-red-50 dark:bg-slate-700 text-red-500 flex items-center justify-center"><i class="fa-solid fa-house"></i></div>
+                <div>
+                    <p class="text-[8px] font-black uppercase tracking-widest text-slate-400">
+                        <span class="lang-en">Matches Sent</span><span class="lang-es hidden">Matches Enviados</span>
+                    </p>
+                    <p id="metricListings" class="text-sm font-black text-slate-800 dark:text-slate-200">
+                        8 <span class="lang-en">Active</span><span class="lang-es hidden">Activos</span>
+                    </p>
                 </div>
             </div>
         </div>
+
+        <!-- UNIFIED TABS -->
+        <div class="flex bg-slate-200 dark:bg-slate-800 p-1 rounded-xl mb-4 text-xs font-black uppercase tracking-widest text-center shadow-inner">
+            <button id="tabBuyer" onclick="switchDeskTab('buyer')" class="flex-1 py-3 rounded-lg bg-white dark:bg-slate-700 text-[#003DA5] dark:text-white shadow-sm transition-all focus:outline-none">
+                <i class="fa-solid fa-magnifying-glass mr-1"></i> <span class="lang-en">My Searches Posted</span><span class="lang-es hidden">Mis Búsquedas Publicadas</span>
+            </button>
+            <button id="tabSeller" onclick="switchDeskTab('seller')" class="flex-1 py-3 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-all focus:outline-none">
+                <i class="fa-solid fa-paper-plane mr-1"></i> <span class="lang-en">Matches Sent</span><span class="lang-es hidden">Matches Enviados</span>
+            </button>
+            <button id="tabDeals" onclick="switchDeskTab('deals')" class="flex-1 py-3 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-all focus:outline-none">
+                <i class="fa-solid fa-handshake mr-1"></i> <span class="lang-en">Deals</span><span class="lang-es hidden">Negocios</span>
+            </button>
+        </div>
+
+        <!-- Invite New Client Button -->
+        <div class="mb-4 flex justify-end">
+            <button onclick="openInviteClientModal()" class="bg-[#003DA5] hover:bg-blue-800 text-white px-4 py-2.5 rounded-xl font-black text-[10px] uppercase shadow-md transition-transform active:scale-95 flex items-center gap-2">
+                <i class="fa-solid fa-user-plus"></i> <span class="lang-en">Invite New Client</span><span class="lang-es hidden">Invitar Nuevo Cliente</span>
+            </button>
+        </div>
+
+        <!-- BUYER TAB CONTENT -->
+        <div id="buyerTabContent" class="space-y-4 animate-fade">
+            
+            <!-- DYNAMIC SUPABASE SEARCHES (populated by loadMySearches) -->
+            <div id="mySearchesContainer" class="space-y-4"></div>
+
+            <!-- Existing Demo Buyer Card (hidden when Supabase data exists) -->
+            <div id="buyerCard_Roberto" class="transition-all duration-500 bg-white dark:bg-slate-800 p-6 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+                <div onclick="openPropertyInbox()" class="cursor-pointer active:opacity-70 transition">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="bg-blue-600 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase">
+                                    <span class="lang-en">FOR BUY</span><span class="lang-es hidden">COMPRA</span>
+                                </span>
+                                <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest">• Land / Finca</span>
+                            </div>
+                            <h3 class="font-black text-xl italic text-slate-900 dark:text-slate-100 leading-none">Roberto M.</h3>
+                            <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Pérez Zeledón • $250k - $450k</p>
+                        </div>
+                        <div class="bg-blue-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase">
+                            4 <span class="lang-en">NEW MATCHES</span><span class="lang-es hidden">NUEVOS MATCHES</span>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-1 border-t border-b py-4 my-4">
+                        <div class="flex-1 text-center">
+                            <p class="text-[16px] font-black text-red-500">1</p>
+                            <p class="text-[7px] font-black text-slate-400 uppercase">
+                                <span class="lang-en">Rejected</span><span class="lang-es hidden">Rechazado</span>
+                            </p>
+                        </div>
+                        <div class="flex-1 text-center border-x">
+                            <p class="text-[16px] font-black text-blue-600">1</p>
+                            <p class="text-[7px] font-black text-slate-400 uppercase">
+                                <span class="lang-en">Visit</span><span class="lang-es hidden">Visitas</span>
+                            </p>
+                        </div>
+                        <div class="flex-1 text-center border-r">
+                            <p class="text-[16px] font-black text-amber-500">1</p>
+                            <p class="text-[7px] font-black text-slate-400 uppercase">
+                                <span class="lang-en">Contract</span><span class="lang-es hidden">Contrato</span>
+                            </p>
+                        </div>
+                        <div class="flex-1 text-center">
+                            <p class="text-[16px] font-black text-slate-300">1</p>
+                            <p class="text-[7px] font-black text-slate-400 uppercase">
+                                <span class="lang-en">New</span><span class="lang-es hidden">Nuevos</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-900 p-3 rounded-2xl">
+                    <div class="flex gap-4">
+                        <a href="add-search.html" class="text-blue-600 text-[10px] font-black uppercase flex items-center gap-1.5 hover:text-blue-800 transition">
+                            <i class="fa-solid fa-pen-to-square"></i> <span class="lang-en">Edit</span><span class="lang-es hidden">Editar</span>
+                        </a>
+                        <button class="text-slate-400 text-[10px] font-black uppercase flex items-center gap-1.5 hover:text-slate-600 transition">
+                            <i class="fa-solid fa-pause"></i> <span class="lang-en">Pause</span><span class="lang-es hidden">Pausar</span>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <i class="fa-solid fa-money-bill-1-wave text-blue-600 text-xs"></i>
+                        <span class="text-[8px] font-black text-slate-400 uppercase">Cash</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EMPTY STATE (Hidden by default, shown if no searches) -->
+            <div id="buyerEmptyState" class="hidden flex flex-col items-center justify-center py-12 text-center animate-fade">
+                <div class="w-24 h-24 mb-6 rounded-full bg-blue-50 dark:bg-slate-800 flex items-center justify-center text-blue-300 dark:text-slate-600">
+                    <i class="fa-solid fa-folder-open text-4xl"></i>
+                </div>
+                <h3 class="font-black text-lg text-slate-800 dark:text-slate-200 mb-2 lang-en">No Active Searches</h3>
+                <h3 class="font-black text-lg text-slate-800 dark:text-slate-200 mb-2 lang-es hidden">Sin Búsquedas Activas</h3>
+                <p class="text-xs text-slate-500 font-bold max-w-xs mb-6 lang-en">You don't have any active buyer profiles. Create one to start receiving matches!</p>
+                <p class="text-xs text-slate-500 font-bold max-w-xs mb-6 lang-es hidden">No tienes perfiles de comprador. ¡Crea uno para recibir matches!</p>
+                <a href="add-search.html" class="bg-[#003DA5] text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase shadow-lg hover:shadow-xl transition-shadow">
+                    <i class="fa-solid fa-plus mr-2"></i> <span class="lang-en">New Search</span><span class="lang-es hidden">Nueva Búsqueda</span>
+                </a>
+            </div>
+
+            <!-- New Dummy Buyer Card -->
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm space-y-4 opacity-80 cursor-pointer hover:opacity-100 transition-opacity">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="bg-blue-600 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase">FOR BUY</span>
+                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest">• House / Casa</span>
+                    </div>
+                    <h3 class="font-black text-xl italic text-slate-900 dark:text-slate-100 leading-none">Family Gómez</h3>
+                    <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Escazú • $600k - $850k</p>
+                </div>
+                <!-- Mini Stats -->
+                <div class="flex gap-4 items-center mt-2 border-t pt-2">
+                    <div class="flex gap-2 text-[10px] font-bold text-slate-500 uppercase">
+                        <span class="text-slate-400"><i class="fa-solid fa-check mr-1"></i>3 Shortlisted</span>
+                        <span class="text-blue-500"><i class="fa-solid fa-car mr-1"></i>2 Visits</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Needs Renewal Buyer Card -->
+            <div class="bg-red-50 p-6 rounded-[32px] border border-red-200 shadow-sm space-y-4 relative">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[9px] font-black px-4 py-1 rounded-full uppercase tracking-widest flex items-center gap-2 shadow-lg z-10">
+                    <i class="fa-solid fa-clock"></i> <span class="lang-en">Action Required (30 Days Old)</span><span class="lang-es hidden">Acción Requerida (30 Días)</span>
+                </div>
+
+                <div class="flex justify-between items-start pt-2 opacity-50">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="bg-red-600 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase">FOR RENT</span>
+                            <span class="text-[8px] font-black text-slate-500 uppercase tracking-widest">• House / Casa</span>
+                        </div>
+                        <h3 class="font-black text-xl italic text-slate-900 dark:text-slate-100 leading-none">Sarah W.</h3>
+                        <p class="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-widest">Escazú • $1.5k - $2k/mo</p>
+                    </div>
+                </div>
+
+                <!-- Renewal Prompt Box -->
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-red-100 shadow-sm text-center">
+                    <i class="fa-solid fa-triangle-exclamation text-3xl text-red-500 mb-3 block"></i>
+                    <h4 class="font-black text-slate-900 dark:text-slate-100 text-sm mb-1 uppercase lang-en">Is this search still active?</h4>
+                    <h4 class="font-black text-slate-900 dark:text-slate-100 text-sm mb-1 uppercase lang-es hidden">¿Sigue activa esta búsqueda?</h4>
+                    <p class="text-xs text-slate-500 font-bold mb-4 lang-en">If your client is still looking, renew it. Otherwise, archive it to keep the Match Board clean.</p>
+                    <p class="text-xs text-slate-500 font-bold mb-4 lang-es hidden">Si tu cliente sigue buscando, renuévala. De lo contrario, archívala para mantener limpio el Feed.</p>
+                    
+                    <div class="flex gap-2">
+                        <button onclick="renewSearch(this)" class="flex-1 bg-green-500 text-white py-3 rounded-xl font-black uppercase text-[10px] shadow active:scale-95 transition">
+                            <i class="fa-solid fa-rotate-right mr-1"></i> <span class="lang-en">Renew 30 Days</span><span class="lang-es hidden">Renovar 30 Días</span>
+                        </button>
+                        <button onclick="archiveSearch(this)" class="flex-1 bg-slate-200 dark:bg-slate-600 text-slate-500 py-3 rounded-xl font-black uppercase text-[10px] shadow-inner active:scale-95 transition hover:bg-slate-300">
+                            <i class="fa-solid fa-box-archive mr-1"></i> <span class="lang-en">Archive</span><span class="lang-es hidden">Archivar</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between items-center bg-white/50 p-3 rounded-2xl">
+                    <div class="flex gap-4">
+                        <a href="add-search.html" class="text-blue-600 text-[10px] font-black uppercase flex items-center gap-1.5 hover:text-blue-800 transition">
+                            <i class="fa-solid fa-pen-to-square"></i> <span class="lang-en">Edit Details</span><span class="lang-es hidden">Editar</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            </div>
+
+        </div> <!-- End Buyer Tab -->
+
+        <!-- SELLER TAB CONTENT (MATCHES SENT) -->
+        <div id="sellerTabContent" class="space-y-4 hidden animate-fade">
+            
+            <div class="bg-blue-50 dark:bg-slate-800 p-6 rounded-[32px] border border-blue-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
+                <div class="absolute top-0 right-4 bg-blue-600 text-white text-[8px] font-black px-3 py-1 rounded-b-lg uppercase tracking-widest shadow-md">
+                    <span class="lang-en">VISITED YESTERDAY</span><span class="lang-es hidden">VISITADO AYER</span>
+                </div>
+                
+                <div class="flex flex-col gap-1 mb-4">
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                        <i class="fa-solid fa-paper-plane text-blue-500"></i> <span class="lang-en">Sent to Search:</span><span class="lang-es hidden">Enviado a Búsqueda:</span>
+                    </p>
+                    <h3 class="font-black text-xl text-slate-900 dark:text-slate-100 italic leading-none">Roberto M.</h3>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase">Agent: Sarah Smith (RE/MAX)</p>
+                </div>
+                
+                <div class="bg-white dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50 mb-4">
+                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Your Listing / Tu Propiedad</p>
+                    <p class="text-sm font-black text-slate-800 dark:text-slate-200 italic">Mountain View Land — Pérez Zeledón</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 border-t border-blue-100 dark:border-slate-700 pt-4">
+                    <button onclick="requestFeedback('Mountain View Land', 'Roberto M. (Sarah Smith)')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-black uppercase text-[9px] shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5 focus:outline-none">
+                        <i class="fa-solid fa-comment-dots"></i> <span class="lang-en">Request Feedback</span><span class="lang-es hidden">Solicitar Feedback</span>
+                    </button>
+                    <button class="w-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 py-3 rounded-xl font-black uppercase text-[9px] shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5 focus:outline-none">
+                        <i class="fa-solid fa-chart-bar"></i> <span class="lang-en">Match Report</span><span class="lang-es hidden">Ver Reporte</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
+                <div class="absolute top-0 right-4 bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-300 text-[8px] font-black px-3 py-1 rounded-b-lg uppercase tracking-widest shadow-md">
+                    <span class="lang-en">WAITING REVIEW</span><span class="lang-es hidden">ESPERANDO REVISIÓN</span>
+                </div>
+                
+                <div class="flex flex-col gap-1 mb-4 mt-2">
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                        <i class="fa-solid fa-paper-plane text-slate-400"></i> <span class="lang-en">Sent to Search:</span><span class="lang-es hidden">Enviado a Búsqueda:</span>
+                    </p>
+                    <h3 class="font-black text-xl text-slate-900 dark:text-slate-100 italic leading-none">Family Gómez</h3>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase">Agent: John Doe</p>
+                </div>
+                
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50 mb-4">
+                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Your Listing / Tu Propiedad</p>
+                    <p class="text-sm font-black text-slate-800 dark:text-slate-200 italic">Modern Suburb Home — Escazú</p>
+                </div>
+
+                <div class="border-t border-slate-100 dark:border-slate-700 pt-4">
+                    <button onclick="openMatchReport('Roberto M. - Specific Requirements')" class="w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 py-3 rounded-xl font-black uppercase text-[9px] shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5 focus:outline-none group-hover:text-blue-600 group-hover:dark:text-blue-400">
+                        <i class="fa-solid fa-chart-bar"></i> <span class="lang-en">Match Report</span><span class="lang-es hidden">Ver Reporte</span>
+                    </button>
+                </div>
+            </div>
+
+        </div> <!-- End Seller Tab -->
+
+        <!-- DEALS TAB CONTENT (NEW KANBAN DESIGN) -->
+        <div id="dealsTabContent" class="hidden animate-fade h-[calc(100vh-150px)]">
+            <h2 class="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest italic mb-4 mt-2 px-2">
+                <i class="fa-solid fa-handshake mr-2 text-blue-500"></i><span class="lang-en">Pipeline Dashboard</span><span class="lang-es hidden">Embudo de Ventas</span>
+            </h2>
+
+            <!-- Kanban Container -->
+            <div class="flex gap-6 overflow-x-auto h-full pb-12 custom-scrollbar items-start px-2">
+                
+                <!-- COLUMN 1: IN NEGOTIATION -->
+                <div id="colDealsNegotiation" class="w-[85vw] sm:w-80 lg:w-96 flex-shrink-0 bg-slate-100/50 dark:bg-slate-800/30 rounded-[32px] p-4 flex flex-col gap-4 border border-slate-200/50 dark:border-slate-700/50 h-full overflow-y-auto no-scrollbar">
+                    <div class="sticky top-0 bg-slate-100/90 dark:bg-slate-800/90 backdrop-blur-md z-10 py-2 -mt-2 mb-2">
+                        <h4 class="text-xs font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest flex items-center justify-between">
+                            <span class="flex items-center gap-2"><i class="fa-solid fa-comments"></i> <span class="lang-en">In Negotiation</span><span class="lang-es hidden">En Negociación</span></span>
+                            <span class="bg-purple-600 text-white rounded-full px-2 py-0.5 text-[10px]">1</span>
+                        </h4>
+                    </div>
+
+                    <!-- Pending Review / Counter Offer -->
+                    <div id="dealsCard1" class="transition-colors bg-white dark:bg-slate-800 rounded-3xl p-5 border-l-4 border-l-purple-500 shadow-sm relative overflow-hidden group">
+                        <div class="mb-3">
+                            <p class="text-[9px] font-black text-purple-600 dark:text-purple-400 uppercase flex justify-between items-center mb-1">
+                                <span><i class="fa-solid fa-reply mr-1"></i> <span class="lang-en">Counter Offer</span><span class="lang-es hidden">Contraoferta</span></span>
+                                <span class="text-[8px] text-slate-400"><i class="fa-solid fa-location-dot"></i> Dominical</span>
+                            </p>
+                            <p class="text-sm font-bold text-slate-900 dark:text-white italic leading-tight">Ocean View Villa</p>
+                            
+                            <!-- Agent Header -->
+                            <div class="flex items-center gap-2 mt-2 bg-slate-50 dark:bg-slate-700/50 p-2 rounded-xl border border-slate-100 dark:border-slate-700">
+                                <div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 text-blue-600 dark:text-blue-300 flex items-center justify-center shadow-sm"><i class="fa-solid fa-user text-[10px]"></i></div>
+                                <div class="flex-1">
+                                    <p class="text-[9px] font-black text-slate-800 dark:text-slate-200">John Doe <span class="text-slate-400 font-normal">(Listing Agent)</span></p>
+                                </div>
+                                <a href="https://wa.me/50688888888" target="_blank" class="w-6 h-6 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center transition-colors shadow-sm">
+                                    <i class="fa-brands fa-whatsapp text-[10px]"></i>
+                                </a>
+                            </div>
+
+                            <p class="text-[10px] text-slate-500 font-bold mt-2 mb-2 bg-slate-50 dark:bg-slate-700 p-2 rounded-lg italic border border-slate-100 dark:border-slate-600">"Owner wants $300k and firm 30 day close..."</p>
+                        </div>
+                        <div class="relative z-10">
+                            <select onchange="handleCounter(this, 'dealsCard1')" class="w-full bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 text-[10px] font-black px-3 py-2.5 rounded-xl uppercase tracking-widest appearance-none outline-none pr-8 cursor-pointer shadow-sm border border-purple-100 dark:border-purple-800 transition-colors hover:bg-purple-100/50">
+                                <option value="none" selected disabled>Review Action...</option>
+                                <option value="accept">Accept it</option>
+                                <option value="counter">Counter again</option>
+                                <option value="reject">Reject & Walk</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-purple-500 text-[10px]"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLUMN 2: UNDER CONTRACT -->
+                <div id="colDealsContract" class="w-[85vw] sm:w-80 lg:w-96 flex-shrink-0 bg-slate-100/50 dark:bg-slate-800/30 rounded-[32px] p-4 flex flex-col gap-4 border border-slate-200/50 dark:border-slate-700/50 h-full overflow-y-auto no-scrollbar">
+                    <div class="sticky top-0 bg-slate-100/90 dark:bg-slate-800/90 backdrop-blur-md z-10 py-2 -mt-2 mb-2">
+                        <h4 class="text-xs font-black text-amber-500 uppercase tracking-widest flex items-center justify-between">
+                            <span class="flex items-center gap-2"><i class="fa-solid fa-file-signature"></i> <span class="lang-en">Under Contract</span><span class="lang-es hidden">Bajo Contrato</span></span>
+                            <span class="bg-amber-500 text-white rounded-full px-2 py-0.5 text-[10px]">1</span>
+                        </h4>
+                    </div>
+
+                    <!-- Under Contract Card -->
+                    <div id="dealsCard2" class="transition-colors bg-white dark:bg-slate-800 rounded-3xl p-5 border-l-4 border-l-amber-500 shadow-sm relative group overflow-hidden">
+                        <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-transparent to-amber-500/10 rounded-bl-full"></div>
+                        <div class="mb-3">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest flex justify-between items-center mb-1">
+                                <span><i class="fa-solid fa-file-signature"></i> Under Contract</span>
+                                <span class="text-[8px] text-slate-400"><i class="fa-solid fa-location-dot"></i> Escazú</span>
+                            </p>
+                            <p class="text-sm font-bold text-slate-900 dark:text-white italic leading-tight">Condo Jaboncillos</p>
+                            
+                            <!-- Agent Header -->
+                            <div class="flex items-center gap-2 mt-2 mb-2 bg-slate-50 dark:bg-slate-700/50 p-2 rounded-xl border border-slate-100 dark:border-slate-700">
+                                <div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 text-blue-600 dark:text-blue-300 flex items-center justify-center shadow-sm"><i class="fa-solid fa-user text-[10px]"></i></div>
+                                <div class="flex-1">
+                                    <p class="text-[9px] font-black text-slate-800 dark:text-slate-200">Sarah Smith <span class="text-slate-400 font-normal">(Listing Agent)</span></p>
+                                </div>
+                                <a href="https://wa.me/50688888888" target="_blank" class="w-6 h-6 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center transition-colors shadow-sm">
+                                    <i class="fa-brands fa-whatsapp text-[10px]"></i>
+                                </a>
+                            </div>
+
+                            <p class="text-[10px] text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded-lg font-bold mt-1 inline-block border border-amber-100 dark:border-amber-800">Pending Inspections</p>
+                        </div>
+                        <div class="relative z-10">
+                            <select onchange="handleCompactStatus(this, 'dealsCard2')" class="w-full bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-500 text-[10px] font-black px-3 py-2.5 rounded-xl uppercase tracking-widest appearance-none outline-none pr-8 cursor-pointer shadow-sm border border-amber-100 dark:border-amber-800 transition-colors">
+                                <option value="contract" selected disabled>Under Contract...</option>
+                                <option value="sold">Mark as Sold</option>
+                                <option value="fell_through">Fell Through</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-amber-500 text-[10px]"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLUMN 3: CLOSED DEALS -->
+                <div id="colDealsSold" class="w-[85vw] sm:w-80 lg:w-96 flex-shrink-0 bg-slate-100/50 dark:bg-slate-800/30 rounded-[32px] p-4 flex flex-col gap-4 border border-slate-200/50 dark:border-slate-700/50 h-full overflow-y-auto no-scrollbar">
+                    <div class="sticky top-0 bg-slate-100/90 dark:bg-slate-800/90 backdrop-blur-md z-10 py-2 -mt-2 mb-2">
+                        <h4 class="text-xs font-black text-green-500 uppercase tracking-widest flex items-center justify-between">
+                            <span class="flex items-center gap-2"><i class="fa-solid fa-check-circle"></i> <span class="lang-en">Closed Deals</span><span class="lang-es hidden">Cerrados</span></span>
+                            <span class="bg-green-500 text-white rounded-full px-2 py-0.5 text-[10px]">1</span>
+                        </h4>
+                    </div>
+
+                    <!-- Deal Closed -->
+                    <div class="transition-colors bg-white dark:bg-slate-800 rounded-3xl p-5 border-l-4 border-l-green-500 shadow-sm opacity-80">
+                        <div class="mb-2">
+                            <p class="text-[9px] font-black text-green-500 uppercase flex justify-between items-center mb-1">
+                                <span><i class="fa-solid fa-check mr-1"></i> Closed & Funded</span>
+                                <span class="text-[8px] text-slate-400"><i class="fa-solid fa-location-dot"></i> La Sabana</span>
+                            </p>
+                            <div class="flex justify-between items-start mt-1">
+                                <p class="text-sm font-bold text-slate-900 dark:text-white italic leading-tight">Casa Sabana</p>
+                                <div class="bg-green-100 text-green-700 text-[10px] font-black px-2 py-1 rounded-lg shadow-sm">
+                                    $215K
+                                </div>
+                            </div>
+                            
+                            <!-- Agent Header -->
+                            <div class="flex items-center gap-2 mt-3 bg-slate-50 dark:bg-slate-700/50 p-2 rounded-xl border border-slate-100 dark:border-slate-700">
+                                <div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 text-blue-600 dark:text-blue-300 flex items-center justify-center shadow-sm"><i class="fa-solid fa-user text-[10px]"></i></div>
+                                <div class="flex-1">
+                                    <p class="text-[9px] font-black text-slate-800 dark:text-slate-200">Maria Lopez <span class="text-slate-400 font-normal">(Listing Agent)</span></p>
+                                </div>
+                                <a href="https://wa.me/50688888888" target="_blank" class="w-6 h-6 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center transition-colors shadow-sm">
+                                    <i class="fa-brands fa-whatsapp text-[10px]"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div> <!-- End Deals Tab -->
+
     </div>
 
-    <div id="propertyInbox" class="fixed inset-0 bg-slate-50 property-inbox overflow-y-auto no-scrollbar">
-        <div class="bg-white p-4 flex items-center border-b sticky top-0 shadow-sm z-10">
+    <div id="propertyInbox" class="fixed inset-0 bg-slate-50 dark:bg-slate-900 property-inbox overflow-y-auto no-scrollbar">
+        <div class="bg-white dark:bg-slate-800 p-4 flex items-center border-b sticky top-0 shadow-sm z-10">
             <button onclick="closePropertyInbox()" class="text-slate-400 mr-4 text-xl"><i class="fa-solid fa-arrow-left"></i></button>
             <div>
-                <h2 class="font-black text-sm uppercase text-[#003DA5]">Reviewing Bids</h2>
+                <h2 class="font-black text-sm uppercase text-[#003DA5] lang-en">Reviewing Matches</h2>
+                <h2 class="font-black text-sm uppercase text-[#003DA5] lang-es hidden">Revisando Matches</h2>
                 <p class="text-[10px] font-bold text-slate-400">Client: Roberto M.</p>
             </div>
         </div>
 
-        <div class="p-4 space-y-4">
-            <div class="bg-white rounded-[32px] p-6 border shadow-sm space-y-4">
-                <div class="flex justify-between items-start">
-                    <div class="flex gap-3">
-                        <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center font-black">JD</div>
-                        <div>
-                            <p class="text-[9px] font-black text-slate-400 uppercase">John Doe (RE/MAX)</p>
-                            <a href="#" class="text-xs font-black text-blue-600 underline">Luxury Loft - San Rafael</a>
+        <div class="p-4 flex gap-4 overflow-x-auto h-[calc(100vh-80px)] pb-12 custom-scrollbar items-start snap-x snap-mandatory">
+            
+            <!-- COLUMN 1: NEW MATCHES -->
+            <div id="colNewMatches" class="w-[85vw] max-w-[280px] sm:max-w-none sm:w-80 flex-shrink-0 snap-center bg-slate-100/50 dark:bg-slate-800/30 rounded-[32px] p-4 flex flex-col gap-4 border border-slate-200/50 dark:border-slate-700/50 h-full overflow-y-auto no-scrollbar">
+                <div class="sticky top-0 bg-slate-100/90 dark:bg-slate-800/90 backdrop-blur-md z-10 py-2 -mt-2 mb-2">
+                    <h4 class="text-xs font-black text-[#003DA5] dark:text-blue-400 uppercase tracking-widest flex items-center justify-between">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-sparkles"></i> <span class="lang-en">New Matches</span><span class="lang-es hidden">Nuevos Matches</span></span>
+                        <span class="bg-[#003DA5] text-white rounded-full px-2 py-0.5 text-[10px]">1</span>
+                    </h4>
+                </div>
+                
+                <!-- RICH PROPERTY CARD 1 -->
+                <div id="reviewCard1" class="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden shadow-sm relative transition-all duration-300 border border-transparent hover:border-blue-500/30 dark:hover:border-blue-400/30">
+                    
+                    <!-- STATUS OVERLAY -->
+                    <div id="statusOverlay_reviewCard1" class="absolute inset-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm z-20 flex flex-col items-center justify-center hidden animate-fade">
+                        <div id="statusIconBg_reviewCard1" class="w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-3 shadow-lg">
+                            <i id="statusIcon_reviewCard1" class="fa-solid fa-check"></i>
+                        </div>
+                        <h3 id="statusText_reviewCard1" class="text-xl font-black uppercase tracking-widest lang-en text-center leading-none">Status</h3>
+                        <h3 id="statusText_reviewCard1_es" class="text-xl font-black uppercase tracking-widest lang-es hidden text-center leading-none">Estado</h3>
+                        <p id="statusSubtext_reviewCard1" class="text-[9px] font-bold mt-2 text-slate-500 uppercase tracking-widest lang-en text-center"></p>
+                        <p id="statusSubtext_reviewCard1_es" class="text-[9px] font-bold mt-2 text-slate-500 uppercase tracking-widest lang-es hidden text-center"></p>
+                    </div>
+
+                    <!-- Image Placeholder -->
+                    <div class="h-40 w-full bg-slate-200 dark:bg-slate-700 relative overflow-hidden group">
+                        <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80" class="object-cover w-full h-full opacity-90 group-hover:scale-105 transition-transform duration-700" alt="Luxury Loft">
+                        
+                        <!-- Agent Badge Overlaid -->
+                        <div class="absolute top-3 left-3 flex gap-2 items-center bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-sm">
+                            <div class="w-6 h-6 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 text-blue-600 dark:text-blue-300 rounded-full flex items-center justify-center shadow-sm"><i class="fa-solid fa-user text-[8px]"></i></div>
+                            <p class="text-[8px] font-black text-slate-800 dark:text-slate-200 uppercase">John Doe</p>
+                        </div>
+                        
+                        <!-- Comm Badge -->
+                        <div class="absolute top-3 right-3 bg-green-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm">5.0%</div>
+                    </div>
+
+                    <div class="p-5">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="text-lg font-black italic text-[#003DA5] dark:text-blue-400 leading-tight mb-0.5">Luxury Loft San Rafael</h3>
+                                <p class="text-[10px] font-bold text-slate-500">Escazú, San José</p>
+                            </div>
+                        </div>
+                        <p class="text-xl font-black text-slate-900 dark:text-white mb-1">$325,000</p>
+                        <a href="https://remax-altitud.cr/property/luxury-loft" target="_blank" class="text-[9px] font-black text-[#003DA5] dark:text-amber-400 hover:underline flex items-center gap-1 mb-3"><i class="fa-solid fa-arrow-up-right-from-square"></i> <span class="lang-en">View Full Listing</span><span class="lang-es hidden">Ver Listado Completo</span></a>
+
+                        <div class="flex gap-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-700 pb-3 mb-3">
+                            <span>2 Beds</span>
+                            <span>2 Baths</span>
+                            <span>180 m²</span>
+                        </div>
+
+                        <!-- STAGE 1: QUICK ACTIONS (Triage) -->
+                        <div id="quickActions_reviewCard1" class="flex justify-between gap-2">
+                            <!-- Pass/Reject -->
+                            <button onclick="handleQuickAction('reviewCard1', 'reject', 'John Doe')" class="flex-1 py-2.5 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">
+                                <i class="fa-solid fa-xmark"></i> <span class="lang-en">Pass</span><span class="lang-es hidden">Descartar</span>
+                            </button>
+                            
+                            <!-- Shortlist/Like (Moves to Stage 2) -->
+                            <button onclick="handleQuickAction('reviewCard1', 'liked', 'John Doe')" class="flex-1 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-[#003DA5] dark:text-blue-400 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors">
+                                <i class="fa-solid fa-heart"></i> <span class="lang-en">Save</span><span class="lang-es hidden">Guardar</span>
+                            </button>
+                        </div>
+
+                        <!-- STAGE 2: PIPELINE DROPDOWN (Hidden initially) -->
+                        <div id="pipelineDropdown_reviewCard1" class="hidden animate-fade relative z-30">
+                            <select onchange="handlePipelineSelect(this, 'reviewCard1', 'John Doe')" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 pl-3 pr-8 text-[10px] font-black uppercase tracking-widest text-[#003DA5] dark:text-blue-400 focus:outline-none appearance-none cursor-pointer transition-colors shadow-sm">
+                                <option value="none" selected disabled>-- Action --</option>
+                                <option value="visit">Request Visit</option>
+                                <option value="offer">Make Offer</option>
+                                <option value="contract">Under Contract</option>
+                                <option value="reject">Reject</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#003DA5] dark:text-blue-400">
+                                <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                            </div>
                         </div>
                     </div>
-                    <span class="text-xs font-black text-green-600">5.0%</span>
-                </div>
-
-                <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 italic">What does the client think?</label>
-                    <select onchange="handleDropdown(this, 'John Doe')" class="dropdown-select w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold outline-none">
-                        <option value="none">-- Select Status --</option>
-                        <option value="reject">Not for him</option>
-                        <option value="liked">Liked it</option>
-                        <option value="visit">Wants to visit</option>
-                        <option value="contract">UNDER CONTRACT</option>
-                        <option value="sold">SOLD</option>
-                    </select>
                 </div>
             </div>
 
-            <div class="bg-amber-50 rounded-[32px] p-6 border border-amber-100 flex justify-between items-center">
-                <div>
-                    <p class="text-[9px] font-black text-slate-400 uppercase">Sarah Smith</p>
-                    <p class="text-xs font-bold text-amber-900 italic">Condo Jaboncillos</p>
+            <!-- COLUMN: LIKED IT -->
+            <div id="colLiked" class="w-[85vw] max-w-[280px] sm:max-w-none sm:w-80 flex-shrink-0 snap-center bg-slate-100/50 dark:bg-slate-800/30 rounded-[32px] p-4 flex flex-col gap-4 border border-slate-200/50 dark:border-slate-700/50 h-full overflow-y-auto no-scrollbar">
+                <div class="sticky top-0 bg-slate-100/90 dark:bg-slate-800/90 backdrop-blur-md z-10 py-2 -mt-2 mb-2">
+                    <h4 class="text-xs font-black text-pink-500 dark:text-pink-400 uppercase tracking-widest flex items-center justify-between">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-heart"></i> <span class="lang-en">Liked It</span><span class="lang-es hidden">Me Gusta</span></span>
+                        <span class="bg-slate-300 dark:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-full px-2 py-0.5 text-[10px]">0</span>
+                    </h4>
                 </div>
-                <span class="bg-amber-500 text-white text-[8px] font-black px-3 py-1 rounded-full uppercase">Under Contract</span>
             </div>
+
+            <!-- COLUMN 2: VISITED -->
+            <div id="colVisited" class="w-[85vw] max-w-[280px] sm:max-w-none sm:w-80 flex-shrink-0 snap-center bg-slate-100/50 dark:bg-slate-800/30 rounded-[32px] p-4 flex flex-col gap-4 border border-slate-200/50 dark:border-slate-700/50 h-full overflow-y-auto no-scrollbar">
+                <div class="sticky top-0 bg-slate-100/90 dark:bg-slate-800/90 backdrop-blur-md z-10 py-2 -mt-2 mb-2">
+                    <h4 class="text-xs font-black text-blue-500 dark:text-blue-400 uppercase tracking-widest flex items-center justify-between">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-car"></i> <span class="lang-en">Visited</span><span class="lang-es hidden">Visitados</span></span>
+                        <span class="bg-blue-500 text-white rounded-full px-2 py-0.5 text-[10px]">1</span>
+                    </h4>
+                </div>
+                
+                <!-- Dummy Visited Property -->
+                <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-transparent hover:border-blue-500/30 dark:hover:border-blue-400/30 transition-colors">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-[8px] font-black text-blue-500 uppercase flex items-center gap-1 mb-1"><i class="fa-solid fa-check-double"></i> <span class="lang-en">Visited Yesterday</span><span class="lang-es hidden">Visitado Ayer</span></p>
+                            <p class="text-sm font-black text-slate-900 dark:text-slate-100 italic leading-tight">Sabana Park Tower</p>
+                            <p class="text-[9px] font-bold text-slate-500 mt-0.5">$210,000</p>
+                        </div>
+                    </div>
+                    
+                    <div class="relative z-10">
+                        <select class="w-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[9px] font-black px-3 py-2.5 rounded-xl uppercase tracking-widest appearance-none outline-none pr-8 cursor-pointer transition-colors shadow-sm border border-blue-100 dark:border-blue-800">
+                            <option value="none" selected disabled>Update Status...</option>
+                            <option value="offer">Make Offer</option>
+                            <option value="reject">Reject</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-blue-600 dark:text-blue-400 text-[9px]"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMN 3: CONTRACT -->
+            <div id="colContract" class="w-[85vw] max-w-[280px] sm:max-w-none sm:w-80 flex-shrink-0 snap-center bg-slate-100/50 dark:bg-slate-800/30 rounded-[32px] p-4 flex flex-col gap-4 border border-slate-200/50 dark:border-slate-700/50 h-full overflow-y-auto no-scrollbar">
+                <div class="sticky top-0 bg-slate-100/90 dark:bg-slate-800/90 backdrop-blur-md z-10 py-2 -mt-2 mb-2">
+                    <h4 class="text-xs font-black text-amber-500 uppercase tracking-widest flex items-center justify-between">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-file-signature"></i> <span class="lang-en">Contract</span><span class="lang-es hidden">Contrato</span></span>
+                        <span class="bg-amber-500 text-white rounded-full px-2 py-0.5 text-[10px]">1</span>
+                    </h4>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-amber-200 dark:border-amber-900/40 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-transparent to-amber-500/10 rounded-bl-full"></div>
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-[8px] font-black text-amber-500 uppercase flex items-center gap-1 mb-1"><i class="fa-solid fa-hourglass-half"></i> <span class="lang-en">Pending Escrow</span><span class="lang-es hidden">Pendiente</span></p>
+                            <p class="text-sm font-black text-slate-900 dark:text-slate-100 italic leading-tight">Ocean View Villa</p>
+                            <p class="text-[10px] font-black text-slate-800 dark:text-white mt-1">$450,000</p>
+                        </div>
+                    </div>
+                    
+                    <button onclick="switchDeskTab('deals'); closePropertyInbox();" class="w-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-500 text-[9px] font-black px-3 py-2.5 rounded-xl uppercase tracking-widest flex justify-center items-center gap-2 transition-colors border border-amber-100 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/40">
+                        <span class="lang-en">View in Pipeline</span><span class="lang-es hidden">Ver en Embudo</span> <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- NEW COLUMN: SOLD -->
+            <div id="colSold" class="w-[85vw] max-w-[280px] sm:max-w-none sm:w-80 flex-shrink-0 snap-center bg-slate-100/50 dark:bg-slate-800/30 rounded-[32px] p-4 flex flex-col gap-4 border border-slate-200/50 dark:border-slate-700/50 h-full overflow-y-auto no-scrollbar">
+                <div class="sticky top-0 bg-slate-100/90 dark:bg-slate-800/90 backdrop-blur-md z-10 py-2 -mt-2 mb-2">
+                    <h4 class="text-xs font-black text-green-500 uppercase tracking-widest flex items-center justify-between">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-handshake"></i> <span class="lang-en">Sold</span><span class="lang-es hidden">Vendido</span></span>
+                        <span class="bg-slate-300 dark:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-full px-2 py-0.5 text-[10px]">0</span>
+                    </h4>
+                </div>
+            </div>
+
+            <!-- COLUMN 4: REJECTED -->
+            <div id="colRejected" class="w-[85vw] max-w-[280px] sm:max-w-none sm:w-80 flex-shrink-0 snap-center bg-slate-100/50 dark:bg-slate-800/30 rounded-[32px] p-4 flex flex-col gap-4 border border-slate-200/50 dark:border-slate-700/50 h-full overflow-y-auto no-scrollbar opacity-60 hover:opacity-100 transition-opacity">
+                <div class="sticky top-0 bg-slate-100/90 dark:bg-slate-800/90 backdrop-blur-md z-10 py-2 -mt-2 mb-2">
+                    <h4 class="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center justify-between">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-xmark"></i> <span class="lang-en">Rejected</span><span class="lang-es hidden">Rechazados</span></span>
+                        <span class="bg-slate-300 dark:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-full px-2 py-0.5 text-[10px]">1</span>
+                    </h4>
+                </div>
+
+                <!-- Dummy Rejected Property -->
+                <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-700 grayscale">
+                    <p class="text-[8px] font-black text-red-500 uppercase flex items-center gap-1 mb-1"><i class="fa-solid fa-xmark"></i> <span class="lang-en">Too small</span><span class="lang-es hidden">Muy pequeño</span></p>
+                    <p class="text-sm font-black text-slate-500 italic leading-tight line-through">Tiny Studio Downtown</p>
+                    <p class="text-[9px] font-bold text-slate-400 mt-1">$95,000</p>
+                </div>
+            </div>
+
         </div>
     </div>
 
     <div id="rejectModal" class="fixed inset-0 z-[100] modal-blur hidden flex items-center justify-center p-6">
-        <div class="bg-white rounded-[40px] w-full max-w-sm p-8 shadow-2xl">
-            <h3 class="text-xl font-black text-slate-900 mb-2 italic">Send Feedback</h3>
+        <div class="bg-white dark:bg-slate-800 rounded-[40px] w-full max-w-sm p-8 shadow-2xl">
+            <h3 class="text-xl font-black text-slate-900 dark:text-slate-100 mb-2 italic">Send Feedback</h3>
             <p id="rejectTarget" class="text-xs text-slate-400 font-bold uppercase mb-4"></p>
-            <div class="bg-slate-50 p-4 rounded-2xl mb-6">
-                <p class="text-xs text-slate-600 mb-2 font-medium italic">"Thanks for sharing, but..."</p>
-                <textarea id="rejectComment" class="w-full bg-white border border-slate-200 p-3 rounded-xl text-xs min-h-[100px] outline-none" placeholder="Add comments here..."></textarea>
+            <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl mb-6">
+                <p class="text-xs text-slate-600 dark:text-slate-400 mb-2 font-medium italic">"Thanks for sharing, but..."</p>
+                <textarea id="rejectComment" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 p-3 rounded-xl text-xs min-h-[100px] outline-none" placeholder="Add comments here..."></textarea>
             </div>
             <button onclick="sendReject()" class="w-full bg-[#ED1C24] text-white py-4 rounded-2xl font-black uppercase text-xs shadow-lg">Send Feedback</button>
             <button onclick="closeModals()" class="w-full mt-4 text-slate-400 font-bold text-xs uppercase">Cancel</button>
         </div>
     </div>
 
+    <!-- NEW Provide Feedback Modal (Receiver Side) -->
+    <div id="provideFeedbackModal" class="fixed inset-0 z-[100] modal-blur hidden flex items-center justify-center p-6">
+        <div class="bg-white dark:bg-slate-800 rounded-[40px] w-full max-w-sm p-8 shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-400 to-amber-600"></div>
+            
+            <div class="text-center mt-2">
+                <div class="w-16 h-16 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                </div>
+                <h3 class="text-xl font-black text-slate-900 dark:text-slate-100 mb-1 italic lang-en">Showing Feedback</h3>
+                <h3 class="text-xl font-black text-slate-900 dark:text-slate-100 mb-1 italic lang-es hidden">Feedback de Visita</h3>
+                <p id="provideFeedbackTarget" class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-6"></p>
+            </div>
+            
+            <div class="mb-5 space-y-3">
+                <p class="text-[10px] font-black text-slate-400 uppercase lang-en">How did the client feel?</p>
+                <p class="text-[10px] font-black text-slate-400 uppercase lang-es hidden">¿Qué le pareció al cliente?</p>
+                <div class="grid grid-cols-3 gap-2">
+                    <label class="cursor-pointer group flex flex-col items-center gap-1">
+                        <input type="radio" name="feedbackRating" value="loved" class="peer sr-only">
+                        <div class="w-full bg-slate-50 dark:bg-slate-700 hover:bg-green-50 peer-checked:bg-green-500 text-slate-400 peer-checked:text-white rounded-xl py-3 flex flex-col items-center justify-center transition-all border border-transparent peer-checked:shadow-inner">
+                            <i class="fa-regular fa-face-grin-hearts text-xl mb-1"></i>
+                            <span class="text-[8px] font-black uppercase text-center lang-en">Loved It</span>
+                            <span class="text-[8px] font-black uppercase text-center lang-es hidden">Le encantó</span>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer group flex flex-col items-center gap-1">
+                        <input type="radio" name="feedbackRating" value="neutral" class="peer sr-only">
+                        <div class="w-full bg-slate-50 dark:bg-slate-700 hover:bg-amber-50 peer-checked:bg-amber-500 text-slate-400 peer-checked:text-white rounded-xl py-3 flex flex-col items-center justify-center transition-all border border-transparent peer-checked:shadow-inner">
+                            <i class="fa-regular fa-face-meh text-xl mb-1"></i>
+                            <span class="text-[8px] font-black uppercase text-center lang-en">Not Sure</span>
+                            <span class="text-[8px] font-black uppercase text-center lang-es hidden">No está seguro</span>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer group flex flex-col items-center gap-1">
+                        <input type="radio" name="feedbackRating" value="passed" class="peer sr-only">
+                        <div class="w-full bg-slate-50 dark:bg-slate-700 hover:bg-red-50 peer-checked:bg-red-500 text-slate-400 peer-checked:text-white rounded-xl py-3 flex flex-col items-center justify-center transition-all border border-transparent peer-checked:shadow-inner">
+                            <i class="fa-regular fa-face-frown text-xl mb-1"></i>
+                            <span class="text-[8px] font-black uppercase text-center lang-en">Passed</span>
+                            <span class="text-[8px] font-black uppercase text-center lang-es hidden">No le gustó</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl mb-6">
+                <p class="text-[9px] font-black text-slate-500 uppercase mb-2 lang-en">Additional Comments</p>
+                <p class="text-[9px] font-black text-slate-500 uppercase mb-2 lang-es hidden">Comentarios Adicionales</p>
+                <textarea id="provideFeedbackNotes" class="w-full bg-transparent text-xs text-slate-800 dark:text-slate-200 outline-none resize-none min-h-[60px]" placeholder="Loved the kitchen, but the yard is too small..."></textarea>
+            </div>
+
+            <button onclick="submitShowingFeedback()" class="w-full bg-amber-500 hover:bg-amber-600 text-white py-4 rounded-2xl font-black uppercase text-xs shadow-lg transition active:scale-95 mb-3">
+                <i class="fa-solid fa-paper-plane mr-1.5"></i> <span class="lang-en">Submit Feedback</span><span class="lang-es hidden">Enviar Feedback</span>
+            </button>
+            <button onclick="closeModals()" class="w-full text-slate-400 font-bold text-[10px] uppercase hover:text-slate-600 transition text-center">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Existing Request Feedback Modal (Sender Side) -->
+    <div id="feedbackModal" class="fixed inset-0 z-[100] modal-blur hidden flex items-center justify-center p-6">
+        <div class="bg-white dark:bg-slate-800 rounded-[40px] w-full max-w-sm p-8 shadow-2xl relative overflow-hidden">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                    <i class="fa-solid fa-comment-dots"></i>
+                </div>
+                <h3 class="text-xl font-black text-slate-900 dark:text-slate-100 mb-2 italic lang-en">Request Showing Feedback</h3>
+                <h3 class="text-xl font-black text-slate-900 dark:text-slate-100 mb-2 italic lang-es hidden">Solicitar Feedback de Visita</h3>
+            </div>
+            
+            <div class="mb-4 text-left">
+                <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Listing</p>
+                <p id="feedbackListingTarget" class="text-xs font-bold text-slate-800 dark:text-slate-200 italic border-b pb-2 border-slate-100 dark:border-slate-700"></p>
+            </div>
+
+            <div class="mb-4 text-left">
+                <p class="text-[9px] font-black text-slate-400 uppercase mb-2">Select Showing / Buyer Agent</p>
+                <div class="relative">
+                    <select id="feedbackShowingSelect" onchange="updateFeedbackMessage()" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 pr-10 text-xs font-bold text-[#003DA5] dark:text-blue-400 outline-none appearance-none cursor-pointer">
+                        <option value="" selected disabled>Select...</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down absolute right-4 top-[15px] text-slate-400"></i>
+                </div>
+            </div>
+
+            <div class="bg-blue-50/50 dark:bg-slate-900 p-4 rounded-2xl mb-6">
+                <p class="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase mb-2 lang-en">Message to Agent (Editable)</p>
+                <p class="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase mb-2 lang-es hidden">Mensaje al Agente (Editable)</p>
+                <textarea id="feedbackMessagePreview" class="w-full bg-transparent text-xs text-slate-800 dark:text-slate-200 outline-none resize-none min-h-[60px]" placeholder="Please select a showing..."></textarea>
+            </div>
+
+            <button onclick="sendFeedbackRequest()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-black uppercase text-xs shadow-lg transition active:scale-95 mb-3">Send Request</button>
+            <button onclick="closeModals()" class="w-full text-slate-400 font-bold text-[10px] uppercase hover:text-slate-600 transition text-center">Cancel</button>
+        </div>
+    </div>
+
     <div id="visitModal" class="fixed inset-0 z-[100] modal-blur hidden flex items-center justify-center p-6">
-        <div class="bg-white rounded-[40px] w-full max-w-sm p-8 shadow-2xl text-center">
+        <div class="bg-white dark:bg-slate-800 rounded-[40px] w-full max-w-sm p-8 shadow-2xl text-center">
             <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
                 <i class="fa-solid fa-calendar-days"></i>
             </div>
-            <h3 class="text-xl font-black text-slate-900 mb-2 italic">Schedule Visit</h3>
-            <p id="visitTarget" class="text-sm text-slate-500 mb-8"></p>
-            <button onclick="sendVisitRequest()" class="w-full bg-[#003DA5] text-white py-5 rounded-3xl font-black uppercase text-xs shadow-xl">Request Time Slot</button>
-            <button onclick="closeModals()" class="mt-4 text-slate-400 font-bold text-xs uppercase">Cancel</button>
+            <h3 class="text-xl font-black text-slate-900 dark:text-slate-100 mb-2 italic lang-en">Schedule Visit</h3>
+            <h3 class="text-xl font-black text-slate-900 dark:text-slate-100 mb-2 italic lang-es hidden">Agendar Visita</h3>
+            
+            <p id="visitTarget" class="text-sm text-slate-500 mb-6"></p>
+
+            <div class="text-left mb-6 space-y-4">
+                
+                <!-- Date Picker -->
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 lang-en">Preferred Date</label>
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 lang-es hidden">Fecha Preferida</label>
+                    <div class="relative">
+                        <input type="date" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl p-4 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none appearance-none">
+                    </div>
+                </div>
+
+                <!-- Time Frame -->
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 lang-en">Time Window</label>
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 lang-es hidden">Rango de Tiempo</label>
+                    <div class="flex items-center gap-2">
+                        <input type="time" class="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl p-3 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none">
+                        <span class="text-slate-400 font-bold">-</span>
+                        <input type="time" class="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl p-3 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none">
+                    </div>
+                </div>
+
+                <!-- Custom Notes -->
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 lang-en">Special Requests / Notes</label>
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 lang-es hidden">Notas / Peticiones</label>
+                    <textarea class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl p-3 text-xs font-medium text-slate-800 dark:text-slate-300 outline-none min-h-[80px]" placeholder="e.g. Needs to be afternoon, client flying in..."></textarea>
+                </div>
+                
+            </div>
+
+            <button onclick="sendVisitRequest()" class="w-full bg-[#003DA5] text-white py-5 rounded-3xl font-black uppercase text-xs shadow-xl active:scale-95 transition-transform lang-en">Request Time Slot</button>
+            <button onclick="sendVisitRequest()" class="w-full bg-[#003DA5] text-white py-5 rounded-3xl font-black uppercase text-xs shadow-xl active:scale-95 transition-transform lang-es hidden">Solicitar Horario</button>
+            
+            <button onclick="closeModals()" class="w-full mt-4 text-slate-400 font-bold text-xs uppercase lang-en">Cancel</button>
+            <button onclick="closeModals()" class="w-full mt-4 text-slate-400 font-bold text-xs uppercase lang-es hidden">Cancelar</button>
         </div>
     </div>
 
     <!-- SUCCESS MODAL -->
     <div id="successModal" class="fixed inset-0 bg-slate-900/60 z-[100] hidden flex-col items-center justify-center p-6 backdrop-blur-sm animate-fade">
-        <div class="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center transform transition-all scale-100">
+        <div class="bg-white dark:bg-slate-800 rounded-[32px] p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center transform transition-all scale-100">
             <div class="w-24 h-24 bg-green-50 text-green-500 rounded-full flex items-center justify-center mb-6 border-4 border-green-100">
                 <i class="fa-solid fa-check text-5xl"></i>
             </div>
@@ -165,44 +859,811 @@
         </div>
     </div>
 
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t py-4 px-8 flex justify-between items-center text-slate-400 z-40 shadow-xl">
-        <a href="index.html" class="flex flex-col items-center gap-1"><i class="fa-solid fa-magnifying-glass text-xl"></i><span class="text-[10px] font-black uppercase">Feed</span></a>
-        <a href="market.html" class="flex flex-col items-center gap-1"><i class="fa-solid fa-chart-line text-xl"></i><span class="text-[10px] font-black uppercase">Pulse</span></a>
-        <div class="flex flex-col items-center gap-1 text-[#003DA5]"><i class="fa-solid fa-briefcase text-xl"></i><span class="text-[10px] font-black uppercase">Desk</span></div>
-        <a href="profile.html" class="flex flex-col items-center gap-1"><i class="fa-solid fa-user text-xl"></i><span class="text-[10px] font-black uppercase">Profile</span></a>
+    <!-- OFFER MODAL (NEW) -->
+    <div id="offerModal" class="fixed inset-0 z-[100] modal-blur hidden flex items-center justify-center p-6">
+        <div class="bg-white dark:bg-slate-800 rounded-[40px] w-full max-w-sm p-8 shadow-2xl">
+            <h3 class="text-xl font-black text-[#003DA5] dark:text-blue-400 mb-2 italic"><span class="lang-en">Make an Offer</span><span class="lang-es hidden">Hacer una Oferta</span></h3>
+            <p id="offerTarget" class="text-xs text-slate-400 font-bold uppercase mb-4"></p>
+            
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2"><span class="lang-en">Offer Amount ($)</span><span class="lang-es hidden">Monto de la Oferta ($)</span></label>
+                    <input type="number" class="w-full bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 p-3 rounded-xl text-lg font-black text-slate-800 dark:text-slate-200 focus:border-[#003DA5] outline-none" placeholder="e.g. 300,000">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2"><span class="lang-en">Message to Listing Agent</span><span class="lang-es hidden">Mensaje para el Agente Captador</span></label>
+                    <textarea class="w-full bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 p-3 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200 min-h-[100px] focus:border-[#003DA5] outline-none" placeholder="Hi, my client is ready to move forward. They are offering..."></textarea>
+                </div>
+            </div>
+
+            <button onclick="sendOffer()" class="w-full bg-purple-600 text-white py-4 rounded-2xl font-black uppercase text-xs shadow-lg hover:bg-purple-700 active:scale-95 transition-all"><i class="fa-solid fa-paper-plane mr-2"></i><span class="lang-en">Submit Offer</span><span class="lang-es hidden">Enviar Oferta</span></button>
+            <button onclick="closeModals()" class="w-full mt-4 text-slate-400 font-bold text-xs uppercase hover:text-slate-600">Cancel</button>
+        </div>
     </div>
 
+    <!-- PARTY / SOLD MODAL (NEW) -->
+    <div id="partyModal" class="fixed inset-0 bg-slate-900/80 z-[100] hidden flex-col items-center justify-center p-6 backdrop-blur-md animate-fade">
+        <div class="bg-white dark:bg-slate-800 rounded-[40px] p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center transform transition-all scale-100 overflow-hidden relative">
+            <div class="absolute -top-10 -right-10 text-9xl opacity-10">🎉</div>
+            <div class="absolute -bottom-10 -left-10 text-9xl opacity-10">🍾</div>
+            
+            <div class="w-24 h-24 bg-gradient-to-br from-yellow-100 to-amber-200 text-amber-600 rounded-full flex items-center justify-center mb-6 shadow-inner z-10">
+                <i class="fa-solid fa-champagne-glasses text-5xl"></i>
+            </div>
+            
+            <h2 class="text-3xl font-black text-slate-900 dark:text-white mb-2 leading-tight tracking-tighter italic z-10">Deal Closed!</h2>
+            <p class="text-[10px] font-black uppercase tracking-widest text-green-500 mb-6 z-10">Message sent to listing agent</p>
+            
+            <p class="text-sm font-bold text-slate-500 mb-8 leading-relaxed z-10">Congratulations on the successful close. The pipeline metrics have been updated.</p>
+            
+            <div class="w-full space-y-3 z-10">
+                <a href="market.html" class="w-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-transform block text-center hover:bg-slate-800 dark:hover:bg-white">
+                    <i class="fa-solid fa-bullhorn mr-2"></i> Publish to Market
+                </a>
+                <button onclick="closeModals()" class="w-full text-slate-400 font-bold text-xs uppercase hover:text-slate-600 py-2">
+                    Back to Hub
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- COUNTER OFFER MODAL (NEW) -->
+    <div id="counterOfferModal" class="fixed inset-0 z-[100] modal-blur hidden flex items-center justify-center p-6">
+        <div class="bg-white dark:bg-slate-800 rounded-[40px] w-full max-w-sm p-8 shadow-2xl">
+            <h3 class="text-xl font-black text-purple-600 dark:text-purple-400 mb-2 italic"><span class="lang-en">Counter Offer</span><span class="lang-es hidden">Contraoferta</span></h3>
+            <p id="counterTarget" class="text-xs text-slate-400 font-bold uppercase mb-4"></p>
+            
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2"><span class="lang-en">New Amount ($)</span><span class="lang-es hidden">Nuevo Monto ($)</span></label>
+                    <input type="number" class="w-full bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 p-3 rounded-xl text-lg font-black text-slate-800 dark:text-slate-200 focus:border-purple-600 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2"><span class="lang-en">Terms / Comments</span><span class="lang-es hidden">Términos / Comentarios</span></label>
+                    <textarea class="w-full bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 p-3 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200 min-h-[100px] focus:border-purple-600 outline-none" placeholder="Explain the reasoning behind this counter..."></textarea>
+                </div>
+            </div>
+
+            <button onclick="sendCounter()" class="w-full bg-purple-600 text-white py-4 rounded-2xl font-black uppercase text-xs shadow-lg hover:bg-purple-700 active:scale-95 transition-all"><i class="fa-solid fa-reply mr-2"></i><span class="lang-en">Send Counter</span><span class="lang-es hidden">Enviar Contraoferta</span></button>
+            <button onclick="closeModals()" class="w-full mt-4 text-slate-400 font-bold text-xs uppercase hover:text-slate-600">Cancel</button>
+        </div>
+    </div>
+
+
+    <!-- OKR PROMPT MODAL (NEW) -->
+    <div id="okrPromptModal" class="fixed inset-0 z-[100] modal-blur hidden flex items-center justify-center p-6">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-[35px] p-8 shadow-2xl relative text-center">
+            <h3 class="text-2xl font-black text-slate-900 dark:text-white italic tracking-tighter mb-2 lang-en">Great Job!</h3>
+            <h3 class="text-2xl font-black text-slate-900 dark:text-white italic tracking-tighter mb-2 lang-es hidden">¡Buen Trabajo!</h3>
+            
+            <p class="text-[11px] font-bold text-slate-500 mb-6 lang-en">Do you want to report this new activity to the office for your OKRs?</p>
+            <p class="text-[11px] font-bold text-slate-500 mb-6 lang-es hidden">¿Quieres reportar esta nueva actividad a la oficina para tus OKRs?</p>
+            
+            <div class="flex flex-col gap-3">
+                <button onclick="reportToOffice()" class="w-full bg-[#003DA5] text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-blue-200 transition-transform active:scale-95 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span class="lang-en">Yes, Report It</span>
+                    <span class="lang-es hidden">Sí, Reportarlo</span>
+                </button>
+                <button onclick="setOkrReminder()" class="w-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 py-3 rounded-2xl font-bold text-[10px] uppercase tracking-widest transition-transform active:scale-95">
+                    <span class="lang-en">Remind me tomorrow</span>
+                    <span class="lang-es hidden">Recordarme mañana</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+                            <!-- BOTTOM NAVIGATION -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t py-4 px-6 flex justify-between items-center text-slate-600 dark:text-slate-400 z-50 shadow-xl pb-6 overflow-x-auto no-scrollbar gap-4">
+        <a href="index.html" data-nav="index.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
+            <i class="fa-solid fa-house mb-1 text-xl hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-bold" data-i18n="navFeed">Match Board</span>
+        </a>
+        <a href="my-desk.html" data-nav="my-desk.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
+            <i class="fa-solid fa-briefcase mb-1 text-xl hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-bold" data-i18n="navMyDesk">My Hub</span>
+        </a>
+        
+        <!-- Premium Links -->
+        <a href="market.html" data-nav="market.html" id="nav-market" class="flex flex-col items-center justify-center min-w-[3.5rem] text-amber-500 hover:text-amber-400 transition-all relative group premium-only">
+            <div class="absolute inset-0 bg-amber-500/10 blur-xl rounded-full group-hover:bg-amber-500/20 transition"></div>
+            <i class="fa-solid fa-chart-line mb-1 text-xl drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] group-hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-black uppercase tracking-widest lang-en">Market</span>
+            <span class="text-[10px] font-black uppercase tracking-widest lang-es hidden" data-i18n="navMarket">Mercado</span>
+        </a>
+
+        <!-- Universal Link -->
+        <a href="profile.html" data-nav="profile.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
+            <i class="fa-solid fa-user mb-1 text-xl hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-bold" data-i18n="navProfile">Profile</span>
+        </a>
+    </div>
     <script>
+    (function(){
+        var page = location.pathname.split('/').pop() || 'index.html';
+        var links = document.querySelectorAll('[data-nav]');
+        links.forEach(function(a){
+            if(a.getAttribute('data-nav') === page){
+                a.classList.remove('text-slate-400','text-amber-500');
+                a.classList.add('text-[#003DA5]');
+                var dot = document.createElement('div');
+                dot.className = 'absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full';
+                a.appendChild(dot);
+            }
+        });
+    })();
+    </script>
+    <script>
+    (function(){
+        var page = location.pathname.split('/').pop() || 'index.html';
+        var links = document.querySelectorAll('[data-nav]');
+        links.forEach(function(a){
+            if(a.getAttribute('data-nav') === page){
+                a.classList.remove('text-slate-400','text-amber-500');
+                a.classList.add('text-[#003DA5]');
+                var dot = document.createElement('div');
+                dot.className = 'absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full';
+                a.appendChild(dot);
+            }
+        });
+    })();
+    </script>
+
+    <script>
+        let currentLang = 'en';
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'es' : 'en';
+            document.getElementById('langToggleBtn').innerText = currentLang.toUpperCase();
+            
+            const enEls = document.querySelectorAll('.lang-en');
+            const esEls = document.querySelectorAll('.lang-es');
+            
+            enEls.forEach(el => currentLang === 'en' ? el.classList.remove('hidden') : el.classList.add('hidden'));
+            esEls.forEach(el => currentLang === 'es' ? el.classList.remove('hidden') : el.classList.add('hidden'));
+        }
+
+        function switchDeskTab(tab) {
+            const btnBuyer = document.getElementById('tabBuyer');
+            const btnSeller = document.getElementById('tabSeller');
+            const btnDeals = document.getElementById('tabDeals');
+            const contentBuyer = document.getElementById('buyerTabContent');
+            const contentSeller = document.getElementById('sellerTabContent');
+            const contentDeals = document.getElementById('dealsTabContent');
+
+            // Reset all styles
+            const inactiveClass = "flex-1 py-3 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-all focus:outline-none";
+            btnBuyer.className = inactiveClass;
+            btnSeller.className = inactiveClass;
+            btnDeals.className = inactiveClass;
+            
+            contentBuyer.classList.add('hidden');
+            contentSeller.classList.add('hidden');
+            contentDeals.classList.add('hidden');
+
+            const activeClass = "flex-1 py-3 rounded-lg bg-white dark:bg-slate-700 text-[#003DA5] dark:text-white shadow-sm transition-all focus:outline-none";
+
+            if(tab === 'buyer') {
+                btnBuyer.className = activeClass;
+                contentBuyer.classList.remove('hidden');
+            } else if(tab === 'seller') {
+                btnSeller.className = activeClass;
+                contentSeller.classList.remove('hidden');
+            } else if(tab === 'deals') {
+                btnDeals.className = activeClass;
+                contentDeals.classList.remove('hidden');
+            }
+        }
+
         function openPropertyInbox() { document.getElementById('propertyInbox').classList.add('show'); }
         function closePropertyInbox() { document.getElementById('propertyInbox').classList.remove('show'); }
         
-        function handleDropdown(select, agentName) {
-            if (select.value === 'reject') {
+        async function loadPropertyInbox(searchId, clientName) {
+            document.getElementById('propertyInbox').classList.add('show');
+            const h2 = document.querySelector('#propertyInbox h2');
+            const p = document.querySelector('#propertyInbox p');
+            if (h2) h2.innerText = 'Reviewing Matches';
+            if (p) p.innerText = 'Client: ' + clientName;
+
+            ['colNewMatches', 'colLiked', 'colVisited', 'colContract', 'colSold', 'colRejected'].forEach(colId => {
+                const el = document.getElementById(colId);
+                if (el) {
+                    Array.from(el.children).forEach(child => {
+                        if (!child.classList.contains('sticky')) {
+                            child.remove();
+                        }
+                    });
+                }
+            });
+
+            if (!isSupabaseConfigured() || !supabase) return;
+            try {
+                const matches = await getMatchesForSearch(searchId);
+                if (matches && matches.length > 0) {
+                    matches.forEach(m => {
+                        const cardHTML = renderMatchCardAgent(m);
+                        const div = document.createElement('div');
+                        div.innerHTML = cardHTML;
+                        const card = div.firstElementChild;
+                        
+                        // We also add an overlay div required for the handlePipelineSelect quick actions logic
+                        const overlayHTML = `
+                        <div id="statusOverlay_card_${m.id}" class="absolute inset-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm z-20 flex flex-col items-center justify-center hidden animate-fade">
+                            <div id="statusIconBg_card_${m.id}" class="w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-3 shadow-lg">
+                                <i id="statusIcon_card_${m.id}" class="fa-solid fa-check"></i>
+                            </div>
+                            <h3 id="statusText_card_${m.id}" class="text-xl font-black uppercase tracking-widest text-center leading-none"></h3>
+                            <h3 id="statusText_card_${m.id}_es" class="text-xl font-black uppercase tracking-widest text-center leading-none hidden"></h3>
+                            <p id="statusSubtext_card_${m.id}" class="text-[9px] font-bold mt-2 text-slate-500 uppercase tracking-widest text-center"></p>
+                            <p id="statusSubtext_card_${m.id}_es" class="text-[9px] font-bold mt-2 text-slate-500 uppercase tracking-widest text-center hidden"></p>
+                        </div>`;
+                        card.innerHTML = overlayHTML + card.innerHTML;
+                        
+                        if (m.status === 'new' && document.getElementById('colNewMatches')) document.getElementById('colNewMatches').appendChild(card);
+                        else if ((m.status === 'liked' || m.status === 'waiting_partner') && document.getElementById('colLiked')) document.getElementById('colLiked').appendChild(card);
+                        else if (m.status === 'visited' && document.getElementById('colVisited')) document.getElementById('colVisited').appendChild(card);
+                        else if (m.status === 'contract' && document.getElementById('colContract')) document.getElementById('colContract').appendChild(card);
+                        else if (m.status === 'sold' && document.getElementById('colSold')) document.getElementById('colSold').appendChild(card);
+                        else if (m.status === 'rejected' && document.getElementById('colRejected')) document.getElementById('colRejected').appendChild(card);
+                    });
+                }
+            } catch (e) {
+                console.error("Error loading property inbox:", e);
+            }
+        }
+
+        function renderMatchCardAgent(m) {
+            const isLiked = m.status === 'liked';
+            const isRejected = m.status === 'rejected';
+            const isWaiting = m.status === 'waiting_partner';
+
+            let buttonsHTML = '';
+            if (isLiked || m.status === 'new' || isWaiting) {
+                buttonsHTML = `
+                    <div class="mt-3 relative z-30">
+                        <select onchange="handlePipelineSelect(this, 'card_${m.id}', 'Listing Agent')" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 pl-3 pr-8 text-[10px] font-black uppercase tracking-widest text-[#003DA5] dark:text-blue-400 focus:outline-none appearance-none cursor-pointer transition-colors shadow-sm">
+                            <option value="none" selected disabled>-- Action --</option>
+                            <option value="visit">Request Visit</option>
+                            <option value="offer">Make Offer</option>
+                            <option value="contract">Under Contract</option>
+                            <option value="reject">Reject</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#003DA5] dark:text-blue-400">
+                            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+            <div id="card_${m.id}" class="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden shadow-sm relative transition-all duration-300 border border-transparent hover:border-blue-500/30 dark:hover:border-blue-400/30 ${isRejected ? 'opacity-60 grayscale hover:opacity-100 hover:grayscale-0' : ''}">
+                <div class="h-32 w-full bg-slate-200 dark:bg-slate-700 relative overflow-hidden group">
+                    <img src="${m.image_url || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=400&q=80'}" class="object-cover w-full h-full opacity-90 group-hover:scale-105 transition-transform duration-700" alt="Listing">
+                </div>
+                <div class="p-4">
+                    <h3 class="text-md font-black italic text-[#003DA5] dark:text-blue-400 leading-tight mb-0.5">${m.property_name}</h3>
+                    <p class="text-[10px] font-bold text-slate-500">${m.property_location || 'N/A'}</p>
+                    <p class="text-lg font-black text-slate-900 dark:text-white mb-2">$${m.property_price ? m.property_price.toLocaleString() : '0'}</p>
+                    
+                    ${isRejected ? `<p class="text-[9px] font-black text-red-500 uppercase flex items-center gap-1 mb-1 mt-2 border-t pt-2"><i class="fa-solid fa-xmark"></i> Reason: ${m.reject_reason || 'No Reason'}</p>` : ''}
+                    ${isWaiting ? `<p class="text-[9px] font-black text-amber-500 uppercase flex items-center gap-1 mb-1 mt-2 border-t pt-2"><i class="fa-solid fa-clock-rotate-left"></i> Waiting on Partner</p>` : ''}
+
+                    ${buttonsHTML}
+                </div>
+            </div>`;
+        }
+        
+        let currentReviewCardId = null;
+
+        function handleQuickAction(cardId, action, agentName) {
+            currentReviewCardId = cardId;
+            const card = document.getElementById(cardId);
+            
+            if (action === 'reject') {
                 document.getElementById('rejectTarget').innerText = "Feedback for " + agentName;
                 document.getElementById('rejectModal').classList.remove('hidden');
-            } else if (select.value === 'visit') {
+                // Don't move it yet, wait for feedback to be sent
+            } else if (action === 'liked') {
+                // Determine if this is a couple's search (simulation for reviewCard1)
+                const isCoupleSearch = (cardId === 'reviewCard1');
+
+                document.getElementById('quickActions_' + cardId).classList.add('hidden');
+                
+                if (isCoupleSearch) {
+                    // Phase 6 Co-Swiping: Wait for partner
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = "mt-3 pt-3 border-t border-slate-100 dark:border-slate-700 bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3 flex flex-col items-center justify-center animate-fade";
+                    infoDiv.innerHTML = `<i class="fa-solid fa-clock-rotate-left text-amber-500 text-xl mb-1 mt-1"></i>
+                                         <p class="text-[9px] font-black text-amber-600 uppercase">Waiting on Partner</p>
+                                         <p class="text-[8px] font-bold text-slate-500 mt-1 text-center">Your partner has been notified to vote on this match.</p>`;
+                    card.querySelector('.p-5').appendChild(infoDiv);
+                    
+                    const colLiked = document.getElementById('colLiked');
+                    if(colLiked && card) colLiked.appendChild(card);
+
+                    if (typeof showSuccessModal !== 'undefined') {
+                        showSuccessModal("Liked!", "We notified your partner to review this property too.", "¡Guardado!", "Notificamos a tu pareja para que revise esta propiedad.");
+                    } else {
+                        alert("Liked! Waiting on partner approval.");
+                    }
+                } else {
+                    // Normal behavior
+                    document.getElementById('pipelineDropdown_' + cardId).classList.remove('hidden');
+                    const colLiked = document.getElementById('colLiked');
+                    if(colLiked && card) colLiked.appendChild(card);
+
+                    if (typeof showSuccessModal !== 'undefined') {
+                        showSuccessModal("Shortlisted!", "This property is saved to favorites.", "¡Guardado!", "Esta propiedad se guardó en los favoritos.");
+                    }
+                }
+            }
+        }
+
+        function triggerConfetti() {
+            var duration = 3 * 1000;
+            var end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 5,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#003DA5', '#ED1C24', '#FCD34D', '#10B981']
+                });
+                confetti({
+                    particleCount: 5,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#003DA5', '#ED1C24', '#FCD34D', '#10B981']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+        }
+
+        function convertToCompactCard(cardId, propertyName, agentName) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+
+            // Replace full card innerHTML with compact style
+            card.className = "transition-all duration-500 bg-amber-50 rounded-[32px] p-6 border border-amber-100 flex justify-between items-center mb-6";
+            card.innerHTML = `
+                <div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase">Offer via \${agentName}</p>
+                    <p class="text-xs font-bold text-amber-900 border-b border-transparent hover:border-amber-900 cursor-pointer transition-colors italic">\${propertyName}</p>
+                </div>
+                <!-- Compact Status Dropdown -->
+                <div class="relative">
+                    <select onchange="handleCompactStatus(this, '\${cardId}')" class="bg-amber-500 text-white text-[8px] font-black px-3 py-1.5 rounded-full uppercase appearance-none outline-none pr-6 cursor-pointer transition-colors text-center shadow-sm">
+                        <option value="contract" selected>Under Contract</option>
+                        <option value="sold">Sold</option>
+                        <option value="fell_through">Fell Through</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down absolute right-2 top-1.5 text-white/80 text-[8px] text-center"></i>
+                </div>
+            `;
+        }
+
+        function handlePipelineSelect(selectElement, cardId, agentName) {
+            currentReviewCardId = cardId;
+            const value = selectElement.value;
+            const card = document.getElementById(cardId);
+            const propertyName = cardId === 'reviewCard1' ? 'Luxury Loft San Rafael' : 'Property';
+            
+            if (value === 'visit') {
                 document.getElementById('visitTarget').innerText = "Asking " + agentName + " to schedule a showing.";
                 document.getElementById('visitModal').classList.remove('hidden');
-            } else if (select.value === 'contract') {
-                alert("Status updated to: Under Contract. Listing Agent notified.");
-            } else if (select.value === 'sold') {
-                alert("Directing to SOLD confirmation flow...");
+                // Move card to Visited after request is completed (handled in sendVisitRequest)
+            } else if (value === 'offer') {
+                document.getElementById('offerTarget').innerText = "To: " + agentName;
+                document.getElementById('offerModal').classList.remove('hidden');
+            } else if (value === 'contract') {
+                convertToCompactCard(cardId, propertyName, agentName);
+                if (cardId === 'reviewCard1') {
+                    // Simulate moving to Deals by hiding from Searches Posted and notifying
+                    setTimeout(() => {
+                        closePropertyInbox();
+                        const buyerCard = document.getElementById('buyerCard_Roberto');
+                        if(buyerCard) buyerCard.style.display = 'none';
+                        
+                        showSuccessModal(
+                            "Moved to Deals", 
+                            "Roberto's search is now <b>Under Contract!</b><br><br>The search has been moved to the Deals tab.<br>The 3 other agents with shortlisted properties have been notified that Roberto went with another property.", 
+                            "Movido a Negocios", 
+                            "¡La búsqueda de Roberto está <b>Bajo Contrato!</b><br><br>La búsqueda pasó a tu embudo.<br>Se notificó a los otros 3 agentes que Roberto eligió otra propiedad."
+                        );
+                    }, 800);
+                } else {
+                    // showSuccessModal("Under Contract", "Pipeline metrics have been updated.", "Bajo Contrato", "Las métricas del embudo han sido actualizadas.");
+                    document.getElementById('okrPromptModal').classList.remove('hidden');
+                }
+            } else if (value === 'sold') {
+                const colSold = document.getElementById('colSold');
+                if(colSold && card) colSold.appendChild(card);
+                triggerConfetti();
+                document.getElementById('partyModal').classList.remove('hidden');
+                document.getElementById('partyModal').classList.add('flex');
+            } else if (value === 'fell_through') {
+                applyCardOverlay(cardId, 'fell_through');
+                const colRejected = document.getElementById('colRejected');
+                if(colRejected && card) colRejected.appendChild(card);
+                showSuccessModal("Deal Fell Through", "Status reverted.", "Oferta Caída", "Estado revertido.");
+            } else if (value === 'reject') {
+                const colRejected = document.getElementById('colRejected');
+                if(colRejected && card) colRejected.appendChild(card);
+                applyCardOverlay(cardId, 'reject');
+                showSuccessModal("Rejected", "Moved to rejected column.", "Rechazado", "Movido a rechazados.");
             }
+            
+            updateDashboardMetrics();
+
+            if(value !== 'visit' && value !== 'offer' && value !== 'contract') {
+                 selectElement.value = "none";
+            }
+        }
+
+        function handleCompactStatus(selectElement, cardId) {
+            const card = document.getElementById(cardId);
+            const value = selectElement.value;
+            
+            if (value === 'sold') {
+                card.className = "transition-colors bg-green-50 rounded-[32px] p-6 border border-green-100 flex justify-between items-center mb-6";
+                selectElement.className = "bg-green-500 text-white text-[8px] font-black px-3 py-1.5 rounded-full uppercase appearance-none outline-none pr-6 cursor-pointer transition-colors text-center shadow-sm";
+                
+                // Works for both Seller deals and regular Deals
+                const colSold = document.getElementById('colSold') || document.getElementById('colDealsSold');
+                if(colSold && card) colSold.appendChild(card);
+
+                triggerConfetti();
+                document.getElementById('partyModal').classList.remove('hidden');
+                document.getElementById('partyModal').classList.add('flex');
+            } else if (value === 'fell_through') {
+                card.className = "transition-colors bg-slate-100 rounded-[32px] p-6 border border-slate-200 flex justify-between items-center mb-6";
+                selectElement.className = "bg-slate-500 text-white text-[8px] font-black px-3 py-1.5 rounded-full uppercase appearance-none outline-none pr-6 cursor-pointer transition-colors text-center shadow-sm";
+                
+                const colRejected = document.getElementById('colRejected') || document.getElementById('colDealsNegotiation');
+                if(colRejected && card) colRejected.appendChild(card);
+
+                showSuccessModal("Deal Fell Through", "Status reverted.", "Oferta Caída", "Estado revertido.");
+            } else if (value === 'contract') {
+                card.className = "transition-colors bg-amber-50 rounded-[32px] p-6 border border-amber-100 flex justify-between items-center mb-6";
+                selectElement.className = "bg-amber-500 text-white text-[8px] font-black px-3 py-1.5 rounded-full uppercase appearance-none outline-none pr-6 cursor-pointer transition-colors text-center shadow-sm";
+                
+                const colContract = document.getElementById('colContract') || document.getElementById('colDealsContract');
+                if(colContract && card) colContract.appendChild(card);
+
+                showSuccessModal("Under Contract", "Pipeline metrics have been updated.", "Bajo Contrato", "Las métricas del embudo han sido actualizadas.");
+                openOkrPrompt('reserva'); // Trigger OKR for a deal closed / under contract
+            }
+
+            updateDashboardMetrics();
+        }
+
+        function applyCardOverlay(cardId, type) {
+            const overlay = document.getElementById('statusOverlay_' + cardId);
+            if(!overlay) return;
+
+            const iconBg = document.getElementById('statusIconBg_' + cardId);
+            const icon = document.getElementById('statusIcon_' + cardId);
+            const textEn = document.getElementById('statusText_' + cardId);
+            const textEs = document.getElementById('statusText_' + cardId + '_es');
+            const subtextEn = document.getElementById('statusSubtext_' + cardId);
+            const subtextEs = document.getElementById('statusSubtext_' + cardId + '_es');
+
+            overlay.classList.remove('hidden');
+
+            if (type === 'reject') {
+                iconBg.className = "w-20 h-20 rounded-full flex items-center justify-center text-4xl mb-4 shadow-lg bg-red-100 text-red-500";
+                icon.className = "fa-solid fa-xmark";
+                textEn.className = "text-2xl font-black uppercase tracking-widest text-red-600 lang-en text-center leading-none";
+                textEs.className = "text-2xl font-black uppercase tracking-widest text-red-600 lang-es hidden text-center leading-none";
+                textEn.innerText = "Passed"; textEs.innerText = "Descartado";
+                subtextEn.innerText = "Feedback sent to listing agent."; subtextEs.innerText = "Feedback enviado al agente.";
+            } else if (type === 'visit') {
+                iconBg.className = "w-20 h-20 rounded-full flex items-center justify-center text-4xl mb-4 shadow-lg bg-blue-100 text-blue-600";
+                icon.className = "fa-solid fa-calendar-check";
+                textEn.className = "text-2xl font-black uppercase tracking-widest text-[#003DA5] lang-en text-center leading-none";
+                textEs.className = "text-2xl font-black uppercase tracking-widest text-[#003DA5] lang-es hidden text-center leading-none";
+                textEn.innerText = "Visit Requested"; textEs.innerText = "Visita Solicitada";
+                subtextEn.innerText = "Pending confirmation."; subtextEs.innerText = "Pendiente de confirmación.";
+            } else if (type === 'offer') {
+                iconBg.className = "w-20 h-20 rounded-full flex items-center justify-center text-4xl mb-4 shadow-lg bg-amber-100 text-amber-500";
+                icon.className = "fa-solid fa-file-signature";
+                textEn.className = "text-2xl font-black uppercase tracking-widest text-amber-600 lang-en text-center leading-none";
+                textEs.className = "text-2xl font-black uppercase tracking-widest text-amber-600 lang-es hidden text-center leading-none";
+                textEn.innerText = "Under Contract"; textEs.innerText = "Bajo Contrato";
+                subtextEn.innerText = "Offer submitted & status updated."; subtextEs.innerText = "Oferta enviada y estado actualizado.";
+            } else if (type === 'contract') {
+                iconBg.className = "w-20 h-20 rounded-full flex items-center justify-center text-4xl mb-4 shadow-lg bg-amber-100 text-amber-500";
+                icon.className = "fa-solid fa-file-signature";
+                textEn.className = "text-2xl font-black uppercase tracking-widest text-amber-600 lang-en text-center leading-none";
+                textEs.className = "text-2xl font-black uppercase tracking-widest text-amber-600 lang-es hidden text-center leading-none";
+                textEn.innerText = "Under Contract"; textEs.innerText = "Bajo Contrato";
+                subtextEn.innerText = "Status updated."; subtextEs.innerText = "Estado actualizado.";
+            } else if (type === 'sold') {
+                iconBg.className = "w-20 h-20 rounded-full flex items-center justify-center text-4xl mb-4 shadow-lg bg-green-100 text-green-600";
+                icon.className = "fa-solid fa-handshake";
+                textEn.className = "text-2xl font-black uppercase tracking-widest text-green-600 lang-en text-center leading-none";
+                textEs.className = "text-2xl font-black uppercase tracking-widest text-green-600 lang-es hidden text-center leading-none";
+                textEn.innerText = "Sold"; textEs.innerText = "Vendido";
+                subtextEn.innerText = "Deal closed."; subtextEs.innerText = "Cierre exitoso.";
+            } else if (type === 'fell_through') {
+                iconBg.className = "w-20 h-20 rounded-full flex items-center justify-center text-4xl mb-4 shadow-lg bg-slate-100 text-slate-500";
+                icon.className = "fa-solid fa-face-frown-open";
+                textEn.className = "text-2xl font-black uppercase tracking-widest text-slate-600 lang-en text-center leading-none";
+                textEs.className = "text-2xl font-black uppercase tracking-widest text-slate-600 lang-es hidden text-center leading-none";
+                textEn.innerText = "Fell Through"; textEs.innerText = "Oferta Caída";
+                subtextEn.innerText = "Returned to market."; subtextEs.innerText = "Regresó al mercado.";
+            }
+        }
+
+        function handleCounter(selectElement, cardId) {
+            currentReviewCardId = cardId;
+            const value = selectElement.value;
+            const card = document.getElementById(cardId);
+            
+            if (value === 'accept') {
+                // Accepted the counter offer -> Under Contract
+                card.className = "transition-colors bg-amber-50 rounded-[32px] p-6 border border-amber-100 flex justify-between items-center mb-6";
+                card.innerHTML = `
+                    <div class="mb-3">
+                        <p class="text-[9px] font-black text-amber-500 uppercase tracking-widest flex justify-between items-center mb-1">
+                            <span><i class="fa-solid fa-file-signature"></i> Under Contract</span>
+                            <span class="text-[8px] text-slate-400"><i class="fa-solid fa-location-dot"></i> Dominical</span>
+                        </p>
+                        <p class="text-sm font-bold text-slate-900 dark:text-white italic leading-tight">Ocean View Villa</p>
+                        
+                        <!-- Agent Header -->
+                        <div class="flex items-center gap-2 mt-2 mb-2 bg-slate-50 dark:bg-slate-700/50 p-2 rounded-xl border border-slate-100 dark:border-slate-700">
+                            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 text-blue-600 dark:text-blue-300 flex items-center justify-center shadow-sm"><i class="fa-solid fa-user text-[10px]"></i></div>
+                            <div class="flex-1">
+                                <p class="text-[9px] font-black text-slate-800 dark:text-slate-200">John Doe <span class="text-slate-400 font-normal">(Listing Agent)</span></p>
+                            </div>
+                            <a href="https://wa.me/50688888888" target="_blank" class="w-6 h-6 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center transition-colors shadow-sm">
+                                <i class="fa-brands fa-whatsapp text-[10px]"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="relative z-10 w-full mt-2">
+                        <select onchange="handleCompactStatus(this, '\${cardId}')" class="w-full bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-500 text-[10px] font-black px-3 py-2.5 rounded-xl uppercase tracking-widest appearance-none outline-none pr-8 cursor-pointer shadow-sm border border-amber-100 dark:border-amber-800 transition-colors">
+                            <option value="contract" selected disabled>Under Contract...</option>
+                            <option value="sold">Mark as Sold</option>
+                            <option value="fell_through">Fell Through</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-amber-500 text-[10px]"></i>
+                    </div>
+                `;
+                
+                const colContract = document.getElementById('colDealsContract') || document.getElementById('colContract');
+                if(colContract && card) colContract.appendChild(card);
+
+                showSuccessModal("Offer Accepted!", "You accepted the counter offer. Property is now Under Contract.", "¡Oferta Aceptada!", "Aceptaste la contraoferta. La propiedad está Bajo Contrato.");
+                
+            } else if (value === 'counter') {
+                document.getElementById('counterTarget').innerText = "To: John Doe";
+                document.getElementById('counterOfferModal').classList.remove('hidden');
+            } else if (value === 'reject') {
+                card.className = "transition-colors bg-slate-100 rounded-[32px] p-6 border border-slate-200 flex justify-between items-center mb-6";
+                card.innerHTML = `
+                    <div class="mb-3">
+                        <p class="text-[9px] font-black text-slate-500 uppercase flex justify-between items-center mb-1">
+                            <span><i class="fa-solid fa-xmark mr-1"></i> Walked Away</span>
+                            <span class="text-[8px] text-slate-400"><i class="fa-solid fa-location-dot"></i> Dominical</span>
+                        </p>
+                        <div class="flex justify-between items-start mt-1">
+                            <p class="text-sm font-bold text-slate-900 dark:text-white italic leading-tight">Ocean View Villa</p>
+                            <div class="bg-slate-100 text-slate-500 text-[10px] font-black px-2 py-1 rounded-lg shadow-sm">
+                                Rejected
+                            </div>
+                        </div>
+                        
+                        <!-- Agent Header -->
+                        <div class="flex items-center gap-2 mt-3 bg-slate-50 dark:bg-slate-700/50 p-2 rounded-xl border border-slate-100 dark:border-slate-700 opacity-50">
+                            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 text-blue-600 dark:text-blue-300 flex items-center justify-center shadow-sm"><i class="fa-solid fa-user text-[10px]"></i></div>
+                            <div class="flex-1">
+                                <p class="text-[9px] font-black text-slate-800 dark:text-slate-200">John Doe <span class="text-slate-400 font-normal">(Listing Agent)</span></p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                const colRejected = document.getElementById('colRejected');
+                if(colRejected && card) colRejected.appendChild(card);
+
+                showSuccessModal("Offer Rejected", "The deal has fallen through. The agent has been notified.", "Oferta Rechazada", "Se ha notificado al agente.");
+            }
+            selectElement.value = "none";
         }
 
         function closeModals() {
             document.getElementById('rejectModal').classList.add('hidden');
+            document.getElementById('feedbackModal').classList.add('hidden');
             document.getElementById('visitModal').classList.add('hidden');
+            document.getElementById('offerModal').classList.add('hidden');
+            document.getElementById('counterOfferModal').classList.add('hidden');
+            document.getElementById('okrPromptModal').classList.add('hidden');
+            if (document.getElementById('partyModal')) {
+                document.getElementById('partyModal').classList.add('hidden');
+                document.getElementById('partyModal').classList.remove('flex');
+            }
+            if (document.getElementById('matchReportModal')) {
+                document.getElementById('matchReportModal').classList.add('hidden');
+            }
+        }
+
+        function openOkrPrompt(type) {
+            // Store the type we are reporting so the buttons know where to go
+            document.getElementById('okrPromptModal').setAttribute('data-okr-type', type);
+            document.getElementById('okrPromptModal').classList.remove('hidden');
+        }
+
+        function reportToOffice() {
+            closeModals();
+            const type = document.getElementById('okrPromptModal').getAttribute('data-okr-type');
+            
+            if (type === 'reserva') {
+                // Link for New Reservation/Deal Closed
+                window.open("https://docs.google.com/forms/d/e/1FAIpQLSdpw3j1ZgIrmzBofK84pQ4s1L1kYyZJ9q8h50M8v9O8C1A8Nw/viewform", "_blank");
+                localStorage.removeItem('pendingOkrReserva');
+            } else {
+                // Default to Listing Link
+                window.open("https://docs.google.com/forms/d/e/1FAIpQLSd788bL1fT5r6FHzn89eR2B84D3W21g_m0N5P7A41tE2w56Q/viewform", "_blank");
+                localStorage.removeItem('pendingOkrListing');
+            }
+        }
+
+        function setOkrReminder() {
+            closeModals();
+            const type = document.getElementById('okrPromptModal').getAttribute('data-okr-type') || 'listing';
+            localStorage.setItem('pendingOkr' + type.charAt(0).toUpperCase() + type.slice(1), 'true');
+            showSuccessModal(currentLang === 'en' ? 'Reminder Set' : 'Recordatorio Configurado', currentLang === 'en' ? "We will remind you tomorrow to report your OKR." : "Te recordaremos mañana reportar tu OKR.");
+        }
+
+        function openMatchReport(title) {
+            if(title) document.getElementById('matchReportTitle').innerText = title;
+            document.getElementById('matchReportModal').classList.remove('hidden');
+            document.getElementById('matchReportModal').classList.add('flex');
         }
 
         function sendReject() {
             closeModals();
+            if(currentReviewCardId) {
+                applyCardOverlay(currentReviewCardId, 'reject');
+                const card = document.getElementById(currentReviewCardId);
+                const colRejected = document.getElementById('colRejected');
+                if(colRejected && card) colRejected.appendChild(card);
+            }
             showSuccessModal("Comment Sent!", "The Listing Agent has been notified of the feedback.");
         }
 
         function sendVisitRequest() {
             closeModals();
-            showSuccessModal("Visit Requested!", "Coordinate with the agent via WhatsApp if needed.");
+            if(currentReviewCardId) {
+                applyCardOverlay(currentReviewCardId, 'visit');
+                const card = document.getElementById(currentReviewCardId);
+                const colVisited = document.getElementById('colVisited');
+                if(colVisited && card) colVisited.appendChild(card);
+            }
+            showSuccessModal("Visit Requested!", "Coordinate with the agent via WhatsApp if needed.", "¡Visita Solicitada!", "Coordina con el agente vía WhatsApp si es necesario.");
+        }
+
+        function sendCounter() {
+            closeModals();
+            showSuccessModal("Counter Sent!", "The Listing Agent has been notified of your counter offer.", "¡Contraoferta Enviada!", "El agente ha sido notificado.");
+        }
+
+        function sendOffer() {
+            closeModals();
+            if(currentReviewCardId) {
+                const propertyName = currentReviewCardId === 'reviewCard1' ? 'Luxury Loft San Rafael' : 'Property';
+                convertToCompactCard(currentReviewCardId, propertyName, 'John Doe');
+                const card = document.getElementById(currentReviewCardId);
+                const colContract = document.getElementById('colContract');
+                if(colContract && card) colContract.appendChild(card);
+            }
+            showSuccessModal("Offer Submitted!", "You've made an offer. Property is now compact & Under Contract.", "¡Oferta Enviada!", "Has hecho una oferta. La propiedad ahora está Bajo Contrato.");
+        }
+
+        function requestFeedback(listingName, agentName) {
+            document.getElementById('feedbackListingTarget').innerText = listingName;
+            
+            // Populate the specific showing the user wants feedback for
+            const sel = document.getElementById('feedbackShowingSelect');
+            sel.innerHTML = `<option value="" selected disabled>Select showing...</option>`;
+            
+            // Normally populated dynamically via API, mock it based on agentName passed:
+            sel.innerHTML += `<option value="\${agentName}">Yesterday (2:00 PM) - \${agentName}</option>`;
+            
+            document.getElementById('feedbackMessagePreview').value = "";
+            document.getElementById('feedbackMessagePreview').setAttribute("placeholder", currentLang === 'en' ? "Please select a showing..." : "Por favor, seleccione una visita...");
+
+            document.getElementById('feedbackModal').classList.remove('hidden');
+            document.getElementById('feedbackModal').classList.add('flex');
+        }
+
+        function updateFeedbackMessage() {
+            const sel = document.getElementById('feedbackShowingSelect');
+            const agent = sel.options[sel.selectedIndex].value;
+            const preview = document.getElementById('feedbackMessagePreview');
+            
+            if (agent) {
+                const justAgentName = agent.split(' (')[0]; // Quick extract for demo
+                
+                if (currentLang === 'en') {
+                    preview.value = `Hey \${justAgentName}, thanks for visiting with your client! Can you give me feedback about the visit? Did they like it, not like it, or not sure yet? Any comments would be super helpful.`;
+                } else {
+                    preview.value = `¡Hola \${justAgentName}, gracias por visitar con tu cliente! ¿Puedes darme feedback sobre la visita? ¿Les gustó, no les gustó o aún no están seguros? Cualquier comentario sería muy útil.`;
+                }
+            } else {
+                preview.value = "";
+                preview.setAttribute("placeholder", currentLang === 'en' ? "Please select a showing..." : "Por favor, seleccione una visita...");
+            }
+        }
+
+        function openProvideFeedbackModal(listingName, agentName) {
+            document.getElementById('provideFeedbackTarget').innerText = `${listingName} - ${agentName}`;
+            
+            // Clear previous form states
+            document.getElementById('provideFeedbackNotes').value = "";
+            const radios = document.getElementsByName('feedbackRating');
+            for(let i=0; i<radios.length; i++) radios[i].checked = false;
+
+            document.getElementById('provideFeedbackModal').classList.remove('hidden');
+            document.getElementById('provideFeedbackModal').classList.add('flex');
+        }
+
+        function submitShowingFeedback() {
+            closeModals();
+            showSuccessModal("Feedback Submitted", "The listing agent has received your feedback notes. Thank you!", "Feedback Enviado", "El agente captador ha recibido tus notas de la visita. ¡Gracias!");
+        }
+
+        function sendFeedbackRequest() {
+            closeModals();
+            // Log OKR
+            let matches = parseInt(localStorage.getItem('okr_matches_sent') || '0');
+            localStorage.setItem('okr_matches_sent', matches + 1);
+            showSuccessModal("Feedback Requested", "The agent will receive a notification to fill out the feedback form (Liked, Did not like, Not sure + comments). This will sync into your Matches Sent pipeline.", "Feedback Solicitado", "El agente recibirá una notificación para llenar el formulario de feedback (Le gustó, No le gustó, No sabe + comentarios). Esto se sincronizará en tu embudo de Matches Enviados.");
+        }
+
+
+        function renewSearch(btn) {
+            const card = btn.closest('.bg-red-50');
+            if (card) {
+                // Remove the action required warning and prompt box
+                const actionBadge = card.querySelector('.absolute.-top-3');
+                if (actionBadge) actionBadge.remove();
+                
+                const promptBox = card.querySelector('.bg-white.dark\\:bg-slate-800.p-4');
+                if (promptBox) promptBox.remove();
+
+                // Restore card styling to active
+                card.classList.remove('bg-red-50', 'border-red-200');
+                card.classList.add('bg-white', 'dark:bg-slate-800', 'border-slate-200', 'dark:border-slate-700');
+                
+                const pt2 = card.querySelector('.pt-2.opacity-50');
+                if(pt2) {
+                    pt2.classList.replace('pt-2','pt-0');
+                    pt2.classList.remove('opacity-50');
+                }
+            }
+            showSuccessModal("Search Renewed", "This search has been bumped to the top of the feed for 30 more days.");
+        }
+
+        function archiveSearch(btn) {
+            const card = btn.closest('.bg-red-50');
+            if (card) {
+                // Transition out
+                card.style.transition = "all 0.3s ease";
+                card.style.opacity = "0";
+                card.style.transform = "scale(0.95)";
+                setTimeout(() => {
+                    card.remove();
+                }, 300);
+            }
+            showSuccessModal("Search Archived", "This search has been removed from your active pipeline.");
         }
 
         function showSuccessModal(title, message) {
@@ -215,6 +1676,516 @@
         function closeSuccessModal() {
             document.getElementById('successModal').classList.add('hidden');
             document.getElementById('successModal').classList.remove('flex');
+        }
+
+        // Initialize Language and Metrics on load
+        window.onload = async function() {
+            setLanguage();
+            try { await loadMySearches(); } catch(e) { console.warn('Search load error:', e); }
+            updateDashboardMetrics();
+        }
+
+        function updateDashboardMetrics() {
+            // Count cards in specific Kanban columns
+            const contractCards = document.querySelectorAll('#colContract > div, #colDealsContract > div').length;
+            const negotiationCards = document.querySelectorAll('#colDealsNegotiation > div').length;
+            const soldCards = document.querySelectorAll('#colSold > div, #colDealsSold > div').length;
+
+            // Update UI elements if they exist
+            const potentialEl = document.getElementById('metricPipelinePotential');
+            const contractEl = document.getElementById('metricUnderContract');
+
+            if(potentialEl && contractEl) {
+                // For the generic demo, we'll assign some arbitrary averages per card stage
+                const contractValue = contractCards * 12000;
+                const negotiationValue = negotiationCards * 15000;
+                const soldValue = soldCards * 11500;
+                
+                const totalPotential = contractValue + negotiationValue + soldValue + 10000; // +10k base
+
+                potentialEl.innerText = "$" + totalPotential.toLocaleString();
+                contractEl.innerText = "$" + contractValue.toLocaleString();
+            }
+        }
+
+        // ===== LOAD USER'S OWN SEARCHES FROM SUPABASE =====
+        async function loadMySearches() {
+            if (!isSupabaseConfigured() || !supabase) return;
+
+            try {
+                const user = await getCurrentUser();
+                if (!user) return;
+
+                const { data, error } = await supabase
+                    .from('searches')
+                    .select('*')
+                    .eq('agent_id', user.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                if (!data || data.length === 0) {
+                    // Show empty state, hide demo cards
+                    const demoCards = document.querySelectorAll('#buyerTabContent > div:not(#mySearchesContainer):not(#buyerEmptyState)');
+                    demoCards.forEach(c => c.style.display = 'none');
+                    document.getElementById('buyerEmptyState').classList.remove('hidden');
+                    // Update metrics
+                    document.getElementById('metricBuyers').innerHTML = '0 <span class="lang-en">Active</span><span class="lang-es hidden">Activas</span>';
+                    return;
+                }
+
+                const container = document.getElementById('mySearchesContainer');
+                if (!container) return;
+
+                // Hide demo cards
+                const demoCards = document.querySelectorAll('#buyerTabContent > div:not(#mySearchesContainer):not(#buyerEmptyState)');
+                demoCards.forEach(c => c.style.display = 'none');
+
+                container.innerHTML = data.map(s => renderMySearchCard(s)).join('');
+
+                // Update metrics
+                const activeCount = data.filter(s => s.status === 'active').length;
+                document.getElementById('metricBuyers').innerHTML = `${activeCount} <span class="lang-en">Active</span><span class="lang-es hidden">Activas</span>`;
+
+                // Apply language
+                const lang = localStorage.getItem('nexusLang') || 'en';
+                container.querySelectorAll('.lang-en').forEach(el => lang === 'en' ? el.classList.remove('hidden') : el.classList.add('hidden'));
+                container.querySelectorAll('.lang-es').forEach(el => lang === 'es' ? el.classList.remove('hidden') : el.classList.add('hidden'));
+
+            } catch (e) {
+                console.warn('Could not load user searches:', e.message);
+            }
+        }
+
+        function renderMySearchCard(s) {
+            const propType = (s.property_type || 'any').split(',')[0].trim();
+            const propLabel = propType.charAt(0).toUpperCase() + propType.slice(1);
+            const budgetMin = s.budget_min ? fmtBudget(s.budget_min) : '—';
+            const budgetMax = s.budget_max ? fmtBudget(s.budget_max) : '—';
+            const location = s.location || '—';
+            const searchType = s.search_type === 'rent' ? 'FOR RENT' : 'FOR BUY';
+            const searchTypeEs = s.search_type === 'rent' ? 'ALQUILER' : 'COMPRA';
+            const timing = s.timing || 'Flexible';
+            const payment = s.payment_method || 'Unknown';
+            const daysSince = Math.floor((Date.now() - new Date(s.created_at).getTime()) / 86400000);
+            const isStale = daysSince > 60;
+
+            const paymentIcons = {
+                'Cash': 'fa-money-bill-1-wave text-green-600',
+                'Mortgage Approved': 'fa-building-columns text-blue-600',
+                'Needs Seller Financing': 'fa-handshake text-amber-600',
+                'Unknown': 'fa-circle-question text-slate-400'
+            };
+            const payIcon = paymentIcons[payment] || paymentIcons['Unknown'];
+
+            return `
+            <div class="transition-all duration-500 bg-white dark:bg-slate-800 p-6 rounded-[32px] border ${isStale ? 'border-red-200 bg-red-50' : 'border-slate-200 dark:border-slate-700'} shadow-sm space-y-4">
+                <div onclick="loadPropertyInbox('${s.id}', '${s.client_name || 'Private'}')" class="cursor-pointer active:opacity-70 transition">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="bg-blue-600 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase">
+                                    <span class="lang-en">${searchType}</span><span class="lang-es hidden">${searchTypeEs}</span>
+                                </span>
+                                <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest">• ${propLabel}</span>
+                            </div>
+                            <h3 class="font-black text-xl italic text-slate-900 dark:text-slate-100 leading-none">${s.client_name || 'Private'}</h3>
+                            <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">${location} • ${budgetMin} - ${budgetMax}</p>
+                        </div>
+                        <div class="text-right flex flex-col items-end gap-2">
+                            <span class="text-[8px] font-black px-2 py-1 rounded-full uppercase ${isStale ? 'bg-red-100 text-red-500' : 'bg-green-100 text-green-600'}"><i class="fa-solid ${isStale ? 'fa-clock' : 'fa-check-circle'} mr-1"></i>${isStale ? daysSince + 'd' : 'Active'}</span>
+                            <div class="flex items-center gap-1">
+                                <i class="fa-solid ${payIcon} text-xs"></i>
+                                <span class="text-[8px] font-black text-slate-400 uppercase">${payment}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-900 p-3 rounded-2xl">
+                    <div class="flex gap-4">
+                        <button class="text-blue-600 text-[10px] font-black uppercase flex items-center gap-1.5 hover:text-blue-800 transition">
+                            <i class="fa-solid fa-pen-to-square"></i> <span class="lang-en">Edit</span><span class="lang-es hidden">Editar</span>
+                        </button>
+                        <button class="text-slate-400 text-[10px] font-black uppercase flex items-center gap-1.5 hover:text-slate-600 transition">
+                            <i class="fa-solid fa-pause"></i> <span class="lang-en">Pause</span><span class="lang-es hidden">Pausar</span>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[8px] font-black text-slate-400">${timing}</span>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function fmtBudget(n) {
+            if (n >= 1000000) return '$' + (n/1000000).toFixed(1) + 'M';
+            if (n >= 1000) return '$' + Math.round(n/1000) + 'k';
+            return '$' + n;
+        }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const isPremium = localStorage.getItem('isPremium') === 'true';
+            const isAdmin = localStorage.getItem('isAdmin') === 'true';
+
+            // Hide Admin feature
+            if (!isAdmin) {
+                const broker = document.getElementById('nav-broker');
+                if (broker) broker.style.display = 'none';
+            }
+
+            // Premium Access Control - Visible to all, but restricted access
+            // PHASE 1 LAUNCH LOCK (Hardcoded for ALL users)
+            const launchLockedElements = [
+                document.getElementById('nav-market'),
+                document.getElementById('nav-office'),
+                document.getElementById('nav-business'),
+                document.getElementById('nav-resources'),
+                ...Array.from(document.querySelectorAll('.premium-only')),
+                ...Array.from(document.querySelectorAll('a[href="office.html"]')),
+                ...Array.from(document.querySelectorAll('a[href="my-business.html"]')),
+                ...Array.from(document.querySelectorAll('a[href="resources.html"]')),
+                ...Array.from(document.querySelectorAll('a[href="market.html"]'))
+            ];
+            
+            // Remove nulls and apply locks unconditionally for everyone
+            launchLockedElements.filter(Boolean).forEach(el => {
+                if (el && el.tagName === 'A' || el.tagName === 'BUTTON' || el.tagName === 'DIV' && el.getAttribute('onclick')) {
+                    // Apply visual lock and make it a group for hover effects
+                    el.classList.add('grayscale', 'opacity-60', 'relative', 'group');
+                    
+                    // Don't add duplicate lock icons if it already has one
+                    if (!el.innerHTML.includes('fa-lock')) {
+                        el.insertAdjacentHTML('beforeend', '<div class="absolute top-1 right-1 lg:top-2 lg:right-2 bg-slate-900 border border-[#003DA5] rounded-full w-4 h-4 flex items-center justify-center shadow-lg z-20"><i class="fa-solid fa-lock text-[8px] text-white"></i></div>');
+                        
+                        // Add the hover tooltip
+                        el.insertAdjacentHTML('beforeend', `
+                            <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-xl border border-slate-700">
+                                <span class="lang-en inline" style="display: var(--lang-en-display, inline);">Premium Feature</span>
+                                <span class="lang-es hidden" style="display: var(--lang-es-display, none);">Función Premium</span>
+                            </div>
+                        `);
+                    }
+
+                    // Remove existing hrefs or onclicks to disable it natively
+                    if (el.tagName === 'A') el.removeAttribute('href');
+                    if (el.hasAttribute('onclick')) el.removeAttribute('onclick');
+                    
+                    // Prevent default click gracefully without alert
+                    el.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
+                }
+            });
+        });
+    </script>
+
+    <!-- INVITE CLIENT MODAL -->
+    <div id="inviteClientModal" class="fixed inset-0 z-[100] bg-slate-900/80 hidden flex-col items-center justify-center p-4 backdrop-blur-md animate-fade">
+        <div class="bg-white dark:bg-slate-800 rounded-[32px] w-full max-w-md shadow-2xl relative overflow-hidden flex flex-col">
+            <div class="bg-gradient-to-r from-[#003DA5] to-blue-600 p-6 text-white shrink-0 relative">
+                <button onclick="closeInviteClientModal()" class="absolute top-4 right-4 text-white/70 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <h2 class="text-xl font-black italic tracking-tighter uppercase leading-none">Register Lead</h2>
+                <p class="text-[10px] font-bold uppercase opacity-80 mt-1">Generate a secure onboarding link</p>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2">Client Name</label>
+                    <input type="text" id="inviteName" placeholder="John Doe" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                </div>
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2">Client Email</label>
+                    <input type="email" id="inviteEmail" placeholder="john@example.com" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                </div>
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2">Client Phone</label>
+                    <input type="tel" id="invitePhone" placeholder="+1 555-0000" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                </div>
+                <div id="inviteErrorMsg" class="hidden p-3 bg-red-50 text-red-600 border border-red-200 rounded-xl text-[10px] font-bold"></div>
+                
+                <div id="inviteLinkResult" class="hidden p-4 bg-green-50 border border-green-200 rounded-xl mt-4">
+                    <p class="text-[9px] font-black text-green-700 uppercase mb-2">Success! Share this link:</p>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="inviteLinkUrl" readonly class="flex-1 p-2 border border-green-200 rounded text-xs text-green-800 bg-white" value="">
+                        <button onclick="copyInviteLink()" class="bg-green-600 text-white px-3 py-2 rounded text-xs font-black"><i class="fa-solid fa-copy"></i></button>
+                    </div>
+                </div>
+
+                <button id="btnGenerateInvite" onclick="generateClientInvite()" class="w-full bg-[#003DA5] hover:bg-blue-800 text-white py-4 rounded-2xl font-black text-xs uppercase shadow-sm transition-transform active:scale-95 mt-2">Create & Protect Lead</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function openInviteClientModal() {
+            document.getElementById('inviteName').value = '';
+            document.getElementById('inviteEmail').value = '';
+            document.getElementById('invitePhone').value = '';
+            document.getElementById('inviteErrorMsg').classList.add('hidden');
+            document.getElementById('inviteLinkResult').classList.add('hidden');
+            document.getElementById('btnGenerateInvite').style.display = 'block';
+            
+            document.getElementById('inviteClientModal').classList.remove('hidden');
+            document.getElementById('inviteClientModal').classList.add('flex');
+        }
+        function closeInviteClientModal() {
+            document.getElementById('inviteClientModal').classList.remove('flex');
+            document.getElementById('inviteClientModal').classList.add('hidden');
+        }
+        async function generateClientInvite() {
+            const name = document.getElementById('inviteName').value.trim();
+            const email = document.getElementById('inviteEmail').value.trim();
+            const phone = document.getElementById('invitePhone').value.trim();
+            const errDiv = document.getElementById('inviteErrorMsg');
+            
+            if(!name || !email || !phone) {
+                errDiv.innerText = "Please fill all fields.";
+                errDiv.classList.remove('hidden');
+                return;
+            }
+            errDiv.classList.add('hidden');
+            document.getElementById('btnGenerateInvite').innerText = "Processing...";
+            
+            try {
+                if(typeof validateAndPreRegisterClient === 'function') {
+                    const result = await validateAndPreRegisterClient({name, email, phone});
+                    if(result.error) {
+                        errDiv.innerText = result.error;
+                        errDiv.classList.remove('hidden');
+                    } else if(result.clientId) {
+                        const link = window.location.origin + window.location.pathname.replace('my-desk.html', 'client-onboarding.html') + '?client_id=' + result.clientId;
+                        document.getElementById('inviteLinkUrl').value = link;
+                        document.getElementById('inviteLinkResult').classList.remove('hidden');
+                        document.getElementById('btnGenerateInvite').style.display = 'none';
+                        loadMySearches(); 
+                    }
+                }
+            } catch(e) {
+                errDiv.innerText = "Error: " + e.message;
+                errDiv.classList.remove('hidden');
+            }
+            document.getElementById('btnGenerateInvite').innerText = "Create & Protect Lead";
+        }
+        function copyInviteLink() {
+            const input = document.getElementById('inviteLinkUrl');
+            input.select();
+            document.execCommand('copy');
+            alert('Link copied to clipboard!');
+        }
+    </script>
+
+    <!-- MATCH REPORT MODAL -->
+    <div id="matchReportModal" class="fixed inset-0 z-[100] bg-slate-900/80 hidden flex-col items-center justify-center p-4 backdrop-blur-md animate-fade">
+        <div class="bg-white dark:bg-slate-800 rounded-[32px] w-full max-w-md shadow-2xl relative overflow-hidden flex flex-col h-[85vh]">
+            
+            <!-- Header -->
+            <div class="relative bg-gradient-to-r from-[#003DA5] to-blue-600 p-6 text-white shrink-0">
+                <button onclick="closeMatchReport()" class="absolute top-4 right-4 w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-16 h-16 rounded-2xl bg-white/20 flex flex-col items-center justify-center border-2 border-white/50 shadow-inner">
+                        <span class="text-2xl font-black leading-none">92<span class="text-sm">%</span></span>
+                    </div>
+                    <div>
+                        <h2 id="matchReportTitle" class="text-xl font-black italic tracking-tighter uppercase leading-none lang-en">Match Report</h2>
+                        <h2 class="text-xl font-black italic tracking-tighter uppercase leading-none lang-es hidden">Reporte de Coincidencia</h2>
+                        <p class="text-[10px] font-bold uppercase opacity-80 mt-1">Generated by NEXUS AI</p>
+                    </div>
+                </div>
+                <div class="flex justify-between items-end">
+                    <div>
+                        <p class="text-[9px] uppercase font-black opacity-80 mb-0.5">Buyer</p>
+                        <p class="text-sm font-bold">Invest Corp (Escazú)</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[9px] uppercase font-black opacity-80 mb-0.5">Property</p>
+                        <p class="text-sm font-bold">Luxury Condo Unit 4B</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div class="p-6 overflow-y-auto flex-1 bg-slate-50 dark:bg-slate-900/50 space-y-6 hidden-scrollbar">
+                
+                <!-- Match Breakdown -->
+                <div class="space-y-4">
+                    <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest lang-en">Criteria Breakdown</h3>
+                    <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest lang-es hidden">Desglose de Criterios</h3>
+                    
+                    <div class="space-y-3">
+                        <!-- Budget -->
+                        <div>
+                            <div class="flex justify-between text-[10px] font-black uppercase mb-1">
+                                <span class="text-slate-700 dark:text-slate-300"><i class="fa-solid fa-money-bill-wave text-green-500 mr-1"></i> Budget / Presupuesto</span>
+                                <span class="text-green-500">100% Match</span>
+                            </div>
+                            <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-green-500 w-full rounded-full"></div>
+                            </div>
+                            <p class="text-[9px] text-slate-500 font-bold mt-1">Buyer max: $450k | Property: $425k</p>
+                        </div>
+                        
+                        <!-- Location -->
+                        <div>
+                            <div class="flex justify-between text-[10px] font-black uppercase mb-1">
+                                <span class="text-slate-700 dark:text-slate-300"><i class="fa-solid fa-location-dot text-blue-500 mr-1"></i> Area / Zona</span>
+                                <span class="text-blue-500">100% Match</span>
+                            </div>
+                            <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-blue-500 w-full rounded-full"></div>
+                            </div>
+                            <p class="text-[9px] text-slate-500 font-bold mt-1">Exact match: Escazú</p>
+                        </div>
+                        
+                        <!-- Specs -->
+                        <div>
+                            <div class="flex justify-between text-[10px] font-black uppercase mb-1">
+                                <span class="text-slate-700 dark:text-slate-300"><i class="fa-solid fa-bed text-amber-500 mr-1"></i> Specs / Especificaciones</span>
+                                <span class="text-amber-500">80% Match</span>
+                            </div>
+                            <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-amber-500 w-[80%] rounded-full"></div>
+                            </div>
+                            <p class="text-[9px] text-slate-500 font-bold mt-1">Property has 2 beds (Buyer requested 2-3 beds)</p>
+                        </div>
+                        
+                        <!-- Amenities -->
+                        <div>
+                            <div class="flex justify-between text-[10px] font-black uppercase mb-1">
+                                <span class="text-slate-700 dark:text-slate-300"><i class="fa-solid fa-swimming-pool text-purple-500 mr-1"></i> Amenities / Amenidades</span>
+                                <span class="text-purple-500">85% Match</span>
+                            </div>
+                            <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-purple-500 w-[85%] rounded-full"></div>
+                            </div>
+                            <p class="text-[9px] text-slate-500 font-bold mt-1">Missing: Private Garden (Has Shared Green Area)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Missing Elements / Warnings -->
+                <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 p-4 rounded-2xl">
+                    <h4 class="text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                        <i class="fa-solid fa-triangle-exclamation"></i> NEXUS Insights
+                    </h4>
+                    <p class="text-[10px] text-amber-800 dark:text-amber-400 font-bold leading-relaxed">
+                        The buyer strongly requested a <span class="font-black italic">private garden</span> which this property lacks. However, the exact location match and being 5% under budget makes it a highly viable option. Mention this cost savings in your pitch!
+                    </p>
+                </div>
+
+                <!-- Action Areas -->
+                <div class="grid grid-cols-2 gap-3">
+                    <button class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl text-center shadow-sm hover:border-[#003DA5] transition-colors group">
+                        <i class="fa-solid fa-file-pdf text-red-500 text-lg mb-1 group-hover:scale-110 transition-transform"></i>
+                        <p class="text-[9px] font-black text-slate-600 dark:text-slate-300 uppercase">Export PDF</p>
+                    </button>
+                    <button class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl text-center shadow-sm hover:border-[#003DA5] transition-colors group">
+                        <i class="fa-solid fa-share-nodes text-blue-500 text-lg mb-1 group-hover:scale-110 transition-transform"></i>
+                        <p class="text-[9px] font-black text-slate-600 dark:text-slate-300 uppercase">Share Report</p>
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Footer Action -->
+            <div class="p-4 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 shrink-0">
+                <a href="https://wa.me/50688888888" target="_blank" class="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black uppercase text-xs shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2">
+                    <i class="fa-brands fa-whatsapp text-lg"></i> <span class="lang-en">Contact Counterpart</span><span class="lang-es hidden">Contactar Contraparte</span>
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- NOTIFICATIONS PANEL (Matchmaker) -->
+    <div id="notificationsPanel" class="fixed inset-0 z-[100] bg-slate-900/60 hidden flex-col justify-end sm:justify-center sm:items-center p-0 sm:p-6 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-800 w-full sm:max-w-md h-[85vh] sm:h-auto sm:max-h-[85vh] rounded-t-[32px] sm:rounded-[32px] shadow-2xl flex flex-col overflow-hidden animate-slideUp sm:animate-fade">
+            
+            <!-- Header -->
+            <div class="bg-[#003DA5] p-6 text-white flex justify-between items-center shrink-0">
+                <div>
+                    <h2 class="text-xl font-black italic tracking-tighter uppercase leading-none lang-en">Notifications</h2>
+                    <h2 class="text-xl font-black italic tracking-tighter uppercase leading-none lang-es hidden">Notificaciones</h2>
+                    <p class="text-[10px] uppercase font-bold text-blue-200 mt-1">NEXUS Matchmaker</p>
+                </div>
+                <button onclick="toggleNotifications()" class="text-white/50 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <!-- List -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 dark:bg-slate-900/50">
+                <!-- Reminder Item -->
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border-l-4 border-[#003DA5] shadow-sm relative group">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 text-[#003DA5] flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-calendar-check text-xs"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-xs font-black text-slate-900 dark:text-white mb-0.5 lang-en">Daily OKR Reminder</p>
+                            <p class="text-xs font-black text-slate-900 dark:text-white mb-0.5 lang-es hidden">Recordatorio Diario OKR</p>
+                            <p class="text-[10px] text-slate-500 font-bold leading-tight lang-en">You successfully logged your OKR today. Keep building your pipeline!</p>
+                            <p class="text-[10px] text-slate-500 font-bold leading-tight lang-es hidden">Registraste tu OKR de hoy con éxito. ¡Sigue construyendo tu embudo!</p>
+                            <p class="text-[8px] text-slate-400 font-black uppercase mt-2">Just Now</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Request Item (NEW) -->
+                <div class="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-2xl border-l-4 border-amber-500 shadow-sm relative group">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-comment-dots text-xs"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-xs font-black text-slate-900 dark:text-amber-50 mb-0.5 lang-en">Showing Feedback Requested</p>
+                            <p class="text-xs font-black text-slate-900 dark:text-amber-50 mb-0.5 lang-es hidden">Solicitud de Feedback de Visita</p>
+                            <p class="text-[10px] text-slate-600 dark:text-slate-400 font-bold leading-tight"><span class="font-black text-slate-800 dark:text-slate-200">Sarah Jenkins</span> <span class="lang-en">is asking for your feedback on yesterday's showing at</span><span class="lang-es hidden">solicita tus comentarios sobre la visita de ayer en</span> <span class="italic font-black text-[#003DA5] dark:text-amber-400">Sabana Park Tower</span>.</p>
+                            
+                            <button onclick="openProvideFeedbackModal('Sabana Park Tower', 'Sarah Jenkins')" class="mt-3 bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-colors shadow-sm flex items-center gap-1.5 focus:outline-none w-fit">
+                                <i class="fa-solid fa-reply"></i> <span class="lang-en">Provide Feedback</span><span class="lang-es hidden">Dar Feedback</span>
+                            </button>
+                            
+                            <p class="text-[8px] text-slate-400 font-black uppercase mt-2">1 hour ago</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Request Review Item -->
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border-l-4 border-indigo-500 shadow-sm relative group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-star text-xs"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-xs font-black text-slate-900 dark:text-white mb-0.5 lang-en">Qualification Request</p>
+                            <p class="text-xs font-black text-slate-900 dark:text-white mb-0.5 lang-es hidden">Solicitud de Calificación</p>
+                            <p class="text-[10px] text-slate-500 font-bold leading-tight"><span class="font-black text-slate-700 dark:text-slate-300">Marcelo R.</span> <span class="lang-en">requested a review for the Escazú collaboration.</span><span class="lang-es hidden">solicitó una reseña por la colaboración en Escazú.</span></p>
+                            <p class="text-[8px] text-slate-400 font-black uppercase mt-2">2 hours ago</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-4 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 shrink-0">
+                <button onclick="toggleNotifications()" class="w-full py-3 text-[10px] font-black uppercase text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors tracking-widest lang-en">Close Notifications</button>
+                <button onclick="toggleNotifications()" class="w-full py-3 text-[10px] font-black uppercase text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors tracking-widest lang-es hidden">Cerrar Notificaciones</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function toggleNotifications() {
+            const panel = document.getElementById('notificationsPanel');
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                panel.classList.add('flex');
+            } else {
+                panel.classList.add('hidden');
+                panel.classList.remove('flex');
+            }
         }
     </script>
 </body>

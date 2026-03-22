@@ -3,8 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile Setup - NEXUS</title>
+    <title>My Profile - NEXUS</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="global-theme.js"></script>
+    <script src="supabase-client.js"></script>
     <script src="locations.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -19,32 +27,118 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="bg-slate-50 font-sans pb-24 text-slate-800">
+<body class="bg-slate-50 dark:bg-slate-900 font-sans pb-24 text-slate-800 dark:text-slate-200">
 
-    <nav class="bg-white p-4 border-b sticky top-0 z-50 shadow-sm flex flex-col items-center justify-center gap-0">
-        <h1 class="font-black text-2xl text-[#003DA5] tracking-tighter uppercase italic leading-none">NEXUS - Identity Setup</h1>
-        <p class="text-[10px] uppercase tracking-widest text-[#ED1C24] font-bold mt-1">Powered by REMAX Altitud</p>
-    </nav>
+    <nav class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 py-4 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-[60] flex justify-between items-center shadow-sm transition-colors">
+        <div>
+            <h1 class="font-black text-2xl text-[#003DA5] tracking-tighter uppercase italic leading-none">NEXUS - <span class="lang-en">My Profile</span><span class="lang-es hidden">Mi Perfil</span></h1>
+            <p class="text-[10px] uppercase tracking-widest text-[#ED1C24] font-bold mt-1">Powered by REMAX Altitud</p>
+        </div>
+        <div class="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-full text-[9px] font-black border">
+            <button onclick="setLanguage('en')" id="btn-en" class="px-2 py-1 rounded-full bg-[#003DA5] text-white">EN</button>
+            <button onclick="setLanguage('es')" id="btn-es" class="px-2 py-1 rounded-full text-slate-400">ES</button>
+        </div>
+        <div class="flex gap-3 items-center">
+            <button onclick="toggleDarkMode()" class="text-slate-400 hover:text-[#003DA5] dark:hover:text-yellow-400 transition-colors text-lg px-2">
+                <i class="fa-solid fa-moon dark:hidden"></i>
+                <i class="fa-solid fa-sun hidden dark:inline"></i>
+            </button>
+            
+            <button onclick="toggleNotifications()" class="relative text-slate-400 hover:text-[#003DA5] text-xl px-1 hover:scale-110 transition-transform">
+                <i class="fa-solid fa-bell"></i>
+                <span class="absolute top-0 right-0 w-2.5 h-2.5 bg-[#ED1C24] rounded-full border-2 border-white animate-pulse"></span>
+            </button>
+            <a href="login.html" onclick="localStorage.removeItem('userEmail')" class="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-95 transition-all shadow-sm" title="Log Out">
+                <i class="fa-solid fa-arrow-right-from-bracket text-sm"></i>
+            </a>
+        </div>
+</nav>
 
+                            <!-- PREMIUM TOP NAV -->
+    <div id="premium-top-nav" class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-amber-500/30 flex justify-between items-center mt-2 mb-4 mx-4 rounded-2xl overflow-hidden shadow-2xl relative shadow-amber-500/10">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+        <a href="Mi_Oficina.html" id="nav-office" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
+            <i class="fa-solid fa-building mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Office</span>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Oficina</span>
+        </a>
+        <div class="w-[1px] h-8 bg-amber-500/20 relative z-10"></div>
+        <a href="my-business.html" id="nav-business" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
+            <i class="fa-solid fa-briefcase-medical mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Business</span>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Negocio</span>
+        </a>
+        <div class="w-[1px] h-8 bg-amber-500/20 relative z-10"></div>
+        <a href="#" id="nav-resources" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
+            <i class="fa-solid fa-book-open mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Resources</span>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Recursos</span>
+        </a>
+    </div>
     <form class="p-4 space-y-6 max-w-lg mx-auto">
         
-        <section class="bg-white p-6 rounded-[32px] border shadow-sm space-y-4">
-            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Personal Identity</h3>
+        <!-- PROFILE PHOTO -->
+        <section class="bg-white dark:bg-slate-800 p-6 rounded-[32px] border shadow-sm">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 lang-en">Profile Photo</h3>
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 lang-es hidden">Foto de Perfil</h3>
+            <div class="flex flex-col items-center gap-4">
+                <div class="relative group cursor-pointer" onclick="document.getElementById('avatarInput').click()">
+                    <div id="avatarPreview" class="w-28 h-28 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center text-[#003DA5] dark:text-blue-400 text-4xl font-black overflow-hidden ring-4 ring-blue-100 dark:ring-slate-600 shadow-lg">
+                        <i id="avatarPlaceholderIcon" class="fa-solid fa-user-tie"></i>
+                        <img id="avatarImage" src="" alt="Avatar" class="hidden w-full h-full object-cover">
+                    </div>
+                    <div class="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i class="fa-solid fa-camera text-white text-xl"></i>
+                    </div>
+                    <div class="absolute -bottom-1 -right-1 bg-[#003DA5] w-8 h-8 rounded-full flex items-center justify-center border-3 border-white dark:border-slate-800 shadow-lg">
+                        <i class="fa-solid fa-camera text-white text-xs"></i>
+                    </div>
+                </div>
+                <input type="file" id="avatarInput" accept="image/*" class="hidden" onchange="handleAvatarUpload(this)">
+                <p id="avatarStatus" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    <span class="lang-en">Tap to upload photo</span>
+                    <span class="lang-es hidden">Toca para subir foto</span>
+                </p>
+            </div>
+        </section>
+
+        <section class="bg-white dark:bg-slate-800 p-6 rounded-[32px] border shadow-sm space-y-4">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest lang-en">Personal Identity</h3>
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest lang-es hidden">Identidad Personal</h3>
             <div class="space-y-3">
-                <input type="text" placeholder="Full Name" class="w-full p-4 border border-slate-100 rounded-2xl bg-slate-50 font-bold outline-none text-xs">
-                <input type="email" placeholder="Business Email" class="w-full p-4 border border-slate-100 rounded-2xl bg-slate-50 font-bold outline-none text-xs">
-                <div class="relative">
-                    <i class="fa-brands fa-whatsapp absolute left-4 top-1/2 -translate-y-1/2 text-green-600"></i>
-                    <input type="tel" placeholder="WhatsApp Number" class="w-full pl-10 p-4 border border-slate-100 rounded-2xl bg-slate-50 font-bold text-green-700 outline-none text-xs">
+                <input type="text" id="phName" placeholder="Full Name" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs">
+                <input type="email" id="phEmail" placeholder="Business Email" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs">
+                <div class="flex gap-2">
+                    <div class="relative shrink-0">
+                        <i class="fa-brands fa-whatsapp absolute left-3 top-1/2 -translate-y-1/2 text-green-600 text-sm"></i>
+                        <select id="phCountryCode" class="pl-8 pr-2 py-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold text-green-700 outline-none text-[11px] appearance-none w-[100px]">
+                            <option value="+506">🇨🇷 +506</option>
+                            <option value="+1">🇺🇸 +1</option>
+                            <option value="+52">🇲🇽 +52</option>
+                            <option value="+57">🇨🇴 +57</option>
+                            <option value="+507">🇵🇦 +507</option>
+                            <option value="+503">🇸🇻 +503</option>
+                            <option value="+502">🇬🇹 +502</option>
+                            <option value="+504">🇭🇳 +504</option>
+                            <option value="+505">🇳🇮 +505</option>
+                            <option value="+44">🇬🇧 +44</option>
+                            <option value="+34">🇪🇸 +34</option>
+                            <option value="+49">🇩🇪 +49</option>
+                            <option value="+33">🇫🇷 +33</option>
+                            <option value="+55">🇧🇷 +55</option>
+                        </select>
+                    </div>
+                    <input type="tel" id="phPhone" placeholder="8888-8888" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold text-green-700 outline-none text-xs">
                 </div>
             </div>
         </section>
 
-        <section class="bg-white p-6 rounded-[32px] border shadow-sm space-y-4">
-            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Agency & Performance</h3>
+        <section class="bg-white dark:bg-slate-800 p-6 rounded-[32px] border shadow-sm space-y-4">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest lang-en">Agency & Performance</h3>
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest lang-es hidden">Agencia y Rendimiento</h3>
             
             <div class="grid grid-cols-1 gap-4">
-                <select onchange="checkAgency(this)" class="w-full p-4 border border-slate-100 rounded-2xl bg-slate-50 font-bold outline-none text-xs">
+                <select id="agencySelect" onchange="checkAgency(this)" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs">
                     <option value="REMAX">REMAX</option>
                     <option value="Century 21">Century 21</option>
                     <option value="Coldwell Banker">Coldwell Banker</option>
@@ -55,30 +149,81 @@
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2">Year Started</label>
-                        <input type="number" placeholder="2018" class="w-full p-4 border border-slate-100 rounded-2xl bg-slate-50 font-bold outline-none text-xs">
+                        <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2 lang-en">Month & Year Started</label>
+                        <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2 lang-es hidden">Mes y Año de Inicio</label>
+                        <input type="month" id="startMonth" value="2018-01" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-600 dark:text-slate-300">
                     </div>
                     <div>
-                        <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2">TX Closed Last Year</label>
-                        <select class="w-full p-4 border border-slate-100 rounded-2xl bg-slate-50 font-bold outline-none text-[10px] text-blue-600">
-                            <option>I was not in the business</option>
-                            <option>1-5</option>
-                            <option>6-15</option>
-                            <option>16-30</option>
-                            <option>31-50</option>
-                            <option>50+</option>
+                        <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2 lang-en">TX Closed Last Year</label>
+                        <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2 lang-es hidden">TX Cerradas (Año Pasado)</label>
+                        <select id="txClosed" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-[10px] text-blue-600">
+                            <option value="0" data-en="I was not in the business" data-es="No estaba en el negocio">I was not in the business</option>
+                            <option value="1-5">1-5</option>
+                            <option value="6-15">6-15</option>
+                            <option value="16-30">16-30</option>
+                            <option value="31-50">31-50</option>
+                            <option value="50+">50+</option>
                         </select>
                     </div>
                 </div>
                 
                 <div>
-                    <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2">Expected TX This Year</label>
-                    <input type="number" placeholder="20" class="w-full p-4 border border-blue-100 rounded-2xl bg-blue-50/30 font-bold outline-none text-xs text-blue-800 focus:ring-2 focus:ring-blue-500">
+                    <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2 lang-en">Expected TX This Year</label>
+                    <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2 lang-es hidden">Desempeño Esperado (Este Año)</label>
+                    <input type="number" id="txExpected" placeholder="20" class="w-full p-4 border border-blue-100 rounded-2xl bg-blue-50/30 font-bold outline-none text-xs text-blue-800 focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
         </section>
 
-        <section class="bg-white p-6 rounded-[32px] border shadow-sm">
+        <!-- LANGUAGES SECTION -->
+        <section class="bg-white dark:bg-slate-800 p-6 rounded-[32px] border shadow-sm">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 lang-en">Languages Spoken</h3>
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 lang-es hidden">Idiomas Hablados</h3>
+            
+            <p class="text-[11px] text-slate-400 font-medium italic mb-4 lang-en">Add languages in order of preference.</p>
+            <p class="text-[11px] text-slate-400 font-medium italic mb-4 lang-es hidden">Agrega idiomas en orden de preferencia.</p>
+
+            <div class="flex gap-2 mb-4">
+                <select id="languageSelect" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs">
+                    <option value="" disabled selected>Select a language...</option>
+                    <option value="English">English</option>
+                    <option value="Spanish">Spanish (Español)</option>
+                    <option value="French">French (Français)</option>
+                    <option value="German">German (Deutsch)</option>
+                    <option value="Portuguese">Portuguese (Português)</option>
+                    <option value="Italian">Italian (Italiano)</option>
+                    <option value="Mandarin">Mandarin (中文)</option>
+                </select>
+                <button type="button" onclick="addLanguage()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 rounded-2xl font-black shadow-md transition-colors flex items-center justify-center active:scale-95">
+                    <i class="fa-solid fa-plus text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Draggable/Sortable List Container -->
+            <div id="selectedLanguagesContainer" class="flex flex-col gap-2 min-h-[40px] pt-2">
+                <!-- Example populated data to match existing agent state -->
+                <div class="flex items-center justify-between p-3.5 bg-blue-50/50 border border-blue-100 rounded-xl shadow-sm group lang-item" draggable="true">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-grip-vertical text-slate-300 cursor-grab active:cursor-grabbing hover:text-blue-500"></i>
+                        <span class="text-xs font-black text-blue-900 uppercase tracking-tight lang-name">1. Spanish (Español)</span>
+                    </div>
+                    <button type="button" onclick="this.parentElement.remove(); updateLanguageNumbers();" class="text-slate-400 hover:text-red-500 transition-colors w-8 h-8 flex items-center justify-center">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+                <div class="flex items-center justify-between p-3.5 bg-blue-50/50 border border-blue-100 rounded-xl shadow-sm group lang-item" draggable="true">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-grip-vertical text-slate-300 cursor-grab active:cursor-grabbing hover:text-blue-500"></i>
+                        <span class="text-xs font-black text-blue-900 uppercase tracking-tight lang-name">2. English</span>
+                    </div>
+                    <button type="button" onclick="this.parentElement.remove(); updateLanguageNumbers();" class="text-slate-400 hover:text-red-500 transition-colors w-8 h-8 flex items-center justify-center">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white dark:bg-slate-800 p-6 rounded-[32px] border shadow-sm">
             <div class="mb-4">
                 <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest lang-en">Expert Zones</h3>
                 <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest lang-es hidden">Zonas de Experiencia</h3>
@@ -88,10 +233,10 @@
             
             <div class="space-y-3 relative">
                 <div class="relative w-full">
-                    <input type="text" id="locationSearch" oninput="showSuggestions(this.value)" autocomplete="off" placeholder="Search area (e.g. Rivas)" class="w-full p-4 border border-slate-100 rounded-2xl bg-slate-50 font-bold outline-none text-xs pl-12">
+                    <input type="text" id="locationSearch" oninput="showSuggestions(this.value)" autocomplete="off" placeholder="Search area (e.g. Rivas)" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs pl-12">
                     <i class="fa-solid fa-map-location-dot absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
                     <!-- Dropdown suggestions container hidden by default -->
-                    <div id="suggestionsBox" class="absolute z-10 w-full bg-white border border-slate-200 mt-2 max-h-56 overflow-y-auto rounded-xl shadow-lg hidden hidden-scrollbar text-[12px] font-bold text-slate-700"></div>
+                    <div id="suggestionsBox" class="absolute z-10 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 mt-2 max-h-56 overflow-y-auto rounded-xl shadow-lg hidden hidden-scrollbar text-[12px] font-bold text-slate-700 dark:text-slate-300"></div>
                 </div>
 
                 <div class="pt-2 text-center">
@@ -107,69 +252,639 @@
             </div>
         </section>
 
-        <section class="bg-white p-6 rounded-[32px] border shadow-sm">
-            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Specializations</h3>
+        <section class="bg-white dark:bg-slate-800 p-6 rounded-[32px] border shadow-sm">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 lang-en">Specializations</h3>
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 lang-es hidden">Especializaciones</h3>
             <div class="grid grid-cols-2 gap-3">
                 <div onclick="this.classList.toggle('active')" class="spec-card p-4 rounded-2xl">
                     <i class="fa-solid fa-house text-lg mb-2 block"></i>
-                    <span class="text-[9px] font-black uppercase">Residential</span>
+                    <span class="text-[9px] font-black uppercase lang-en">Residential</span>
+                    <span class="text-[9px] font-black uppercase lang-es hidden">Residencial</span>
                 </div>
                 <div onclick="this.classList.toggle('active')" class="spec-card p-4 rounded-2xl">
                     <i class="fa-solid fa-building text-lg mb-2 block"></i>
-                    <span class="text-[9px] font-black uppercase">Commercial</span>
+                    <span class="text-[9px] font-black uppercase lang-en">Commercial</span>
+                    <span class="text-[9px] font-black uppercase lang-es hidden">Comercial</span>
                 </div>
                 <div onclick="this.classList.toggle('active')" class="spec-card p-4 rounded-2xl">
                     <i class="fa-solid fa-trowel-bricks text-lg mb-2 block"></i>
-                    <span class="text-[9px] font-black uppercase">Developers</span>
+                    <span class="text-[9px] font-black uppercase lang-en">Developers</span>
+                    <span class="text-[9px] font-black uppercase lang-es hidden">Desarrolladores</span>
                 </div>
                 <div onclick="this.classList.toggle('active')" class="spec-card p-4 rounded-2xl">
                     <i class="fa-solid fa-key text-lg mb-2 block"></i>
-                    <span class="text-[9px] font-black uppercase">Rentals</span>
+                    <span class="text-[9px] font-black uppercase lang-en">Rentals</span>
+                    <span class="text-[9px] font-black uppercase lang-es hidden">Alquileres</span>
                 </div>
             </div>
         </section>
 
-        <button type="button" onclick="openTerms()" class="w-full bg-[#003DA5] text-white py-5 rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-xl">
-            Review Code of Conduct
-        </button>
+        <div class="pt-4">
+            <button type="button" id="saveProfileBtn" onclick="saveProfile()" class="w-full bg-[#ED1C24] hover:bg-red-700 text-white py-5 rounded-3xl font-black text-sm uppercase shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2">
+                <span id="saveBtnText"><span class="lang-en">Save Updates</span><span class="lang-es hidden">Guardar Cambios</span></span>
+                <i id="saveBtnIcon" class="fa-solid fa-cloud-arrow-up"></i>
+            </button>
+        </div>
 
     </form>
 
-    <div id="termsModal" class="fixed inset-0 z-[100] modal-blur hidden flex items-center justify-center p-6">
-        <div class="bg-white rounded-[40px] w-full max-w-md h-[80vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="bg-[#003DA5] p-8 text-white text-center shrink-0">
-                <h2 class="text-3xl font-black italic mb-1 uppercase">The Nexus Code</h2>
-                <p class="text-[10px] font-bold uppercase opacity-60">REMAX Altitud Standards</p>
+    <!-- AGENT QUALIFICATIONS / REVIEWS SECTION -->
+    <section class="max-w-lg mx-auto p-4 mb-8">
+        <div class="flex justify-between items-end mb-4 px-2">
+            <div>
+                <h2 class="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest italic leading-none mb-1">
+                    <i class="fa-solid fa-star text-amber-500 mr-1.5"></i>
+                    <span class="lang-en">Peer Qualifications</span>
+                    <span class="lang-es hidden">Calificaciones</span>
+                </h2>
+                <div class="flex items-center gap-2 mt-1.5">
+                    <div class="flex text-amber-500 text-[10px]">
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-0.5">5.0 (3)</span>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="document.getElementById('submitReviewModal').classList.remove('hidden'); document.getElementById('submitReviewModal').classList.add('flex');" class="bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 px-4 py-2 rounded-xl text-[9px] font-black uppercase shadow-sm transition-colors flex items-center gap-1.5 active:scale-95">
+                    <i class="fa-solid fa-pen"></i>
+                    <span class="lang-en">Leave Review</span>
+                    <span class="lang-es hidden">Dejar Reseña</span>
+                </button>
+                <button onclick="document.getElementById('requestReviewModal').classList.remove('hidden'); document.getElementById('requestReviewModal').classList.add('flex');" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase shadow-md transition-colors flex items-center gap-1.5 active:scale-95">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span class="lang-en">Ask for Review</span>
+                    <span class="lang-es hidden">Pedir Reseña</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <!-- Review 1 -->
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10">
+                    <i class="fa-solid fa-quote-right text-4xl text-slate-900 dark:text-white"></i>
+                </div>
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-black text-slate-700 dark:text-slate-300 text-xs shadow-inner">
+                        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80" alt="Sarah" class="w-full h-full rounded-full object-cover">
+                    </div>
+                    <div>
+                        <p class="text-sm font-black text-slate-900 dark:text-white italic leading-tight">Sarah Smith</p>
+                        <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Century 21 • <span class="text-amber-500">Fast Closer</span></p>
+                    </div>
+                </div>
+                <p class="text-[11px] text-slate-600 dark:text-slate-300 font-medium italic leading-relaxed relative z-10 px-2 border-l-[3px] border-amber-400">
+                    "Alejandra is incredibly professional and responsive. We closed a challenging deal in Escazú and her communication made all the difference. Highly recommended for collaborations."
+                </p>
+            </div>
+
+            <!-- Review 2 -->
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10">
+                    <i class="fa-solid fa-quote-right text-4xl text-slate-900 dark:text-white"></i>
+                </div>
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-black text-slate-700 dark:text-slate-300 text-xs shadow-inner">
+                        <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80" alt="David" class="w-full h-full rounded-full object-cover">
+                    </div>
+                    <div>
+                        <p class="text-sm font-black text-slate-900 dark:text-white italic leading-tight">David R.</p>
+                        <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Coldwell Banker • <span class="text-amber-500">Clear Comm</span></p>
+                    </div>
+                </div>
+                <p class="text-[11px] text-slate-600 dark:text-slate-300 font-medium italic leading-relaxed relative z-10 px-2 border-l-[3px] border-amber-400">
+                    "Excellent partner in the Rivas area. She knows her market and didn't waste my buyer's time. A true asset to the Costa Rican network."
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- HELP & SUPPORT SECTION -->
+    <section class="max-w-lg mx-auto p-4 mb-24 border-t border-slate-200 dark:border-slate-700">
+        <div class="bg-indigo-50 dark:bg-slate-800 p-6 rounded-[32px] border border-indigo-100 dark:border-slate-700 flex flex-col items-center text-center shadow-sm">
+            <div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center mb-3">
+                <i class="fa-solid fa-headset text-xl"></i>
+            </div>
+            <h3 class="text-xs font-black text-indigo-900 dark:text-indigo-100 uppercase tracking-widest mb-1 lang-en">Need Assistance?</h3>
+            <h3 class="text-xs font-black text-indigo-900 dark:text-indigo-100 uppercase tracking-widest mb-1 lang-es hidden">¿Necesitas Ayuda?</h3>
+            <p class="text-[10px] text-slate-500 font-bold mb-4 lang-en">Report bugs, suggest features, or ask us anything.</p>
+            <p class="text-[10px] text-slate-500 font-bold mb-4 lang-es hidden">Reporta errores, sugiere mejoras o pregúntanos cualquier cosa.</p>
+            
+            <button onclick="document.getElementById('supportModal').classList.remove('hidden'); document.getElementById('supportModal').classList.add('flex');" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase shadow-lg transition-transform active:scale-95 flex items-center gap-2">
+                <i class="fa-solid fa-life-ring text-sm"></i>
+                <span class="lang-en">Help & Support</span>
+                <span class="lang-es hidden">Ayuda y Soporte</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- Submit Review Modal & Privacy Toggle -->
+    <div id="submitReviewModal" class="fixed inset-0 z-[100] bg-slate-900/60 hidden flex-col items-center justify-center p-6 backdrop-blur-sm animate-fade">
+        <div class="bg-white dark:bg-slate-800 rounded-[32px] p-6 max-w-sm w-full shadow-2xl flex flex-col transform transition-all scale-100">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-xl font-black text-indigo-600 italic uppercase tracking-widest lang-en">Leave a Review</h2>
+                    <h2 class="text-xl font-black text-indigo-600 italic uppercase tracking-widest lang-es hidden">Dejar una Reseña</h2>
+                    <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-0.5 lang-en">FOR: MARCELO R.</p>
+                    <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-0.5 lang-es hidden">PARA: MARCELO R.</p>
+                </div>
+                <button onclick="document.getElementById('submitReviewModal').classList.add('hidden'); document.getElementById('submitReviewModal').classList.remove('flex');" class="w-8 h-8 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-full flex items-center justify-center hover:bg-slate-600 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="reviewSubmissionForm" class="space-y-5" onsubmit="event.preventDefault(); submitFinalReview();">
+                
+                <!-- Mandatory Admin Fraud Field -->
+                <input type="hidden" id="adminOverrideId" name="reviewer_real_id" value="alejandra.castro@remax.com">
+                <input type="hidden" id="adminOverrideName" name="reviewer_real_name" value="Alejandra Castro">
+
+                <div>
+                    <label class="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-en">Star Rating</label>
+                    <label class="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-es hidden">Calificación</label>
+                    <div class="flex text-amber-400 text-2xl gap-2 cursor-pointer">
+                        <i class="fa-solid fa-star hover:scale-110 transition"></i>
+                        <i class="fa-solid fa-star hover:scale-110 transition"></i>
+                        <i class="fa-solid fa-star hover:scale-110 transition"></i>
+                        <i class="fa-solid fa-star hover:scale-110 transition"></i>
+                        <i class="fa-regular fa-star hover:scale-110 transition"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-en">Choose Badge</label>
+                    <label class="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-es hidden">Elegir Insignia</label>
+                    <select class="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-2xl text-[12px] font-bold outline-none focus:border-indigo-500">
+                        <option>Fast Closer (Cierre Rápido)</option>
+                        <option>Great Communicator (Gran Comunicador)</option>
+                        <option>Market Expert (Experto en Mercado)</option>
+                        <option>Problem Solver (Resuelve Problemas)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-en">Comments</label>
+                    <label class="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-es hidden">Comentarios</label>
+                    <textarea rows="3" required placeholder="Describe your experience collaborating with this agent..." class="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-2xl text-[11px] font-bold outline-none focus:border-indigo-500 resize-none"></textarea>
+                </div>
+
+                <!-- THE PRIVACY TOGGLE SECTION -->
+                <div class="bg-indigo-50/50 dark:bg-slate-700/50 border border-indigo-100 dark:border-slate-600 p-4 rounded-2xl">
+                    <div class="flex justify-between items-center mb-2">
+                        <div>
+                            <p class="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest lang-en">Display Identity</p>
+                            <p class="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest lang-es hidden">Mostrar Identidad</p>
+                            <p id="privacyHint" class="text-[9px] text-slate-500 font-bold mt-1">Review will show as "Verified User"</p>
+                        </div>
+                        
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="privacyToggleCheckbox" class="sr-only peer" onchange="updatePrivacyHint(this)">
+                            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2">
+                    <span class="lang-en">Submit Evaluation</span>
+                    <span class="lang-es hidden">Enviar Evaluación</span>
+                    <i class="fa-solid fa-check-double text-sm"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Help & Support Modal -->
+    <div id="supportModal" class="fixed inset-0 z-[100] bg-slate-900/60 hidden flex-col items-center justify-center p-6 backdrop-blur-sm animate-fade">
+        <div class="bg-white dark:bg-slate-800 rounded-[32px] p-6 max-w-sm w-full shadow-2xl flex flex-col transform transition-all scale-100 max-h-[90vh] overflow-y-auto hidden-scrollbar">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center">
+                        <i class="fa-solid fa-headset text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-black text-indigo-600 italic uppercase tracking-widest lang-en">Support</h2>
+                        <h2 class="text-xl font-black text-indigo-600 italic uppercase tracking-widest lang-es hidden">Soporte</h2>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('supportModal').classList.add('hidden'); document.getElementById('supportModal').classList.remove('flex');" class="w-8 h-8 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-full flex items-center justify-center hover:bg-slate-600 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Quick Links / FAQ -->
+            <div class="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl mb-6">
+                <h3 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 lang-en">Quick Answers</h3>
+                <h3 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 lang-es hidden">Respuestas Rápidas</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5 leading-tight">
+                            <i class="fa-solid fa-arrow-right text-[8px]"></i> 
+                            <span class="lang-en">How does the auto-match work?</span>
+                            <span class="lang-es hidden">¿Cómo funciona el auto-match?</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5 leading-tight">
+                            <i class="fa-solid fa-arrow-right text-[8px]"></i> 
+                            <span class="lang-en">Can I hide my profile from other agents?</span>
+                            <span class="lang-es hidden">¿Puedo ocultar mi perfil de otros agentes?</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Contact Support Form -->
+            <form class="space-y-4" onsubmit="event.preventDefault(); submitSupportForm();">
+                <div>
+                    <label class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-en">What do you need help with?</label>
+                    <label class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-es hidden">¿En qué necesitas ayuda?</label>
+                    <select id="supportType" class="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-2xl text-[12px] font-bold outline-none focus:border-indigo-500">
+                        <option value="bug">Report a Bug / Error (Reportar un Error)</option>
+                        <option value="question">Ask a Question (Hacer una Pregunta)</option>
+                        <option value="feature">Suggest a Feature (Sugerir una Mejora)</option>
+                        <option value="question">App Access / Premium (Acceso Premium)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-en">Description</label>
+                    <label class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-es hidden">Descripción</label>
+                    <textarea id="supportBody" rows="4" required placeholder="..." class="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-2xl text-[11px] font-bold outline-none focus:border-indigo-500 resize-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-1 lang-en">Attachment (Optional)</label>
+                    <label class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-1 lang-es hidden">Archivo adjunto (Opcional)</label>
+                    <div class="flex items-center gap-3">
+                        <label class="bg-indigo-50 dark:bg-slate-700 text-indigo-600 dark:text-slate-300 px-4 py-2 mt-1 rounded-xl cursor-pointer hover:bg-indigo-100 transition inline-flex font-bold text-[10px] uppercase items-center gap-1.5 shadow-sm border border-indigo-100 dark:border-slate-600">
+                            <i class="fa-solid fa-paperclip"></i>
+                            <span class="lang-en">Upload Screenshot</span>
+                            <span class="lang-es hidden">Subir Captura</span>
+                            <input type="file" class="hidden" accept="image/*">
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2">
+                    <span class="lang-en">Submit Ticket</span>
+                    <span class="lang-es hidden">Enviar Ticket</span>
+                    <i class="fa-solid fa-paper-plane text-sm"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+                            <!-- BOTTOM NAVIGATION -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t py-4 px-6 flex justify-between items-center text-slate-600 dark:text-slate-400 z-50 shadow-xl pb-6 overflow-x-auto no-scrollbar gap-4">
+        <a href="index.html" data-nav="index.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
+            <i class="fa-solid fa-house mb-1 text-xl hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-bold" data-i18n="navFeed">Match Board</span>
+        </a>
+        <a href="my-desk.html" data-nav="my-desk.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
+            <i class="fa-solid fa-briefcase mb-1 text-xl hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-bold" data-i18n="navMyDesk">My Hub</span>
+        </a>
+        
+        <!-- Premium Links -->
+        <a href="market.html" data-nav="market.html" id="nav-market" class="flex flex-col items-center justify-center min-w-[3.5rem] text-amber-500 hover:text-amber-400 transition-all relative group premium-only">
+            <div class="absolute inset-0 bg-amber-500/10 blur-xl rounded-full group-hover:bg-amber-500/20 transition"></div>
+            <i class="fa-solid fa-chart-line mb-1 text-xl drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] group-hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-black uppercase tracking-widest lang-en">Market</span>
+            <span class="text-[10px] font-black uppercase tracking-widest lang-es hidden" data-i18n="navMarket">Mercado</span>
+        </a>
+
+        <!-- Universal Link -->
+        <a href="profile.html" data-nav="profile.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
+            <i class="fa-solid fa-user mb-1 text-xl hover:scale-110 transition-transform"></i>
+            <span class="text-[10px] font-bold" data-i18n="navProfile">Profile</span>
+        </a>
+    </div>
+    <script>
+    (function(){
+        var page = location.pathname.split('/').pop() || 'index.html';
+        var links = document.querySelectorAll('[data-nav]');
+        links.forEach(function(a){
+            if(a.getAttribute('data-nav') === page){
+                a.classList.remove('text-slate-400','text-amber-500');
+                a.classList.add('text-[#003DA5]');
+                var dot = document.createElement('div');
+                dot.className = 'absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full';
+                a.appendChild(dot);
+            }
+        });
+    })();
+    </script>
+    <script>
+    (function(){
+        var page = location.pathname.split('/').pop() || 'index.html';
+        var links = document.querySelectorAll('[data-nav]');
+        links.forEach(function(a){
+            if(a.getAttribute('data-nav') === page){
+                a.classList.remove('text-slate-400','text-amber-500');
+                a.classList.add('text-[#003DA5]');
+                var dot = document.createElement('div');
+                dot.className = 'absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full';
+                a.appendChild(dot);
+            }
+        });
+    })();
+    </script>
+
+    <!-- Success Modal (Profile Updated) -->
+    <div id="successModal" class="fixed inset-0 z-[100] bg-slate-900/60 hidden flex-col items-center justify-center p-6 backdrop-blur-sm animate-fade">
+        <div class="bg-white dark:bg-slate-800 rounded-[32px] p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center transform transition-all scale-100">
+            <div class="w-24 h-24 bg-green-50 text-green-500 rounded-full flex items-center justify-center mb-6 border-4 border-green-100 shadow-inner">
+                <i class="fa-solid fa-check text-4xl"></i>
             </div>
             
-            <div class="p-8 overflow-y-auto space-y-6 text-sm text-slate-600 no-scrollbar">
+            <h2 class="text-3xl font-black text-slate-900 dark:text-white italic tracking-tighter mb-2 lang-en">Profile Updated</h2>
+            <h2 class="text-3xl font-black text-slate-900 dark:text-white italic tracking-tighter mb-2 lang-es hidden">Perfil Actualizado</h2>
+            
+            <p class="text-xs font-bold text-slate-600 dark:text-slate-400 leading-relaxed mb-6 lang-en">
+                Your agent profile has been successfully saved to the Matchmaker API network.
+            </p>
+            <p class="text-xs font-bold text-slate-600 dark:text-slate-400 leading-relaxed mb-6 lang-es hidden">
+                Tu perfil de agente ha sido guardado exitosamente en la red Matchmaker API.
+            </p>
+
+            <button onclick="closeSuccessModal()" class="w-full bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg transition-all active:scale-95">
+                <span class="lang-en">Got it</span>
+                <span class="lang-es hidden">Entendido</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Request Review / Qualification Modal -->
+    <div id="requestReviewModal" class="fixed inset-0 z-[100] bg-slate-900/60 hidden flex-col items-center justify-center p-6 backdrop-blur-sm animate-fade">
+        <div class="bg-white dark:bg-slate-800 rounded-[32px] p-6 max-w-sm w-full shadow-2xl flex flex-col transform transition-all scale-100">
+            <div class="flex justify-between items-center mb-6">
                 <div>
-                    <h4 class="font-black text-slate-900 uppercase text-xs mb-1">1. Full-Time Pros Only</h4>
-                    <p class="text-xs italic text-slate-500">No "intermediarios." This must be your primary profession.</p>
+                    <h2 class="text-xl font-black text-[#003DA5] italic uppercase tracking-widest lang-en">Ask for Review</h2>
+                    <h2 class="text-xl font-black text-[#003DA5] italic uppercase tracking-widest lang-es hidden">Pedir Reseña</h2>
+                    <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-0.5 lang-en">BUILD YOUR REPUTATION</p>
+                    <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-0.5 lang-es hidden">CONSTRUYE TU REPUTACIÓN</p>
                 </div>
-                <div class="border-t pt-4">
-                    <h4 class="font-black text-slate-900 uppercase text-xs mb-1">2. Direct Representation</h4>
-                    <p class="text-xs italic text-slate-500">You must directly represent the buyer or seller. No broker chains.</p>
+                <button onclick="document.getElementById('requestReviewModal').classList.add('hidden'); document.getElementById('requestReviewModal').classList.remove('flex');" class="w-8 h-8 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-full flex items-center justify-center hover:bg-slate-600 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-en">Select Agent</label>
+                    <label class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-es hidden">Seleccionar Agente</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="reviewAgentSearch" placeholder="Name or Office..." class="w-full p-4 pl-10 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-2xl text-[13px] font-bold outline-none focus:border-[#003DA5]">
+                        <div id="agentSuggestionsBlock" class="absolute z-10 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 mt-2 rounded-xl shadow-lg hidden">
+                            <!-- Dummy suggestions -->
+                            <div onclick="selectAgentForReview('Maria L. (REMAX Altitud)')" class="p-3 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer border-b border-slate-100 dark:border-slate-700 text-[11px] font-bold">Maria L. (REMAX Altitud)</div>
+                            <div onclick="selectAgentForReview('Juan P. (Century 21)')" class="p-3 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer text-[11px] font-bold">Juan P. (Century 21)</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="border-t pt-4">
-                    <h4 class="font-black text-slate-900 uppercase text-xs mb-1">3. The 50/50 Rule</h4>
-                    <p class="text-xs italic text-slate-500">Collaboration assumes an equal commission split by default.</p>
-                </div>
-                <div class="border-t pt-4">
-                    <h4 class="font-black text-slate-900 uppercase text-xs mb-1">4. Ethical Collaboration</h4>
-                    <p class="text-xs italic text-slate-500">No circumvention. Do not contact colleagues' clients directly.</p>
+
+                <div>
+                    <label class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-en">Message (Optional)</label>
+                    <label class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-es hidden">Mensaje (Opcional)</label>
+                    <textarea rows="3" placeholder="Hi! It was great working with you on the Escazú deal. Could you leave me a short qualification on my profile?" class="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-2xl text-[11px] font-bold outline-none focus:border-[#003DA5] resize-none"></textarea>
                 </div>
             </div>
 
-            <div class="p-8 border-t bg-slate-50 shrink-0">
-                <button onclick="window.location.href='index.html'" class="w-full bg-[#ED1C24] text-white py-5 rounded-3xl font-black text-xs uppercase shadow-xl tracking-widest">
-                    I AGREE & ENTER NEXUS
-                </button>
-            </div>
+            <button onclick="submitReviewRequest()" class="w-full mt-6 bg-[#ED1C24] hover:bg-red-700 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2">
+                <span class="lang-en">Send Request</span>
+                <span class="lang-es hidden">Enviar Solicitud</span>
+                <i class="fa-solid fa-paper-plane text-sm"></i>
+            </button>
         </div>
     </div>
 
     <script>
+        function showSuccessModal() {
+            document.getElementById('successModal').classList.remove('hidden');
+            document.getElementById('successModal').classList.add('flex');
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.add('hidden');
+            document.getElementById('successModal').classList.remove('flex');
+        }
+
+        // Search logic for reviews
+        document.getElementById('reviewAgentSearch').addEventListener('focus', function() {
+            document.getElementById('agentSuggestionsBlock').classList.remove('hidden');
+        });
+
+        // Basic out-click hide for suggestion text
+        document.addEventListener('click', function(e) {
+            if(!document.getElementById('reviewAgentSearch').contains(e.target) && !document.getElementById('agentSuggestionsBlock').contains(e.target)) {
+                document.getElementById('agentSuggestionsBlock').classList.add('hidden');
+            }
+        });
+
+        function selectAgentForReview(name) {
+            document.getElementById('reviewAgentSearch').value = name;
+            document.getElementById('agentSuggestionsBlock').classList.add('hidden');
+        }
+
+        function submitReviewRequest() {
+            // Close Request modal
+            document.getElementById('requestReviewModal').classList.add('hidden');
+            document.getElementById('requestReviewModal').classList.remove('flex');
+
+            // Reuse the Success Modal but change text for demo
+            document.querySelector('#successModal h2.lang-en').innerText = "Request Sent";
+            document.querySelector('#successModal h2.lang-es').innerText = "Solicitud Enviada";
+            document.querySelector('#successModal p.lang-en').innerText = "Your request for a qualification has been sent to the agent's notification center.";
+            document.querySelector('#successModal p.lang-es').innerText = "Tu solicitud de calificación ha sido enviada al centro de notificaciones del agente.";
+
+            showSuccessModal();
+            
+            // Revert back text after closing for the Save Profile flow
+            setTimeout(() => {
+                document.querySelector('#successModal h2.lang-en').innerText = "Profile Updated";
+                document.querySelector('#successModal h2.lang-es').innerText = "Perfil Actualizado";
+                document.querySelector('#successModal p.lang-en').innerText = "Your agent profile has been successfully saved to the Matchmaker API network.";
+                document.querySelector('#successModal p.lang-es').innerText = "Tu perfil de agente ha sido guardado exitosamente en la red Matchmaker API.";
+            }, 3000); // 3 seconds is generous enough that they close it, but resets the state
+        }
+
+        function updatePrivacyHint(checkbox) {
+            const hint = document.getElementById('privacyHint');
+            if (checkbox.checked) {
+                hint.innerHTML = '<span class="text-indigo-600 dark:text-indigo-400"><i class="fa-solid fa-link"></i> Will link to your Profile</span>';
+            } else {
+                hint.innerHTML = '<span class="text-slate-500 dark:text-slate-400"><i class="fa-solid fa-user-secret"></i> Show as "Verified User"</span>';
+            }
+        }
+
+        function submitFinalReview() {
+            document.getElementById('submitReviewModal').classList.add('hidden');
+            document.getElementById('submitReviewModal').classList.remove('flex');
+            
+            document.querySelector('#successModal h2.lang-en').innerText = "Review Posted";
+            document.querySelector('#successModal h2.lang-es').innerText = "Reseña Publicada";
+            
+            if(document.getElementById('privacyToggleCheckbox').checked) {
+                document.querySelector('#successModal p.lang-en').innerText = "Your public review has been added to their profile.";
+                document.querySelector('#successModal p.lang-es').innerText = "Tu reseña pública ha sido agregada a su perfil.";
+            } else {
+                document.querySelector('#successModal p.lang-en').innerText = "Your anonymous review has been securely posted.";
+                document.querySelector('#successModal p.lang-es').innerText = "Tu reseña anónima ha sido publicada de forma segura.";
+            }
+            
+            showSuccessModal();
+            
+            setTimeout(() => {
+                document.querySelector('#successModal h2.lang-en').innerText = "Profile Updated";
+                document.querySelector('#successModal h2.lang-es').innerText = "Perfil Actualizado";
+                document.querySelector('#successModal p.lang-en').innerText = "Your agent profile has been successfully saved to the Matchmaker API network.";
+                document.querySelector('#successModal p.lang-es').innerText = "Tu perfil de agente ha sido guardado exitosamente en la red Matchmaker API.";
+            }, 3000);
+        }
+
+        function submitSupportForm() {
+            const type = document.getElementById('supportType').value;
+            const body = document.getElementById('supportBody').value.trim();
+            if (!body) return;
+
+            // Build ticket for admin panel
+            const userName = document.getElementById('fullName') ? document.getElementById('fullName').value : 'Anonymous';
+            const userEmail = localStorage.getItem('nexusEmail') || 'unknown@email.com';
+            const tickets = JSON.parse(localStorage.getItem('nexusTickets')) || [];
+            const newTicket = {
+                id: Date.now(),
+                type: type,
+                from: userName || 'Agent',
+                email: userEmail,
+                date: new Date().toISOString().split('T')[0],
+                status: 'open',
+                subject: body.substring(0, 60) + (body.length > 60 ? '...' : ''),
+                body: body
+            };
+            tickets.unshift(newTicket);
+            localStorage.setItem('nexusTickets', JSON.stringify(tickets));
+
+            // Clear form
+            document.getElementById('supportBody').value = '';
+            document.getElementById('supportType').selectedIndex = 0;
+
+            // Close modal and show success
+            document.getElementById('supportModal').classList.add('hidden');
+            document.getElementById('supportModal').classList.remove('flex');
+
+            document.querySelector('#successModal h2.lang-en').innerText = "Ticket Submitted";
+            document.querySelector('#successModal h2.lang-es').innerText = "Ticket Enviado";
+            document.querySelector('#successModal p.lang-en').innerText = "We've received your request! Our team will get back to you via email shortly.";
+            document.querySelector('#successModal p.lang-es').innerText = "¡Hemos recibido tu solicitud! Nuestro equipo te contactará por correo pronto.";
+
+            showSuccessModal();
+
+            setTimeout(() => {
+                document.querySelector('#successModal h2.lang-en').innerText = "Profile Updated";
+                document.querySelector('#successModal h2.lang-es').innerText = "Perfil Actualizado";
+                document.querySelector('#successModal p.lang-en').innerText = "Your agent profile has been successfully saved to the Matchmaker API network.";
+                document.querySelector('#successModal p.lang-es').innerText = "Tu perfil de agente ha sido guardado exitosamente en la red Matchmaker API.";
+            }, 3000);
+        }
+
+        // --- LANGUAGE PROFILE LIST LOGIC ---
+        function addLanguage() {
+            const select = document.getElementById('languageSelect');
+            const val = select.options[select.selectedIndex].text;
+            if(!select.value) return;
+
+            // Check if already exists
+            const existing = document.getElementById('selectedLanguagesContainer').innerText;
+            if(existing.includes(val)) return;
+
+            const container = document.getElementById('selectedLanguagesContainer');
+            const div = document.createElement('div');
+            // Add lang-item class and draggable attribute for drag & drop
+            div.className = "flex items-center justify-between p-3.5 bg-blue-50/50 border border-blue-100 rounded-xl shadow-sm group animate-fade lang-item";
+            div.setAttribute('draggable', 'true');
+            
+            div.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-grip-vertical text-slate-300 cursor-grab active:cursor-grabbing hover:text-blue-500"></i>
+                    <span class="text-xs font-black text-blue-900 uppercase tracking-tight lang-name"></span>
+                </div>
+                <button type="button" onclick="this.parentElement.remove(); updateLanguageNumbers();" class="text-slate-400 hover:text-red-500 transition-colors w-8 h-8 flex items-center justify-center">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            `;
+            
+            div.querySelector('.lang-name').innerText = val;
+            container.appendChild(div);
+            
+            // Re-apply drag listeners to the new item
+            addDragListeners(div);
+
+            // Reset Select
+            select.selectedIndex = 0;
+            updateLanguageNumbers();
+        }
+
+        function updateLanguageNumbers() {
+            const container = document.getElementById('selectedLanguagesContainer');
+            const items = container.querySelectorAll('.lang-name');
+            items.forEach((item, index) => {
+                // Strip existing numbers
+                let text = item.innerText.replace(/^\d+\.\s*/, '');
+                item.innerText = `${index + 1}. ${text}`;
+            });
+        }
+
+        // --- DRAG AND DROP LOGIC (HTML5 Native) ---
+        let draggedItem = null;
+
+        function addDragListeners(item) {
+            item.addEventListener('dragstart', function(e) {
+                draggedItem = item;
+                setTimeout(() => item.classList.add('opacity-50'), 0);
+            });
+
+            item.addEventListener('dragend', function() {
+                setTimeout(() => {
+                    draggedItem.classList.remove('opacity-50');
+                    draggedItem = null;
+                    updateLanguageNumbers(); // Recalculate numbers when dropped
+                }, 0);
+            });
+        }
+
+        // Initialize drag listeners on existing items (from DOM load)
+        document.querySelectorAll('.lang-item').forEach(addDragListeners);
+
+        const langContainer = document.getElementById('selectedLanguagesContainer');
+        langContainer.addEventListener('dragover', function(e) {
+            e.preventDefault(); // Necessary to allow dropping
+            const afterElement = getDragAfterElement(langContainer, e.clientY);
+            const draggable = document.querySelector('.opacity-50');
+            if (afterElement == null) {
+                langContainer.appendChild(draggable);
+            } else {
+                langContainer.insertBefore(draggable, afterElement);
+            }
+        });
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.lang-item:not(.opacity-50)')];
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
         // --- LOCATION LOGIC ---
         // Filters the LOCATION_DB array based on text input and renders clickable suggestion divs.
         function showSuggestions(val) {
@@ -252,7 +967,425 @@
         }
 
         function checkAgency(select) { document.getElementById('otherAgencyDiv').classList.toggle('hidden', select.value !== 'Other'); }
-        function openTerms() { document.getElementById('termsModal').classList.remove('hidden'); }
+
+        // --- LANGUAGE TOGGLE ---
+        function setLanguage(lang) {
+            const en = document.querySelectorAll('.lang-en');
+            const es = document.querySelectorAll('.lang-es');
+            
+            document.getElementById('btn-en').className = lang === 'en' ? 'px-2 py-1 rounded-full bg-[#003DA5] text-white' : 'px-2 py-1 rounded-full text-slate-400 hover:text-white transition';
+            document.getElementById('btn-es').className = lang === 'es' ? 'px-2 py-1 rounded-full bg-[#003DA5] text-white' : 'px-2 py-1 rounded-full text-slate-400 hover:text-white transition';
+            
+            en.forEach(el => lang === 'en' ? el.classList.remove('hidden') : el.classList.add('hidden'));
+            es.forEach(el => lang === 'es' ? el.classList.remove('hidden') : el.classList.add('hidden'));
+
+            // Translate options
+            document.querySelectorAll('option[data-en]').forEach(opt => {
+                opt.innerText = lang === 'en' ? opt.getAttribute('data-en') : opt.getAttribute('data-es');
+            });
+
+            // Update placeholders dynamically
+            if (lang === 'en') {
+                document.getElementById('phName').placeholder = "Full Name";
+                document.getElementById('phEmail').placeholder = "Business Email";
+                document.getElementById('phPhone').placeholder = "WhatsApp Number";
+                document.getElementById('locationSearch').placeholder = "Search area (e.g. Rivas)";
+                if (document.getElementById('otherAgencyDiv')) document.getElementById('otherAgencyDiv').placeholder = "Specify Agency Name";
+            } else {
+                document.getElementById('phName').placeholder = "Nombre Completo";
+                document.getElementById('phEmail').placeholder = "Correo Electrónico";
+                document.getElementById('phPhone').placeholder = "Número de WhatsApp";
+                document.getElementById('locationSearch').placeholder = "Buscar área (ej. Rivas)";
+                if (document.getElementById('otherAgencyDiv')) document.getElementById('otherAgencyDiv').placeholder = "Especificar el Nombre de Agencia";
+            }
+        }
+
+        // ===== PROFILE LOAD/SAVE =====
+        function populateProfileFields(data) {
+            if (data.full_name) document.getElementById('phName').value = data.full_name;
+            if (data.email) document.getElementById('phEmail').value = data.email;
+            if (data.phone) document.getElementById('phPhone').value = data.phone;
+            if (data.country_code) {
+                var ccSel = document.getElementById('phCountryCode');
+                for (var i = 0; i < ccSel.options.length; i++) {
+                    if (ccSel.options[i].value === data.country_code) { ccSel.selectedIndex = i; break; }
+                }
+            }
+            if (data.brand) {
+                const sel = document.getElementById('agencySelect');
+                for (let i = 0; i < sel.options.length; i++) {
+                    if (sel.options[i].value === data.brand) { sel.selectedIndex = i; break; }
+                }
+            }
+            if (data.tx_volume) {
+                const txSel = document.getElementById('txClosed');
+                for (let i = 0; i < txSel.options.length; i++) {
+                    if (txSel.options[i].value === data.tx_volume) { txSel.selectedIndex = i; break; }
+                }
+            }
+            if (data.expert_zones && data.expert_zones.length > 0) {
+                selectedAreas = data.expert_zones;
+                renderAreaChips();
+            }
+            if (data.avatar_url) {
+                const img = document.getElementById('avatarImage');
+                img.src = data.avatar_url;
+                img.classList.remove('hidden');
+                document.getElementById('avatarPlaceholderIcon').classList.add('hidden');
+            }
+            // Restore languages
+            if (data.languages && data.languages.length > 0) {
+                const container = document.getElementById('selectedLanguagesContainer');
+                container.innerHTML = '';
+                data.languages.forEach(function(langText) {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center justify-between p-3.5 bg-blue-50/50 border border-blue-100 rounded-xl shadow-sm group lang-item';
+                    div.setAttribute('draggable', 'true');
+                    div.innerHTML = '<div class="flex items-center gap-3"><i class="fa-solid fa-grip-vertical text-slate-300 cursor-grab active:cursor-grabbing hover:text-blue-500"></i><span class="text-xs font-black text-blue-900 uppercase tracking-tight lang-name"></span></div><button type="button" onclick="this.parentElement.remove(); updateLanguageNumbers();" class="text-slate-400 hover:text-red-500 transition-colors w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-trash-can"></i></button>';
+                    div.querySelector('.lang-name').innerText = langText;
+                    container.appendChild(div);
+                    addDragListeners(div);
+                });
+            }
+            // Restore specializations
+            if (data.specializations && data.specializations.length > 0) {
+                document.querySelectorAll('.spec-card').forEach(function(card) {
+                    var engLabel = card.querySelector('.lang-en');
+                    if (engLabel && data.specializations.indexOf(engLabel.innerText.trim()) !== -1) {
+                        card.classList.add('active');
+                    }
+                });
+            }
+        }
+
+        async function loadProfile() {
+            let loaded = false;
+
+            // 1. Try Supabase first
+            try {
+                if (isSupabaseConfigured() && supabase) {
+                    const user = await getCurrentUser();
+                    if (user) {
+                        const { data, error } = await supabase
+                            .from('profiles')
+                            .select('*')
+                            .eq('id', user.id)
+                            .single();
+                        if (!error && data) {
+                            populateProfileFields(data);
+                            loaded = true;
+                            console.log('\u2705 Profile loaded from Supabase');
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('Supabase profile load skipped:', e.message);
+            }
+
+            // 2. Fallback to localStorage
+            if (!loaded) {
+                try {
+                    const saved = localStorage.getItem('nexusProfile');
+                    if (saved) {
+                        const data = JSON.parse(saved);
+                        populateProfileFields(data);
+                        console.log('\u2705 Profile loaded from localStorage');
+                    }
+                } catch (e) {
+                    console.warn('localStorage profile load failed:', e.message);
+                }
+            }
+        }
+
+        async function handleAvatarUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            // Validate file size (max 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                alert('File too large. Max 2MB.');
+                return;
+            }
+
+            const status = document.getElementById('avatarStatus');
+            status.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Uploading...';
+            status.classList.add('text-blue-500');
+            status.classList.remove('text-slate-400', 'text-green-500');
+
+            try {
+                if (isSupabaseConfigured() && supabase) {
+                    const publicUrl = await uploadAvatar(file);
+                    const img = document.getElementById('avatarImage');
+                    img.src = publicUrl;
+                    img.classList.remove('hidden');
+                    document.getElementById('avatarPlaceholderIcon').classList.add('hidden');
+                    status.innerHTML = '<i class="fa-solid fa-check-circle mr-1"></i> Photo saved!';
+                    status.classList.remove('text-blue-500');
+                    status.classList.add('text-green-500');
+                } else {
+                    throw new Error('no-supabase');
+                }
+            } catch (e) {
+                // Fallback: show local preview
+                console.warn('Avatar upload to cloud skipped:', e.message);
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    const img = document.getElementById('avatarImage');
+                    img.src = ev.target.result;
+                    img.classList.remove('hidden');
+                    document.getElementById('avatarPlaceholderIcon').classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+                status.innerHTML = '<i class="fa-solid fa-check-circle mr-1"></i> Photo set!';
+                status.classList.remove('text-blue-500');
+                status.classList.add('text-green-500');
+            }
+
+            setTimeout(() => {
+                status.classList.remove('text-green-500', 'text-red-500');
+                status.classList.add('text-slate-400');
+                status.innerHTML = '<span class="lang-en">Tap to change photo</span><span class="lang-es hidden">Toca para cambiar foto</span>';
+            }, 3000);
+        }
+
+        async function saveProfile() {
+            const btn = document.getElementById('saveProfileBtn');
+            const btnText = document.getElementById('saveBtnText');
+            const btnIcon = document.getElementById('saveBtnIcon');
+
+            // Show loading state
+            btn.disabled = true;
+            btnText.innerHTML = '<span class="lang-en">Saving...</span><span class="lang-es hidden">Guardando...</span>';
+            btnIcon.className = 'fa-solid fa-spinner fa-spin';
+
+            try {
+                if (isSupabaseConfigured() && supabase) {
+                    const user = await getCurrentUser();
+                    if (user) {
+                        const profileData = {
+                            full_name: document.getElementById('phName').value.trim(),
+                            phone: document.getElementById('phPhone').value.trim(),
+                            brand: document.getElementById('agencySelect').value,
+                            tx_volume: document.getElementById('txClosed').value,
+                            expert_zones: selectedAreas
+                        };
+                        await supabase.from('profiles').update(profileData).eq('id', user.id);
+                    }
+                }
+            } catch (dbErr) { console.warn('DB save skipped:', dbErr.message); }
+
+            // Always save to localStorage as fallback
+            try {
+                // Collect languages
+                var langs = [];
+                document.querySelectorAll('#selectedLanguagesContainer .lang-name').forEach(function(el) {
+                    langs.push(el.innerText);
+                });
+                // Collect active specializations
+                var specs = [];
+                document.querySelectorAll('.spec-card.active').forEach(function(card) {
+                    var engLabel = card.querySelector('.lang-en');
+                    if (engLabel) specs.push(engLabel.innerText.trim());
+                });
+                // Get avatar if set
+                var avatarImg = document.getElementById('avatarImage');
+                var avatarUrl = (avatarImg && !avatarImg.classList.contains('hidden')) ? avatarImg.src : '';
+
+                var localProfile = {
+                    full_name: document.getElementById('phName').value.trim(),
+                    email: document.getElementById('phEmail').value.trim(),
+                    phone: document.getElementById('phPhone').value.trim(),
+                    country_code: document.getElementById('phCountryCode').value,
+                    brand: document.getElementById('agencySelect').value,
+                    tx_volume: document.getElementById('txClosed').value,
+                    expert_zones: selectedAreas,
+                    languages: langs,
+                    specializations: specs,
+                    avatar_url: avatarUrl
+                };
+                localStorage.setItem('nexusProfile', JSON.stringify(localProfile));
+            } catch (lsErr) { console.warn('localStorage save failed:', lsErr.message); }
+
+                // Show success state
+                btn.classList.remove('bg-[#ED1C24]', 'hover:bg-red-700');
+                btn.classList.add('bg-green-500');
+                btnIcon.className = 'fa-solid fa-check';
+                btnText.innerText = '\u2705 Changes Saved!';
+
+                // Redirect to Match Board after short delay
+                setTimeout(function() { window.location.href = 'index.html'; }, 1500);
+        }
+
+        // Load profile on page init
+        document.addEventListener('DOMContentLoaded', async () => {
+            try { await loadProfile(); } catch(e) { console.warn('Profile load error:', e); }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const isPremium = localStorage.getItem('isPremium') === 'true';
+            const isAdmin = localStorage.getItem('isAdmin') === 'true';
+
+            // Hide Admin feature
+            if (!isAdmin) {
+                const broker = document.getElementById('nav-broker');
+                if (broker) broker.style.display = 'none';
+            }
+
+            // Premium Access Control - Visible to all, but restricted access
+            // PHASE 1 LAUNCH LOCK (Hardcoded for ALL users)
+            const launchLockedElements = [
+                document.getElementById('nav-market'),
+                document.getElementById('nav-office'),
+                document.getElementById('nav-business'),
+                document.getElementById('nav-resources'),
+                ...Array.from(document.querySelectorAll('.premium-only')),
+                ...Array.from(document.querySelectorAll('a[href="office.html"]')),
+                ...Array.from(document.querySelectorAll('a[href="my-business.html"]')),
+                ...Array.from(document.querySelectorAll('a[href="resources.html"]')),
+                ...Array.from(document.querySelectorAll('a[href="market.html"]'))
+            ];
+            
+            // Remove nulls and apply locks unconditionally for everyone
+            launchLockedElements.filter(Boolean).forEach(el => {
+                if (el && el.tagName === 'A' || el.tagName === 'BUTTON' || el.tagName === 'DIV' && el.getAttribute('onclick')) {
+                    // Apply visual lock
+                    el.classList.add('grayscale', 'opacity-60', 'relative');
+                    
+                    // Don't add duplicate lock icons if it already has one
+                    if (!el.innerHTML.includes('fa-lock')) {
+                        el.insertAdjacentHTML('beforeend', '<div class="absolute top-1 right-1 lg:top-2 lg:right-2 bg-slate-900 border border-[#003DA5] rounded-full w-4 h-4 flex items-center justify-center shadow-lg z-20"><i class="fa-solid fa-lock text-[8px] text-white"></i></div>');
+                    }
+
+                    // Remove existing hrefs or onclicks
+                    if (el.tagName === 'A') el.removeAttribute('href');
+                    if (el.hasAttribute('onclick')) el.removeAttribute('onclick');
+
+                    // Add new click listener
+                    el.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const lang = localStorage.getItem('nexusLang') || 'en';
+                        alert(lang === 'es' ? '🔒 Función Premium — Mejora tu plan para acceder' : '🔒 Premium Feature — Upgrade your plan for access');
+                    });
+                }
+            });
+        });
+    </script>
+
+    <!-- NOTIFICATIONS PANEL (Matchmaker) -->
+    <div id="notificationsPanel" class="fixed inset-0 z-[100] bg-slate-900/60 hidden flex-col justify-end sm:justify-center sm:items-center p-0 sm:p-6 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-800 w-full sm:max-w-md h-[85vh] sm:h-auto sm:max-h-[85vh] rounded-t-[32px] sm:rounded-[32px] shadow-2xl flex flex-col overflow-hidden animate-slideUp sm:animate-fade">
+            
+            <!-- Header -->
+            <div class="bg-[#003DA5] p-6 text-white flex justify-between items-center shrink-0">
+                <div>
+                    <h2 class="text-xl font-black italic tracking-tighter uppercase leading-none lang-en">Notifications</h2>
+                    <h2 class="text-xl font-black italic tracking-tighter uppercase leading-none lang-es hidden">Notificaciones</h2>
+                    <p class="text-[10px] uppercase font-bold text-blue-200 mt-1">NEXUS Matchmaker</p>
+                </div>
+                <button onclick="toggleNotifications()" class="text-white/50 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <!-- List -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 dark:bg-slate-900/50">
+                <!-- Reminder Item -->
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border-l-4 border-[#003DA5] shadow-sm relative group">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 text-[#003DA5] flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-calendar-check text-xs"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-xs font-black text-slate-900 dark:text-white mb-0.5 lang-en">Daily OKR Reminder</p>
+                            <p class="text-xs font-black text-slate-900 dark:text-white mb-0.5 lang-es hidden">Recordatorio Diario OKR</p>
+                            <p class="text-[10px] text-slate-500 font-bold leading-tight lang-en">You successfully logged your OKR today. Keep building your pipeline!</p>
+                            <p class="text-[10px] text-slate-500 font-bold leading-tight lang-es hidden">Registraste tu OKR de hoy con éxito. ¡Sigue construyendo tu embudo!</p>
+                            <p class="text-[8px] text-slate-400 font-black uppercase mt-2">Just Now</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Request Review Item -->
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border-l-4 border-indigo-500 shadow-sm relative group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-star text-xs"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-xs font-black text-slate-900 dark:text-white mb-0.5 lang-en">Qualification Request</p>
+                            <p class="text-xs font-black text-slate-900 dark:text-white mb-0.5 lang-es hidden">Solicitud de Calificación</p>
+                            <p class="text-[10px] text-slate-500 font-bold leading-tight"><span class="font-black text-slate-700 dark:text-slate-300">Marcelo R.</span> <span class="lang-en">requested a review for the Escazú collaboration.</span><span class="lang-es hidden">solicitó una reseña por la colaboración en Escazú.</span></p>
+                            <p class="text-[8px] text-slate-400 font-black uppercase mt-2">2 hours ago</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-4 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 shrink-0">
+                <button onclick="toggleNotifications()" class="w-full py-3 text-[10px] font-black uppercase text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors tracking-widest lang-en">Close Notifications</button>
+                <button onclick="toggleNotifications()" class="w-full py-3 text-[10px] font-black uppercase text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors tracking-widest lang-es hidden">Cerrar Notificaciones</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function toggleNotifications() {
+            const panel = document.getElementById('notificationsPanel');
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                panel.classList.add('flex');
+            } else {
+                panel.classList.add('hidden');
+                panel.classList.remove('flex');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // PHASE 1 LAUNCH LOCK (Hardcoded for ALL users)
+            const launchLockedElements = [
+                document.getElementById('nav-market'),
+                document.getElementById('nav-office'),
+                document.getElementById('nav-business'),
+                document.getElementById('nav-resources'),
+                ...Array.from(document.querySelectorAll('.premium-only')),
+                ...Array.from(document.querySelectorAll('a[href="office.html"]')),
+                ...Array.from(document.querySelectorAll('a[href="my-business.html"]')),
+                ...Array.from(document.querySelectorAll('a[href="resources.html"]')),
+                ...Array.from(document.querySelectorAll('a[href="market.html"]'))
+            ];
+            
+            // Remove nulls and apply locks unconditionally for everyone
+            launchLockedElements.filter(Boolean).forEach(el => {
+                if (el && el.tagName === 'A' || el.tagName === 'BUTTON' || el.tagName === 'DIV' && el.getAttribute('onclick')) {
+                    // Apply visual lock and make it a group for hover effects
+                    el.classList.add('grayscale', 'opacity-60', 'relative', 'group');
+                    
+                    // Don't add duplicate lock icons if it already has one
+                    if (!el.innerHTML.includes('fa-lock')) {
+                        el.insertAdjacentHTML('beforeend', '<div class="absolute top-1 right-1 lg:top-2 lg:right-2 bg-slate-900 border border-[#003DA5] rounded-full w-4 h-4 flex items-center justify-center shadow-lg z-20"><i class="fa-solid fa-lock text-[8px] text-white"></i></div>');
+                        
+                        // Add the hover tooltip
+                        el.insertAdjacentHTML('beforeend', `
+                            <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-xl border border-slate-700">
+                                <span class="lang-en inline" style="display: var(--lang-en-display, inline);">Premium Feature</span>
+                                <span class="lang-es hidden" style="display: var(--lang-es-display, none);">Función Premium</span>
+                            </div>
+                        `);
+                    }
+
+                    // Remove existing hrefs or onclicks to disable it natively
+                    if (el.tagName === 'A') el.removeAttribute('href');
+                    if (el.hasAttribute('onclick')) el.removeAttribute('onclick');
+                    
+                    // Prevent default click gracefully without alert
+                    el.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
+                }
+            });
+        });
     </script>
 </body>
 </html>

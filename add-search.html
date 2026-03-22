@@ -3,201 +3,346 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Post Search - NEXUS</title>
+    <title>Post New Search - NEXUS</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="global-theme.js"></script>
+    <script src="supabase-client.js"></script>
     <script src="locations.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .financial-chip:has(input:checked) { background-color: #003DA5; color: white; border-color: #003DA5; }
-        .transaction-chip:has(input:checked) { background-color: #003DA5; color: white; }
-        .field-error { border: 2px solid #ef4444 !important; }
-        .compact-input { padding: 16px 14px; font-size: 15px; border-radius: 16px; }
-        select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.7rem center; background-size: 1.25em; }
-        select:disabled { opacity: 0.4; background-color: #f8fafc; cursor: not-allowed; }
+        .spec-card { transition: 0.2s; border: 2px solid #f1f5f9; background: #f8fafc; cursor: pointer; text-align: center; }
+        .dark .spec-card { border-color: #334155; background: #1e293b; color: #cbd5e1; }
+        .spec-card.active { border-color: #003DA5; background-color: #eff6ff; color: #003DA5; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .dark .spec-card.active { border-color: #60a5fa; background-color: #1e3a8a; color: #93c5fd; }
         .animate-fade { animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="bg-slate-50 font-sans h-screen flex flex-col text-slate-800">
+<body class="bg-slate-50 dark:bg-slate-900 font-sans pb-24 text-slate-800 dark:text-slate-200">
 
-    <nav class="bg-white border-b px-4 py-3 flex items-center justify-between shadow-sm shrink-0">
-        <div class="flex items-center gap-4">
-            <a href="index.html" class="text-slate-400"><i class="fa-solid fa-arrow-left text-xl"></i></a>
-            <div class="flex flex-col items-start gap-0">
-                <h1 class="font-black text-2xl text-[#003DA5] tracking-tighter italic leading-none">NEXUS - SEARCH</h1>
-                <p class="text-xs uppercase tracking-widest text-[#ED1C24] font-bold mt-1">Powered by REMAX Altitud</p>
+    <nav class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 py-4 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-[60] flex justify-between items-center shadow-sm transition-colors">
+        <div class="flex items-center gap-3">
+            <a href="my-desk.html" class="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                <i class="fa-solid fa-chevron-left text-sm"></i>
+            </a>
+            <div>
+                <h1 class="font-black text-xl text-[#003DA5] tracking-tighter uppercase italic leading-none lang-en">Post Search</h1>
+                <h1 class="font-black text-xl text-[#003DA5] tracking-tighter uppercase italic leading-none lang-es hidden">Publicar Búsqueda</h1>
             </div>
         </div>
-        <div class="flex bg-slate-100 p-1 rounded-full text-xs font-black border">
-            <button onclick="setLanguage('en')" id="btn-en" class="px-3 py-1.5 rounded-full bg-[#003DA5] text-white">EN</button>
-            <button onclick="setLanguage('es')" id="btn-es" class="px-3 py-1.5 rounded-full text-slate-400">ES</button>
+        <div class="flex items-center gap-3">
+            <div class="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-full text-[9px] font-black border border-slate-200 dark:border-slate-600">
+                <button onclick="setLanguage('en')" id="btn-en" class="px-2 py-1 rounded-full bg-[#003DA5] text-white transition-colors">EN</button>
+                <button onclick="setLanguage('es')" id="btn-es" class="px-2 py-1 rounded-full text-slate-400 dark:text-slate-300 transition-colors">ES</button>
+            </div>
+            <button onclick="toggleDarkMode()" class="text-slate-400 hover:text-[#003DA5] dark:hover:text-yellow-400 transition-colors text-lg px-2">
+                <i class="fa-solid fa-moon dark:hidden"></i>
+                <i class="fa-solid fa-sun hidden dark:inline"></i>
+            </button>
         </div>
     </nav>
 
-    <div class="p-3 flex-1 flex flex-col gap-3 overflow-y-auto no-scrollbar pb-10">
+    <form class="p-4 space-y-6 max-w-lg mx-auto mt-2" onsubmit="event.preventDefault(); handleSubmitSearch();">
         
-        <div class="flex bg-slate-200 p-1.5 rounded-2xl shrink-0">
-            <label class="transaction-chip flex-1 text-center py-2.5 rounded-xl text-sm font-black uppercase transition-all cursor-pointer">
-                <input type="radio" name="transType" value="buy" class="hidden"> <span class="lang-en">BUY</span><span class="lang-es hidden">COMPRA</span>
-            </label>
-            <label class="transaction-chip flex-1 text-center py-2.5 rounded-xl text-sm font-black uppercase transition-all cursor-pointer">
-                <input type="radio" name="transType" value="rent" class="hidden"> <span class="lang-en">RENT</span><span class="lang-es hidden">ALQUILER</span>
-            </label>
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/50 text-[#003DA5] dark:text-blue-400 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fa-solid fa-magnifying-glass-location text-2xl"></i>
+            </div>
+            <h2 class="text-lg font-black text-slate-800 dark:text-white leading-tight mb-1 lang-en">What is your buyer looking for?</h2>
+            <h2 class="text-lg font-black text-slate-800 dark:text-white leading-tight mb-1 lang-es hidden">¿Qué busca tu comprador?</h2>
+            <p class="text-[10px] uppercase font-bold text-slate-500 tracking-widest lang-en">Matchmaker will automatically scan the network.</p>
+            <p class="text-[10px] uppercase font-bold text-slate-500 tracking-widest lang-es hidden">Matchmaker escaneará automáticamente la red.</p>
         </div>
-        
-        <section class="bg-white p-4 rounded-[28px] border shadow-sm space-y-2">
-            <input type="text" id="clientId" placeholder="Client Name / ID" class="validate compact-input w-full border border-slate-100 bg-slate-50 font-bold outline-none">
-            
-            <div class="grid grid-cols-2 gap-3 mt-3">
-                <select id="propertyType" class="validate compact-input w-full border border-slate-100 bg-slate-50 font-bold outline-none">
-                    <option value="" disabled selected id="opt-prop-placeholder">Prop. Type</option>
-                    <option>House / Villa</option>
-                    <option>Land / Finca</option>
-                    <option>Condo / Apartment</option>
-                    <option>Commercial</option>
-                </select>
-                <select id="timeframe" class="validate compact-input w-full border border-slate-100 bg-slate-50 font-bold outline-none text-[15px]">
-                    <option value="" disabled selected id="opt-time-placeholder">Timeframe</option>
-                    <option data-en="Immediately / ASAP" data-es="Inmediatamente / Lo antes posible">Immediately / ASAP</option>
-                    <option data-en="3-6 Months" data-es="3-6 meses">3-6 Months</option>
-                    <option data-en="More than 6 months" data-es="Más de 6 meses">More than 6 months</option>
-                    <option data-en="I do not know" data-es="No lo sé">I do not know</option>
-                </select>
-            </div>
 
-            <div class="grid grid-cols-2 gap-2">
-                <input type="number" id="budgetFrom" placeholder="From ($)" class="validate compact-input w-full border border-slate-100 bg-slate-50 font-bold outline-none">
-                <input type="number" id="budgetTo" placeholder="To ($)" class="validate compact-input w-full border border-slate-100 bg-slate-50 font-bold outline-none">
-            </div>
-        </section>
-
-        <!-- SMART LOCATION AUTOCOMPLETE -->
-        <section class="bg-white p-5 rounded-[28px] border shadow-sm flex flex-col min-h-[160px]">
-            <h3 class="text-sm font-black text-slate-400 uppercase tracking-widest ml-1 mb-3 lang-en">Where are you looking?</h3>
-            <h3 class="text-sm font-black text-slate-400 uppercase tracking-widest ml-1 mb-3 lang-es hidden">¿Dónde buscas?</h3>
-            
-            <div class="flex gap-2 mb-3 relative">
-                <div class="relative flex-1">
-                    <input type="text" id="locationSearch" oninput="showSuggestions(this.value)" autocomplete="off" placeholder="Search area (e.g. Rivas)" class="validate w-full compact-input border border-slate-100 bg-slate-50 font-bold outline-none pl-12">
-                    <i class="fa-solid fa-map-location-dot absolute left-4 top-[1.1rem] text-slate-400 text-lg"></i>
+        <!-- PREMIUM FEATURE: INVITE CLIENT TO ONBOARDING -->
+        <div class="bg-gradient-to-r from-[#003DA5] to-blue-600 rounded-[32px] p-6 text-white shadow-lg mb-6 relative overflow-hidden premium-only cursor-pointer" onclick="openInviteModal()">
+            <div class="relative z-10 flex items-center justify-between">
+                <div>
+                    <h3 class="text-sm font-black mb-1 uppercase tracking-widest lang-en"><i class="fa-solid fa-bolt text-yellow-400 mr-2"></i> Stop Typing. Let Clients Do It.</h3>
+                    <h3 class="text-sm font-black mb-1 uppercase tracking-widest lang-es hidden"><i class="fa-solid fa-bolt text-yellow-400 mr-2"></i> Deja de Escribir. Que lo hagan ellos.</h3>
+                    <p class="text-[10px] font-bold text-blue-100 max-w-[250px] lang-en">Send a smart NexLink. Clients create their profile, invite their partner, and post their criteria securely.</p>
+                    <p class="text-[10px] font-bold text-blue-100 max-w-[250px] lang-es hidden">Envía un NexLink. Ellos arman su perfil, invitan a su pareja y suben qué buscan.</p>
                 </div>
-                <button onclick="addLocation()" type="button" class="bg-[#003DA5] text-white px-6 rounded-2xl font-black text-sm shadow-lg shrink-0 lang-en">ADD</button>
-                <button onclick="addLocation()" type="button" class="bg-[#003DA5] text-white px-6 rounded-2xl font-black text-sm shadow-lg shrink-0 lang-es hidden">AGREGAR</button>
-                
-                <!-- Dropdown suggestions container hidden by default -->
-                <div id="suggestionsBox" class="absolute z-10 w-full left-0 bg-white border border-slate-200 mt-14 max-h-56 overflow-y-auto rounded-xl shadow-lg hidden hidden-scrollbar text-[13px] font-bold text-slate-700"></div>
+                <div class="w-12 h-12 bg-white/20 backdrop-blur rounded-full flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-paper-plane text-xl"></i>
+                </div>
+            </div>
+            <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-white/10 rounded-full blur-xl border border-white/20"></div>
+        </div>
+
+        <section class="bg-white dark:bg-slate-800 p-6 rounded-[32px] border border-slate-100 dark:border-slate-700 shadow-sm space-y-4">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest lang-en"><i class="fa-solid fa-user text-[#003DA5] mr-1"></i> Client Reference</h3>
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest lang-es hidden"><i class="fa-solid fa-user text-[#003DA5] mr-1"></i> Referencia del Cliente</h3>
+            
+            <input type="text" id="clientName" required placeholder="Name or Alias (e.g. Family Smith)" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5] transition-shadow">
+            
+            <div class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded-xl">
+                <p class="text-[9px] font-bold text-amber-700 dark:text-amber-400 leading-relaxed lang-en"><i class="fa-solid fa-shield-halved mr-1"></i> Privacy focus: Client names are kept private. Only you can see them.</p>
+                <p class="text-[9px] font-bold text-amber-700 dark:text-amber-400 leading-relaxed lang-es hidden"><i class="fa-solid fa-shield-halved mr-1"></i> Privacidad: Los nombres de clientes son privados. Solo tú puedes verlos.</p>
+            </div>
+        </section>
+
+        <section class="bg-white dark:bg-slate-800 p-6 rounded-[32px] border border-slate-100 dark:border-slate-700 shadow-sm space-y-4">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest lang-en"><i class="fa-solid fa-location-dot text-[#003DA5] mr-1"></i> Target Location</h3>
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest lang-es hidden"><i class="fa-solid fa-location-dot text-[#003DA5] mr-1"></i> Ubicación Deseada</h3>
+            
+            <div class="relative w-full">
+                <input type="text" id="locationSearch" oninput="showSuggestions(this.value)" autocomplete="off" placeholder="Search area (e.g. Escazu)" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs pl-12 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                <i class="fa-solid fa-map-location-dot absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                <div id="suggestionsBox" class="absolute z-10 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 mt-2 max-h-56 overflow-y-auto rounded-xl shadow-lg hidden hidden-scrollbar text-[12px] font-bold text-slate-700 dark:text-slate-300"></div>
             </div>
             
-            <div id="locationList" class="flex flex-col gap-2"></div>
+            <div id="selectedLocationsContainer" class="flex flex-wrap gap-2 pt-3 empty:hidden"></div>
         </section>
 
-        <section class="bg-white p-5 rounded-[28px] border shadow-sm space-y-3">
-            <h3 class="text-sm font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 lang-en">Exclusivity</h3>
-            <h3 class="text-sm font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 lang-es hidden">Exclusividad</h3>
+        <section class="bg-white dark:bg-slate-800 p-6 rounded-[32px] border border-slate-100 dark:border-slate-700 shadow-sm space-y-4">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest lang-en"><i class="fa-solid fa-sack-dollar text-[#003DA5] mr-1"></i> Transaction Type & Budget</h3>
+            <div class="flex gap-2 mb-4">
+                <button type="button" id="btnBuy" data-type="buy" onclick="setSearchType('buy')" class="flex-1 py-3 rounded-2xl font-black text-[10px] uppercase transition-colors bg-[#003DA5] text-white">Buy</button>
+                <button type="button" id="btnRent" data-type="rent" onclick="setSearchType('rent')" class="flex-1 py-3 rounded-2xl font-black text-[10px] uppercase transition-colors bg-slate-100 text-slate-500 dark:bg-slate-700">Rent</button>
+            </div>
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest lang-es hidden"><i class="fa-solid fa-sack-dollar text-[#003DA5] mr-1"></i> Tipo de Transacción y Presupuesto</h3>
             
-            <div class="grid grid-cols-3 gap-2">
-                <label class="financial-chip flex flex-col items-center justify-center p-3 border border-slate-100 rounded-[16px] bg-slate-50 transition-all cursor-pointer">
-                    <input type="radio" name="exclusivity" value="open" class="hidden">
-                    <span class="text-[11px] font-black uppercase text-center leading-tight lang-en">Open<br>Search</span>
-                    <span class="text-[11px] font-black uppercase text-center leading-tight lang-es hidden">Búsqueda<br>Abierta</span>
-                </label>
-                <label class="financial-chip flex flex-col items-center justify-center p-3 border border-slate-100 rounded-[16px] bg-slate-50 transition-all cursor-pointer">
-                    <input type="radio" name="exclusivity" value="exclusive" class="hidden">
-                    <span class="text-[11px] font-black uppercase text-center leading-tight lang-en">Exclusive<br>With Me</span>
-                    <span class="text-[11px] font-black uppercase text-center leading-tight lang-es hidden">Exclusivo<br>Conmigo</span>
-                </label>
-                <label class="financial-chip flex flex-col items-center justify-center p-3 border border-slate-100 rounded-[16px] bg-slate-50 transition-all cursor-pointer">
-                    <input type="radio" name="exclusivity" value="idk" class="hidden">
-                    <span class="text-[11px] font-black uppercase text-center leading-tight lang-en">I Don't<br>Know</span>
-                    <span class="text-[11px] font-black uppercase text-center leading-tight lang-es hidden">No lo<br>Sé</span>
-                </label>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2 lang-en">Min Budget</label>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2 lang-es hidden">Presupuesto Min.</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black">$</span>
+                        <input type="number" id="budgetMin" placeholder="200,000" class="w-full p-4 pl-8 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2 lang-en">Max Budget</label>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2 lang-es hidden">Presupuesto Max.</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black">$</span>
+                        <input type="number" id="budgetMax" required placeholder="500,000" class="w-full p-4 pl-8 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                    </div>
+                </div>
             </div>
         </section>
 
-        <section class="bg-white p-5 rounded-[28px] border shadow-sm space-y-4">
-            <div class="px-1">
-                <h3 class="text-sm font-black text-slate-400 uppercase tracking-widest lang-en">Purchase Type</h3>
-                <h3 class="text-sm font-black text-slate-400 uppercase tracking-widest lang-es hidden">Tipo de compra</h3>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <label class="financial-chip flex flex-col items-center justify-center p-4 border border-slate-100 rounded-[18px] bg-slate-50 transition-all cursor-pointer">
-                    <input type="radio" name="finance" value="cash" class="hidden">
-                    <span class="text-sm font-black uppercase text-center lang-en">Cash</span>
-                    <span class="text-sm font-black uppercase text-center lang-es hidden">Efectivo</span>
-                </label>
-                <label class="financial-chip flex flex-col items-center justify-center p-4 border border-slate-100 rounded-[18px] bg-slate-50 transition-all cursor-pointer">
-                    <input type="radio" name="finance" value="owner" class="hidden">
-                    <span class="text-sm font-black uppercase text-center leading-tight lang-en">Needs Owner<br>Financing</span>
-                    <span class="text-sm font-black uppercase text-center leading-tight lang-es hidden">Necesita Fin.<br>del Dueño</span>
-                </label>
-                <label class="financial-chip flex flex-col items-center justify-center p-4 border border-slate-100 rounded-[18px] bg-slate-50 transition-all cursor-pointer">
-                    <input type="radio" name="finance" value="mortgage" class="hidden">
-                    <span class="text-sm font-black uppercase text-center leading-tight lang-en">Mortgage<br>Approved</span>
-                    <span class="text-sm font-black uppercase text-center leading-tight lang-es hidden">Hipoteca<br>Aprobada</span>
-                </label>
-                <label class="financial-chip flex flex-col items-center justify-center p-4 border border-slate-100 rounded-[18px] bg-slate-50 transition-all cursor-pointer">
-                    <input type="radio" name="finance" value="other" class="hidden">
-                    <span class="text-sm font-black uppercase text-center lang-en">Other</span>
-                    <span class="text-sm font-black uppercase text-center lang-es hidden">Otro</span>
-                </label>
-                <label class="financial-chip col-span-2 flex flex-col items-center justify-center p-4 border border-slate-100 rounded-[18px] bg-slate-50 transition-all cursor-pointer">
-                    <input type="radio" name="finance" value="idk" class="hidden">
-                    <span class="text-sm font-black uppercase text-center lang-en">I don't know</span>
-                    <span class="text-sm font-black uppercase text-center lang-es hidden">No lo sé</span>
-                </label>
-            </div>
-        </section>
-
-        <section class="bg-white p-5 rounded-[28px] border shadow-sm flex-1 flex flex-col min-h-[160px]">
-            <h3 class="text-sm font-black text-slate-400 uppercase mb-3 tracking-widest lang-en ml-1">Must-Haves</h3>
-            <h3 class="text-sm font-black text-slate-400 uppercase mb-3 tracking-widest lang-es hidden ml-1">Requisitos</h3>
-            <div class="flex gap-2 mb-3">
-                <input type="text" id="mustHaveInput" placeholder="+ Requirement" class="flex-1 compact-input border border-slate-100 bg-slate-50 outline-none">
-                <button onclick="addMustHave()" type="button" class="bg-[#003DA5] text-white px-6 rounded-2xl font-black text-sm shadow-lg lang-en">ADD</button>
-                <button onclick="addMustHave()" type="button" class="bg-[#003DA5] text-white px-6 rounded-2xl font-black text-sm shadow-lg lang-es hidden">AGREGAR</button>
-            </div>
-            <div id="mustHaveList" class="flex flex-col gap-2"></div>
-        </section>
-
-        <button onclick="validateAndPost()" type="button" class="bg-[#ED1C24] text-white py-5 rounded-[24px] font-black text-sm shadow-xl shadow-red-200 uppercase tracking-widest transition-transform active:scale-95 lang-en mt-2">
-            Launch Search
-        </button>
-        <button onclick="validateAndPost()" type="button" class="bg-[#ED1C24] text-white py-5 rounded-[24px] font-black text-sm shadow-xl shadow-red-200 uppercase tracking-widest transition-transform active:scale-95 lang-es hidden mt-2">
-            Lanzar Búsqueda
-        </button>
-
-    </div>
-
-    <!-- SUCCESS MODAL -->
-    <div id="successModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex-col items-center justify-center p-6 backdrop-blur-sm animate-fade">
-        <div class="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center transform transition-all scale-100">
-            <div class="w-24 h-24 bg-green-50 text-green-500 rounded-full flex items-center justify-center mb-6 border-4 border-green-100">
-                <i class="fa-solid fa-check text-5xl"></i>
-            </div>
-            <h2 class="text-3xl font-black text-[#003DA5] mb-3 leading-tight tracking-tighter italic">Congrats!</h2>
-            <p class="text-sm font-bold text-slate-500 mb-8 leading-relaxed lang-en">Your client search is now LIVE! You will find them a property ASAP with <span class="text-[#003DA5] font-black">NEXUS</span>.</p>
-            <p class="text-sm font-bold text-slate-500 mb-8 leading-relaxed lang-es hidden">¡Tu búsqueda está en vivo! Le encontrarás una propiedad lo antes posible con <span class="text-[#003DA5] font-black">NEXUS</span>.</p>
+        <section class="bg-white dark:bg-slate-800 p-6 rounded-[32px] border border-slate-100 dark:border-slate-700 shadow-sm space-y-4">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest lang-en"><i class="fa-solid fa-house-chimney text-[#003DA5] mr-1"></i> Property Criteria</h3>
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest lang-es hidden"><i class="fa-solid fa-house-chimney text-[#003DA5] mr-1"></i> Criterios de la Propiedad</h3>
             
-            <a href="index.html" class="w-full bg-[#003DA5] text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-blue-200 transition-transform active:scale-95 block lang-en">
-                Go back to FEED
-            </a>
-            <a href="index.html" class="w-full bg-[#003DA5] text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-blue-200 transition-transform active:scale-95 block lang-es hidden">
-                Volver al FEED
-            </a>
+            <!-- Type -->
+            <div class="mb-4">
+                <label class="block text-[9px] font-black text-slate-400 uppercase mb-3 ml-2 lang-en">Property Type</label>
+                <label class="block text-[9px] font-black text-slate-400 uppercase mb-3 ml-2 lang-es hidden">Tipo de Propiedad</label>
+                <div class="grid grid-cols-2 gap-3" id="propertyTypeGrid">
+                    <div onclick="this.classList.toggle('active')" data-type="house" class="spec-card p-3 rounded-2xl">
+                        <i class="fa-solid fa-house text-lg mb-1 block"></i>
+                        <span class="text-[9px] font-black uppercase lang-en">House</span>
+                        <span class="text-[9px] font-black uppercase lang-es hidden">Casa</span>
+                    </div>
+                    <div onclick="this.classList.toggle('active')" data-type="condo" class="spec-card p-3 rounded-2xl">
+                        <i class="fa-solid fa-building text-lg mb-1 block"></i>
+                        <span class="text-[9px] font-black uppercase lang-en">Condo</span>
+                        <span class="text-[9px] font-black uppercase lang-es hidden">Condominio</span>
+                    </div>
+                    <div onclick="this.classList.toggle('active')" data-type="land" class="spec-card p-3 rounded-2xl">
+                        <i class="fa-solid fa-mountain-sun text-lg mb-1 block"></i>
+                        <span class="text-[9px] font-black uppercase lang-en">Land/Lots</span>
+                        <span class="text-[9px] font-black uppercase lang-es hidden">Lotes</span>
+                    </div>
+                    <div onclick="this.classList.toggle('active')" data-type="commercial" class="spec-card p-3 rounded-2xl">
+                        <i class="fa-solid fa-store text-lg mb-1 block"></i>
+                        <span class="text-[9px] font-black uppercase lang-en">Commercial</span>
+                        <span class="text-[9px] font-black uppercase lang-es hidden">Comercial</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Beds / Baths -->
+            <div class="grid grid-cols-2 gap-4 pt-2">
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2 lang-en">Min Bedrooms</label>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2 lang-es hidden">Mínimo Cuartos</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-bed absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <select id="bedroomsSelect" class="w-full p-4 pl-10 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200">
+                            <option value="">Any</option>
+                            <option value="1">1+</option>
+                            <option value="2">2+</option>
+                            <option value="3">3+</option>
+                            <option value="4">4+</option>
+                            <option value="5">5+</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2 lang-en">Min Bathrooms</label>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2 lang-es hidden">Mínimo Baños</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-bath absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <select id="bathroomsSelect" class="w-full p-4 pl-10 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200">
+                            <option value="">Any</option>
+                            <option value="1">1+</option>
+                            <option value="2">2+</option>
+                            <option value="3">3+</option>
+                            <option value="4">4+</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="pt-4">
+                <label class="block text-[9px] font-black text-slate-400 uppercase mb-3 ml-2 lang-en">Must-Haves (Select all that apply)</label>
+                <label class="block text-[9px] font-black text-slate-400 uppercase mb-3 ml-2 lang-es hidden">Obligatorios (Selecciona los necesarios)</label>
+                <div class="flex gap-2 mb-3">
+                    <input type="text" id="mustHaveInput" placeholder="e.g. Ocean View" class="flex-1 p-3 border border-slate-100 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-[10px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]" onkeydown="if(event.key === 'Enter') { event.preventDefault(); addMustHave(); }">
+                    <button type="button" onclick="addMustHave()" class="bg-[#003DA5] text-white px-4 rounded-xl font-black text-[10px] uppercase shadow-sm active:scale-95 transition-transform">Add</button>
+                </div>
+                <div id="mustHavesContainer" class="flex flex-wrap gap-2 mb-4 empty:hidden"></div>
+
+                <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2 lang-en">Additional Remarks</label>
+                <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2 lang-es hidden">Comentarios Adicionales / Requisitos</label>
+                <textarea id="notesField" rows="3" placeholder="e.g. Needs a private pool, ocean view, close to school..." class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5] resize-none"></textarea>
+            </div>
+        </section>
+
+        <section class="bg-white dark:bg-slate-800 p-6 rounded-[32px] border border-slate-100 dark:border-slate-700 shadow-sm space-y-4">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest lang-en"><i class="fa-solid fa-clipboard-user text-[#003DA5] mr-1"></i> Client Readiness</h3>
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest lang-es hidden"><i class="fa-solid fa-clipboard-user text-[#003DA5] mr-1"></i> Estado del Cliente</h3>
+            
+            <div class="space-y-4 pt-2">
+                <!-- Type of Contract -->
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2 lang-en">Type of Contract</label>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2 lang-es hidden">Tipo de Contrato</label>
+                    
+                    <div class="relative lang-en">
+                        <i class="fa-solid fa-file-signature absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                        <select id="contractTypeEn" class="w-full p-4 pl-11 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                            <option value="" selected disabled>Select contract type...</option>
+                            <option value="Exclusive Buyer Agency">Exclusive Buyer Agency</option>
+                            <option value="Non-Exclusive">Non-Exclusive</option>
+                            <option value="No Contract Yet">No Contract Yet</option>
+                        </select>
+                    </div>
+                    <div class="relative lang-es hidden">
+                        <i class="fa-solid fa-file-signature absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                        <select class="w-full p-4 pl-11 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                            <option selected disabled>Seleccione el tipo de contrato...</option>
+                            <option>Exclusiva de Comprador</option>
+                            <option>No Exclusiva</option>
+                            <option>Sin Contrato Aún</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Timeline -->
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2 lang-en">Timeline to Buy</label>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2 lang-es hidden">Tiempo para Comprar</label>
+                    
+                    <div class="relative lang-en">
+                        <i class="fa-regular fa-calendar-check absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                        <select id="timelineEn" class="w-full p-4 pl-11 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                            <option value="" selected disabled>Select timeline...</option>
+                            <option value="ASAP">ASAP (0-30 Days)</option>
+                            <option value="1-3 months">1-3 Months</option>
+                            <option value="3-6 months">3-6 Months</option>
+                            <option value="Just Looking">Just Looking</option>
+                        </select>
+                    </div>
+                    <div class="relative lang-es hidden">
+                        <i class="fa-regular fa-calendar-check absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                        <select class="w-full p-4 pl-11 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                            <option selected disabled>Seleccione el tiempo...</option>
+                            <option>Lo antes posible (0-30 días)</option>
+                            <option>1-3 Meses</option>
+                            <option>3-6 Meses</option>
+                            <option>Solo mirando</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Financing -->
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2 lang-en">Financing</label>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2 lang-es hidden">Financiamiento</label>
+                    
+                    <div class="relative lang-en">
+                        <i class="fa-solid fa-money-check-dollar absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                        <select id="financingEn" class="w-full p-4 pl-11 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                            <option value="" selected disabled>Select financing...</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Mortgage Approved">Mortgage Approved</option>
+                            <option value="Needs Seller Financing">Needs Seller Financing</option>
+                            <option value="Unknown">I Don't Know</option>
+                        </select>
+                    </div>
+                    <div class="relative lang-es hidden">
+                        <i class="fa-solid fa-money-check-dollar absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                        <select class="w-full p-4 pl-11 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                            <option selected disabled>Seleccione financiamiento...</option>
+                            <option>Contado / Efectivo</option>
+                            <option>Hipoteca Aprobada</option>
+                            <option>Necesita Financiamiento del Vendedor</option>
+                            <option>No lo sé</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="pt-4">
+            <button type="submit" class="w-full bg-[#003DA5] hover:bg-blue-700 text-white py-5 rounded-3xl font-black text-sm uppercase shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2">
+                <span class="lang-en">Post Market Search</span>
+                <span class="lang-es hidden">Publicar Búsqueda en Mercado</span>
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+
+    </form>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 z-[100] bg-slate-900/60 hidden flex-col items-center justify-center p-6 backdrop-blur-sm animate-fade">
+        <div class="bg-white dark:bg-slate-800 rounded-[32px] p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center transform transition-all scale-100">
+            <div class="w-24 h-24 bg-blue-50 dark:bg-blue-900/50 text-[#003DA5] dark:text-blue-400 rounded-full flex items-center justify-center mb-6 border-4 border-blue-100 dark:border-blue-800 shadow-inner">
+                <i class="fa-solid fa-radar text-4xl"></i>
+            </div>
+            
+            <h2 class="text-3xl font-black text-slate-900 dark:text-white italic tracking-tighter mb-2 lang-en">Scanning Market</h2>
+            <h2 class="text-3xl font-black text-slate-900 dark:text-white italic tracking-tighter mb-2 lang-es hidden">Escanenando Mercado</h2>
+            
+            <p class="text-xs font-bold text-slate-600 dark:text-slate-400 leading-relaxed mb-6 lang-en">
+                Your search has been successfully posted. NEXUS AI will notify you the moment a matching property is found.
+            </p>
+            <p class="text-xs font-bold text-slate-600 dark:text-slate-400 leading-relaxed mb-6 lang-es hidden">
+                Tu búsqueda ha sido publicada con éxito. NEXUS AI te notificará en el momento que se encuentre una propiedad compatible.
+            </p>
+
+            <button onclick="window.location.href='my-desk.html'" class="w-full bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg transition-all active:scale-95">
+                <span class="lang-en">Return to Hub</span>
+                <span class="lang-es hidden">Volver a Mi Escritorio</span>
+            </button>
         </div>
     </div>
 
     <script>
-        // --- DATA LOAD ---
-        window.onload = function() {
-            // No initialization needed for flat array
-        };
-
-        // --- HIERARCHY / AUTOCOMPLETE LOGIC ---
-        // Filters the LOCATION_DB array based on text input and renders clickable suggestion divs.
-        function showSuggestions(val) {
+        
+        let selectedLocations = [];
+        
+        function renderLocations() {
+            const container = document.getElementById('selectedLocationsContainer');
+            container.innerHTML = '';
+            selectedLocations.forEach((loc, index) => {
+                container.innerHTML += `<div class="bg-blue-50 dark:bg-blue-900/30 text-[#003DA5] dark:text-blue-400 px-3 py-1.5 rounded-lg text-[10px] font-black flex items-center justify-between gap-2 border border-blue-100 dark:border-blue-800 shadow-sm">${loc} <i class="fa-solid fa-xmark cursor-pointer hover:text-red-500" onclick="selectedLocations.splice(${index}, 1); renderLocations();"></i></div>`;
+            });
+        }
+        
+        async function showSuggestions(val) {
             const sugBox = document.getElementById('suggestionsBox');
             sugBox.innerHTML = '';
             if (!val) {
@@ -205,9 +350,13 @@
                 return;
             }
             
-            // Limit to 15 matches, ignoring accents
-            const normVal = normalizeStr(val);
-            const matches = LOCATION_DB.filter(loc => normalizeStr(loc).includes(normVal)).slice(0, 15);
+            // Ensure we have locations (hits cache if already loaded)
+            const locations = await LocationService.getAllAsStrings();
+
+            const normalize = (str) => String(str).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+            const normVal = normalize(val);
+            const matches = locations.filter(loc => normalize(loc).includes(normVal)).slice(0, 15);
+            
             if (matches.length === 0) {
                 sugBox.classList.add('hidden');
                 return;
@@ -215,128 +364,295 @@
 
             matches.forEach(match => {
                 const div = document.createElement('div');
-                div.className = "p-3 hover:bg-slate-100 cursor-pointer border-b border-slate-50 last:border-0 text-sm";
+                div.className = "p-3 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer border-b border-slate-100 dark:border-slate-700 text-sm";
                 
-                // Highlight match ignoring accents
-                div.innerHTML = highlightMatch(match, val);
+                const regex = new RegExp(`(${val})`, 'gi');
+                div.innerHTML = match.replace(regex, '<span class="text-[#003DA5] dark:text-blue-400 font-black">$1</span>');
                 
-                // Use pointerdown to support both touch and mouse reliably before blur
                 div.onpointerdown = function(e) {
-                    e.preventDefault(); // Keep focus
-                    document.getElementById('locationSearch').value = match;
+                    e.preventDefault();
+                    if (!selectedLocations.includes(match)) {
+                        selectedLocations.push(match);
+                        renderLocations();
+                    }
+                    document.getElementById('locationSearch').value = '';
                     sugBox.classList.add('hidden');
-                    addLocation(); // Auto-add to list
                 };
                 sugBox.appendChild(div);
             });
             sugBox.classList.remove('hidden');
         }
 
-        // Hide suggestions when clicking outside
         document.addEventListener('pointerdown', function(e) {
             const sugBox = document.getElementById('suggestionsBox');
             const search = document.getElementById('locationSearch');
-            // If clicking outside the search input AND outside the suggestions box, hide it
-            if (e.target !== search && !sugBox.contains(e.target)) {
+            if (sugBox && e.target !== search && !sugBox.contains(e.target)) {
                 sugBox.classList.add('hidden');
             }
         });
+        
+        // --- MUST HAVES SELECTION ---
+        let customMustHaves = [];
 
-        // --- LANGUAGE TOGGLE (The Fix) ---
+        function addMustHave() {
+            const input = document.getElementById('mustHaveInput');
+            const val = input.value.trim();
+            if (val && !customMustHaves.includes(val)) {
+                customMustHaves.push(val);
+                renderMustHaves();
+            }
+            input.value = '';
+        }
+
+        function removeMustHave(index) {
+            customMustHaves.splice(index, 1);
+            renderMustHaves();
+        }
+
+        function renderMustHaves() {
+            const container = document.getElementById('mustHavesContainer');
+            container.innerHTML = '';
+            customMustHaves.forEach((item, index) => {
+                const colors = ['amber', 'blue', 'green', 'purple', 'rose'];
+                const color = colors[index % colors.length];
+                const bgClass = `bg-${color}-100`;
+                const textClass = `text-${color}-700`;
+                
+                const chip = document.createElement('div');
+                chip.className = `px-3 py-2 rounded-xl text-[9px] font-black uppercase flex items-center gap-2 ${bgClass} ${textClass}`;
+                chip.innerHTML = `
+                    ${item}
+                    <i class="fa-solid fa-xmark cursor-pointer opacity-70 hover:opacity-100" onclick="removeMustHave(${index})"></i>
+                `;
+                container.appendChild(chip);
+            });
+        }
+
+        let searchType = 'buy';
+
+        function setSearchType(type) {
+            searchType = type;
+            const btnBuy = document.getElementById('btnBuy');
+            const btnRent = document.getElementById('btnRent');
+            if (type === 'buy') {
+                btnBuy.classList.add('bg-[#003DA5]', 'text-white'); btnBuy.classList.remove('bg-slate-100', 'text-slate-500', 'dark:bg-slate-700');
+                btnRent.classList.remove('bg-[#003DA5]', 'text-white'); btnRent.classList.add('bg-slate-100', 'text-slate-500', 'dark:bg-slate-700');
+            } else {
+                btnRent.classList.add('bg-[#003DA5]', 'text-white'); btnRent.classList.remove('bg-slate-100', 'text-slate-500', 'dark:bg-slate-700');
+                btnBuy.classList.remove('bg-[#003DA5]', 'text-white'); btnBuy.classList.add('bg-slate-100', 'text-slate-500', 'dark:bg-slate-700');
+            }
+        }
+
+        function showSuccessModal() {
+            document.getElementById('successModal').classList.remove('hidden');
+            document.getElementById('successModal').classList.add('flex');
+        }
+
+        async function handleSubmitSearch() {
+            // Collect property types
+            const activeTypes = Array.from(document.querySelectorAll('#propertyTypeGrid .spec-card.active'))
+                .map(el => el.dataset.type).filter(Boolean);
+            const propertyType = activeTypes.join(', ') || 'any';
+
+            // Collect form data
+            const searchData = {
+                client_name: document.getElementById('clientName').value.trim(),
+                search_type: searchType,
+                property_type: propertyType,
+                location: selectedLocations.join(', '),
+                budget_min: parseInt(document.getElementById('budgetMin').value) || 0,
+                budget_max: parseInt(document.getElementById('budgetMax').value) || 0,
+                bedrooms: parseInt(document.getElementById('bedroomsSelect').value) || null,
+                bathrooms: parseInt(document.getElementById('bathroomsSelect').value) || null,
+                must_haves: customMustHaves,
+                notes: document.getElementById('notesField').value.trim(),
+                timing: document.getElementById('timelineEn').value || 'flexible',
+                payment_method: document.getElementById('financingEn').value || 'Unknown'
+            };
+
+            // Validate
+            if (!searchData.client_name) { alert('Please enter a client name.'); return; }
+            if (!searchData.location) { alert('Please select at least one location.'); return; }
+            if (!searchData.budget_max) { alert('Please enter a maximum budget.'); return; }
+
+            // Save to Supabase if configured
+            if (isSupabaseConfigured() && supabase) {
+                try {
+                    const result = await createSearch(searchData);
+                    console.log('✅ Search saved to Supabase:', result);
+                    showSuccessModal();
+                } catch(err) {
+                    console.error('Error saving search:', err);
+                    alert('Error: ' + (err.message || 'Could not save search. Please try again.'));
+                }
+            } else {
+                // Fallback: save to localStorage
+                const searches = JSON.parse(localStorage.getItem('nexusSearches') || '[]');
+                searches.push({ id: Date.now(), ...searchData, status: 'active', created_at: new Date().toISOString() });
+                localStorage.setItem('nexusSearches', JSON.stringify(searches));
+                showSuccessModal();
+            }
+        }
+
         function setLanguage(lang) {
             const en = document.querySelectorAll('.lang-en');
             const es = document.querySelectorAll('.lang-es');
             
-            // Buttons UI
-            document.getElementById('btn-en').className = lang === 'en' ? 'px-2 py-1 rounded-full bg-[#003DA5] text-white' : 'px-2 py-1 rounded-full text-slate-400';
-            document.getElementById('btn-es').className = lang === 'es' ? 'px-2 py-1 rounded-full bg-[#003DA5] text-white' : 'px-2 py-1 rounded-full text-slate-400';
+            document.getElementById('btn-en').className = lang === 'en' ? 'px-2 py-1 rounded-full bg-[#003DA5] text-white transition-colors' : 'px-2 py-1 rounded-full text-slate-400 dark:text-slate-300 transition-colors bg-transparent';
+            document.getElementById('btn-es').className = lang === 'es' ? 'px-2 py-1 rounded-full bg-[#003DA5] text-white transition-colors' : 'px-2 py-1 rounded-full text-slate-400 dark:text-slate-300 transition-colors bg-transparent';
             
-            // Toggle Display
             en.forEach(el => lang === 'en' ? el.classList.remove('hidden') : el.classList.add('hidden'));
             es.forEach(el => lang === 'es' ? el.classList.remove('hidden') : el.classList.add('hidden'));
+            localStorage.setItem('nexusLang', lang);
+        }
 
-            // Translate dynamic options
-            document.querySelectorAll('option[data-en]').forEach(opt => {
-                opt.innerText = lang === 'en' ? opt.getAttribute('data-en') : opt.getAttribute('data-es');
-            });
+        // Init language
+        const savedLang = localStorage.getItem('nexusLang') || 'en';
+        setLanguage(savedLang);
+    </script>
 
-            // UPDATE PLACEHOLDERS DYNAMICALLY
-            const placeholders = {
-                en: {
-                    prop: "Prop. Type",
-                    time: "Timeframe",
-                    search: "Search area (e.g. Rivas)"
-                },
-                es: {
-                    prop: "Tipo Prop.",
-                    time: "Plazo",
-                    search: "Buscar área (ej. Rivas)"
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const role = localStorage.getItem('userRole') || 'agent';
+        if (role !== 'remax' && role !== 'mainadmin' && role !== 'broker' && role !== 'teamleader') {
+            const launchLockedElements = [
+                document.getElementById("nav-market"),
+                document.getElementById("nav-office"),
+                document.getElementById("nav-business"),
+                document.getElementById("nav-resources"),
+                ...Array.from(document.querySelectorAll(".premium-only")),
+                ...Array.from(document.querySelectorAll("a[href=\"office.html\"]")),
+                ...Array.from(document.querySelectorAll("a[href=\"my-business.html\"]")),
+                ...Array.from(document.querySelectorAll("a[href=\"resources.html\"]")),
+                ...Array.from(document.querySelectorAll("a[href=\"market.html\"]"))
+            ];
+            launchLockedElements.filter(Boolean).forEach(el => {
+                if (el && el.tagName === "A" || el.tagName === "BUTTON" || el.tagName === "DIV" && el.getAttribute("onclick")) {
+                    el.classList.add("grayscale", "opacity-60", "relative");
+                    if (!el.innerHTML.includes("fa-lock")) {
+                        el.insertAdjacentHTML("beforeend", "<div class=\"absolute top-1 right-1 lg:top-2 lg:right-2 bg-slate-900 border border-[#003DA5] rounded-full w-4 h-4 flex items-center justify-center shadow-lg z-20\"><i class=\"fa-solid fa-lock text-[8px] text-white\"></i></div>");
+                    }
+                    if (el.tagName === "A") el.removeAttribute("href");
+                    if (el.hasAttribute("onclick")) el.removeAttribute("onclick");
+                    el.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        alert("🔒 Premium Feature — Upgrade your plan for access");
+                    });
                 }
-            };
-
-            document.getElementById('opt-prop-placeholder').innerText = placeholders[lang].prop;
-            document.getElementById('opt-time-placeholder').innerText = placeholders[lang].time;
-            document.getElementById('locationSearch').placeholder = placeholders[lang].search;
-        }
-
-        function addMustHave() {
-            const input = document.getElementById('mustHaveInput');
-            const list = document.getElementById('mustHaveList');
-            if (!input.value.trim()) return;
-            const div = document.createElement('div');
-            div.className = "flex items-center justify-between p-3.5 bg-blue-50 border border-blue-100 rounded-2xl animate-fade shadow-sm";
-            div.innerHTML = `<span class="text-sm font-black text-blue-900 uppercase tracking-tight">● ${input.value}</span><button onclick="this.parentElement.remove()" class="text-slate-400 text-lg w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-trash-can"></i></button>`;
-            list.prepend(div);
-            input.value = "";
-        }
-        
-        function addLocation() {
-            const searchInput = document.getElementById('locationSearch');
-            const list = document.getElementById('locationList');
-            const val = searchInput.value.trim();
-            
-            if (!val) return; // Keep it simple, remove artificial length constraints
-            
-            // Allow adding without full path if custom, or exactly as formatted
-            const locString = val;
-            
-            const div = document.createElement('div');
-            div.className = "flex items-start justify-between p-3.5 bg-blue-50 border border-blue-100 rounded-2xl animate-fade shadow-sm";
-            div.innerHTML = `<span class="text-sm font-black text-blue-900 uppercase tracking-tight leading-tight pr-2">📍 ${locString}</span><button onclick="this.parentElement.remove()" class="text-slate-400 text-lg shrink-0 w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-trash-can"></i></button>`;
-            list.prepend(div);
-            
-            // Reset input
-            searchInput.value = '';
-            document.getElementById('suggestionsBox').classList.add('hidden');
-        }
-
-        function validateAndPost() {
-            let isValid = true;
-            // Removed tight `.validate` empty check on location Search since they might have added to the list instead.
-            // Check if there's at least one location added OR text in input
-            const locAdded = document.getElementById('locationList').children.length > 0;
-            const searchInput = document.getElementById('locationSearch');
-            if(!locAdded && !searchInput.value.trim()) {
-                searchInput.classList.add('field-error');
-                isValid = false;
-            } else {
-                searchInput.classList.remove('field-error');
-            }
-
-            document.querySelectorAll('.validate:not(#locationSearch)').forEach(i => {
-                if(!i.value || i.value.includes(".") || i.value.includes("Prop") || i.value.includes("Tipo")) { 
-                    i.classList.add('field-error'); 
-                    isValid = false; 
-                }
-                else { i.classList.remove('field-error'); }
             });
+        }
+    });
+</script>
+    <!-- PRE-REGISTER CLIENT MODAL -->
+    <div id="inviteClientModal" class="fixed inset-0 z-[100] bg-slate-900/80 hidden flex-col items-center justify-center p-4 backdrop-blur-md animate-fade">
+        <div class="bg-white dark:bg-slate-800 rounded-[32px] w-full max-w-sm shadow-2xl relative overflow-hidden flex flex-col border border-slate-100 dark:border-slate-700">
+            <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/50 text-[#003DA5] dark:text-blue-400 rounded-xl flex items-center justify-center">
+                        <i class="fa-solid fa-bolt text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-slate-800 dark:text-white uppercase text-sm">Generate NexLink</h3>
+                        <p class="text-[9px] font-bold text-slate-500">Lock lead & send invite</p>
+                    </div>
+                </div>
+                <button onclick="closeInviteModal()" class="w-8 h-8 flex items-center justify-center bg-slate-200 dark:bg-slate-700 text-slate-500 rounded-full hover:bg-slate-300 transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
             
-            if (isValid) {
-                // Show modal instead of alert
-                document.getElementById('successModal').classList.remove('hidden');
-                document.getElementById('successModal').classList.add('flex');
+            <div class="p-5 space-y-4">
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2">Client Full Name</label>
+                    <input type="text" id="inviteName" placeholder="Roberto Martinez" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                </div>
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2">Client Email</label>
+                    <input type="email" id="inviteEmail" placeholder="roberto@example.com" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                </div>
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-2 ml-2">Client Phone</label>
+                    <input type="tel" id="invitePhone" placeholder="+1 555-0000" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-[#003DA5]">
+                </div>
+                
+                <div id="inviteErrorMsg" class="hidden p-3 bg-red-50 text-red-600 border border-red-200 rounded-xl text-[10px] font-bold"></div>
+                
+                <div id="inviteLinkResult" class="hidden p-4 bg-green-50 border border-green-200 rounded-xl mt-4">
+                    <p class="text-[9px] font-black text-green-700 uppercase mb-2">Success! Send this link via WhatsApp:</p>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="inviteLinkUrl" readonly class="flex-1 p-2 border border-green-200 rounded text-xs text-green-800 bg-white" value="">
+                        <button onclick="copyInviteLink()" class="bg-green-600 text-white px-3 py-2 rounded text-xs font-black"><i class="fa-solid fa-copy"></i></button>
+                    </div>
+                </div>
+
+                <button id="btnGenerateInvite" onclick="generateClientInvite()" class="w-full bg-[#003DA5] hover:bg-blue-800 text-white py-4 rounded-xl font-black text-xs uppercase shadow-sm transition-transform active:scale-95 mt-2">Generate Link <i class="fa-solid fa-wand-magic-sparkles ml-1"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openInviteModal() {
+            if(document.getElementById('inviteClientModal').parentElement.classList.contains('premium-only') && document.getElementById('inviteClientModal').parentElement.classList.contains('grayscale')) return;
+            document.getElementById('inviteName').value = '';
+            document.getElementById('inviteEmail').value = '';
+            document.getElementById('invitePhone').value = '';
+            document.getElementById('inviteErrorMsg').classList.add('hidden');
+            document.getElementById('inviteLinkResult').classList.add('hidden');
+            document.getElementById('btnGenerateInvite').style.display = 'block';
+            document.getElementById('inviteClientModal').classList.remove('hidden');
+            document.getElementById('inviteClientModal').classList.add('flex');
+        }
+        function closeInviteModal() {
+            document.getElementById('inviteClientModal').classList.remove('flex');
+            document.getElementById('inviteClientModal').classList.add('hidden');
+        }
+        async function generateClientInvite() {
+            const name = document.getElementById('inviteName').value.trim();
+            const email = document.getElementById('inviteEmail').value.trim();
+            const phone = document.getElementById('invitePhone').value.trim();
+            const errDiv = document.getElementById('inviteErrorMsg');
+            
+            if(!name || !email || !phone) {
+                errDiv.innerText = "Please fill all fields.";
+                errDiv.classList.remove('hidden');
+                return;
             }
+            errDiv.classList.add('hidden');
+            document.getElementById('btnGenerateInvite').innerText = "Processing...";
+            
+            try {
+                if(typeof validateAndPreRegisterClient === 'function') {
+                    const result = await validateAndPreRegisterClient({name, email, phone});
+                    if(result.error) {
+                        errDiv.innerText = result.error;
+                        errDiv.classList.remove('hidden');
+                    } else if(result.clientId) {
+                        const link = window.location.origin + window.location.pathname.replace('add-search.html', 'client-onboarding.html') + '?client_id=' + result.clientId + '&agent=' + (await getCurrentUser()).id;
+                        document.getElementById('inviteLinkUrl').value = link;
+                        document.getElementById('inviteLinkResult').classList.remove('hidden');
+                        document.getElementById('btnGenerateInvite').style.display = 'none';
+                    }
+                } else {
+                    errDiv.innerText = "Backend connection error. Try again.";
+                    errDiv.classList.remove('hidden');
+                }
+            } catch(e) {
+                errDiv.innerText = "Error: " + e.message;
+                errDiv.classList.remove('hidden');
+            }
+            if(document.getElementById('btnGenerateInvite').style.display !== 'none') {
+                document.getElementById('btnGenerateInvite').innerText = "Generate Link";
+            }
+        }
+        function copyInviteLink() {
+            const input = document.getElementById('inviteLinkUrl');
+            input.select();
+            input.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(input.value);
+            alert('Link copied to clipboard!');
         }
     </script>
+
 </body>
 </html>
