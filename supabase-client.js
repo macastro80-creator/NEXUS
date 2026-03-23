@@ -735,25 +735,7 @@ async function getBuyerMatches(buyerId) {
     return data;
 }
 
-/**
- * Get matches for a specific search ID
- */
-async function getMatchesForSearch(searchId) {
-    if (!supabase) return [];
-    try {
-        const { data, error } = await supabase
-            .from('matches')
-            .select(`*`)
-            .eq('search_id', searchId)
-            .order('created_at', { ascending: false });
 
-        if (error) throw error;
-        return data;
-    } catch (e) {
-        console.error(e);
-        return [];
-    }
-}
 
 
 // ============================================
@@ -763,8 +745,29 @@ function isSupabaseConfigured() {
     return SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY';
 }
 
+// Global Auth Guard
+document.addEventListener('DOMContentLoaded', async () => {
+    const path = window.location.pathname;
+    if (path.includes('login.html') || path.includes('client-onboarding.html') || path.includes('test_credentials.md')) {
+        return;
+    }
+
+    if (isSupabaseConfigured() && supabase) {
+        try {
+            const user = await getCurrentUser();
+            if (!user) {
+                window.location.href = 'login.html';
+            }
+        } catch (e) {
+            window.location.href = 'login.html';
+        }
+    } else if (!localStorage.getItem('userEmail')) {
+        window.location.href = 'login.html';
+    }
+});
+
 // Export availability check
 console.log(isSupabaseConfigured()
-    ? '✅ Supabase client initialized'
+    ? '✅ Supabase client initialized and global auth guard active'
     : '⚠️ Supabase not configured. Replace URL and KEY in supabase-client.js'
 );

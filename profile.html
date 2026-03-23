@@ -1161,13 +1161,18 @@
             try {
                 if (isSupabaseConfigured() && supabase) {
                     const user = await getCurrentUser();
+                    
+                    const avatarImg = document.getElementById('avatarImage');
+                    const avatarUrl = (avatarImg && !avatarImg.classList.contains('hidden')) ? avatarImg.src : '';
+                    
                     if (user) {
                         const profileData = {
                             full_name: document.getElementById('phName').value.trim(),
                             phone: document.getElementById('phPhone').value.trim(),
                             brand: document.getElementById('agencySelect').value,
                             tx_volume: document.getElementById('txClosed').value,
-                            expert_zones: selectedAreas
+                            expert_zones: selectedAreas,
+                            avatar_url: avatarUrl
                         };
                         await supabase.from('profiles').update(profileData).eq('id', user.id);
                     }

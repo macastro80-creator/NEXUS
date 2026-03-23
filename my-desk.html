@@ -1154,7 +1154,7 @@
         
         let currentReviewCardId = null;
 
-        function handleQuickAction(cardId, action, agentName) {
+        async function handleQuickAction(cardId, action, agentName) {
             currentReviewCardId = cardId;
             const card = document.getElementById(cardId);
             
@@ -1163,6 +1163,11 @@
                 document.getElementById('rejectModal').classList.remove('hidden');
                 // Don't move it yet, wait for feedback to be sent
             } else if (action === 'liked') {
+                if (isSupabaseConfigured() && cardId !== 'reviewCard1') {
+                    const matchId = cardId.replace('card_', '');
+                    await updateMatchStatus(matchId, 'liked');
+                }
+                
                 // Determine if this is a couple's search (simulation for reviewCard1)
                 const isCoupleSearch = (cardId === 'reviewCard1');
 
@@ -1187,7 +1192,8 @@
                     }
                 } else {
                     // Normal behavior
-                    document.getElementById('pipelineDropdown_' + cardId).classList.remove('hidden');
+                    const pd = document.getElementById('pipelineDropdown_' + cardId);
+                    if (pd) pd.classList.remove('hidden');
                     const colLiked = document.getElementById('colLiked');
                     if(colLiked && card) colLiked.appendChild(card);
 
@@ -1247,7 +1253,7 @@
             `;
         }
 
-        function handlePipelineSelect(selectElement, cardId, agentName) {
+        async function handlePipelineSelect(selectElement, cardId, agentName) {
             currentReviewCardId = cardId;
             const value = selectElement.value;
             const card = document.getElementById(cardId);
@@ -1261,6 +1267,10 @@
                 document.getElementById('offerTarget').innerText = "To: " + agentName;
                 document.getElementById('offerModal').classList.remove('hidden');
             } else if (value === 'contract') {
+                if (isSupabaseConfigured() && cardId !== 'reviewCard1') {
+                    const matchId = cardId.replace('card_', '');
+                    await updateMatchStatus(matchId, 'contract');
+                }
                 convertToCompactCard(cardId, propertyName, agentName);
                 if (cardId === 'reviewCard1') {
                     // Simulate moving to Deals by hiding from Searches Posted and notifying
@@ -1281,17 +1291,29 @@
                     document.getElementById('okrPromptModal').classList.remove('hidden');
                 }
             } else if (value === 'sold') {
+                if (isSupabaseConfigured() && cardId !== 'reviewCard1') {
+                    const matchId = cardId.replace('card_', '');
+                    await updateMatchStatus(matchId, 'sold');
+                }
                 const colSold = document.getElementById('colSold');
                 if(colSold && card) colSold.appendChild(card);
                 triggerConfetti();
                 document.getElementById('partyModal').classList.remove('hidden');
                 document.getElementById('partyModal').classList.add('flex');
             } else if (value === 'fell_through') {
+                if (isSupabaseConfigured() && cardId !== 'reviewCard1') {
+                    const matchId = cardId.replace('card_', '');
+                    await updateMatchStatus(matchId, 'fell_through');
+                }
                 applyCardOverlay(cardId, 'fell_through');
                 const colRejected = document.getElementById('colRejected');
                 if(colRejected && card) colRejected.appendChild(card);
                 showSuccessModal("Deal Fell Through", "Status reverted.", "Oferta Caída", "Estado revertido.");
             } else if (value === 'reject') {
+                if (isSupabaseConfigured() && cardId !== 'reviewCard1') {
+                    const matchId = cardId.replace('card_', '');
+                    await updateMatchStatus(matchId, 'rejected');
+                }
                 const colRejected = document.getElementById('colRejected');
                 if(colRejected && card) colRejected.appendChild(card);
                 applyCardOverlay(cardId, 'reject');
@@ -1528,9 +1550,14 @@
             document.getElementById('matchReportModal').classList.add('flex');
         }
 
-        function sendReject() {
+        async function sendReject() {
             closeModals();
             if(currentReviewCardId) {
+                if(isSupabaseConfigured() && currentReviewCardId !== 'reviewCard1') {
+                    const matchId = currentReviewCardId.replace('card_', '');
+                    const comment = document.getElementById('rejectComment')?.value || '';
+                    await updateMatchStatus(matchId, 'rejected', comment);
+                }
                 applyCardOverlay(currentReviewCardId, 'reject');
                 const card = document.getElementById(currentReviewCardId);
                 const colRejected = document.getElementById('colRejected');
@@ -1539,9 +1566,13 @@
             showSuccessModal("Comment Sent!", "The Listing Agent has been notified of the feedback.");
         }
 
-        function sendVisitRequest() {
+        async function sendVisitRequest() {
             closeModals();
             if(currentReviewCardId) {
+                if(isSupabaseConfigured() && currentReviewCardId !== 'reviewCard1') {
+                    const matchId = currentReviewCardId.replace('card_', '');
+                    await updateMatchStatus(matchId, 'visited');
+                }
                 applyCardOverlay(currentReviewCardId, 'visit');
                 const card = document.getElementById(currentReviewCardId);
                 const colVisited = document.getElementById('colVisited');
@@ -1555,9 +1586,13 @@
             showSuccessModal("Counter Sent!", "The Listing Agent has been notified of your counter offer.", "¡Contraoferta Enviada!", "El agente ha sido notificado.");
         }
 
-        function sendOffer() {
+        async function sendOffer() {
             closeModals();
             if(currentReviewCardId) {
+                if(isSupabaseConfigured() && currentReviewCardId !== 'reviewCard1') {
+                    const matchId = currentReviewCardId.replace('card_', '');
+                    await updateMatchStatus(matchId, 'contract');
+                }
                 const propertyName = currentReviewCardId === 'reviewCard1' ? 'Luxury Loft San Rafael' : 'Property';
                 convertToCompactCard(currentReviewCardId, propertyName, 'John Doe');
                 const card = document.getElementById(currentReviewCardId);

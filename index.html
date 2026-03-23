@@ -822,9 +822,13 @@
 
             // --- SEND PROPERTY MODAL ---
             let currentActiveNotification = null; // Track which notification triggered the modal
+            let currentSearchId = null; // Track the search we're sending a match to
+            let currentPropertyTitle = "";
 
-            function openSendPropertyModal(buyerName = "Roberto M.", searchDetails = "Pérez Zeledón • Finca / Farm • $250k - $450k", propertyUrl = "", propertyTitle = "", sourceElement = null) {
+            function openSendPropertyModal(buyerName = "Roberto M.", searchDetails = "Pérez Zeledón • Finca / Farm • $250k - $450k", propertyUrl = "", propertyTitle = "", sourceElement = null, searchId = null) {
                 currentActiveNotification = sourceElement; // Store the reference
+                currentSearchId = searchId;
+                currentPropertyTitle = propertyTitle;
                 
                 document.getElementById('sendPropertyTargetBuyer').innerText = "To: " + buyerName;
                 document.getElementById('sendPropertyTargetDetails').innerText = searchDetails;
@@ -870,7 +874,7 @@
             localStorage.setItem('pendingOkr' + type, 'true');
             showNotification(currentLang === 'en' ? 'Reminder Set' : 'Recordatorio Configurado', currentLang === 'en' ? "We'll remind you tomorrow to report your OKR." : "Te recordaremos mañana reportar tu OKR.");
         }
-            function submitSendProperty() {
+            async function submitSendProperty() {
                 const link = document.getElementById('propLink');
                 if (!link.value) {
                     link.classList.add('border-red-500');
@@ -878,6 +882,29 @@
                 }
                 link.classList.remove('border-red-500');
                 
+                if (currentSearchId && isSupabaseConfigured() && supabase) {
+                    try {
+                        const btn = document.querySelector('#sendPropertyFormContent button[onclick="submitSendProperty()"]') || document.createElement('button');
+                        const origText = btn.innerText || "Send Now";
+                        btn.innerText = "Sending...";
+                        
+                        const propertyName = currentPropertyTitle || "MLS Property Match";
+                        
+                        await sendMatch({
+                            search_id: currentSearchId,
+                            property_name: propertyName,
+                            property_link: link.value,
+                            status: 'new'
+                        });
+                        
+                        btn.innerText = origText;
+                    } catch (e) {
+                        console.error('Error sending match:', e);
+                        alert("Error sending match: " + e.message);
+                        return;
+                    }
+                }
+
                 // Get the agent name from the "To: " string
                 let agentName = document.getElementById('sendPropertyTargetBuyer').innerText.replace('To: ', '');
                 document.getElementById('successAgentNameEn').innerText = agentName;
@@ -1218,10 +1245,10 @@
                     </div>
 
                     <div class="flex gap-2">
-                        <button onclick="openSendPropertyModal('${agentName.replace(/'/g, "\\'")}', 'For Buyer: ${(s.client_name||'').replace(/'/g, "\\'")} (${(s.location||'').replace(/'/g, "\\'")} • ${propLabel})')"
+                        <button onclick="openSendPropertyModal('${agentName.replace(/'/g, "\\'")}', 'For Buyer: ${(s.client_name||'').replace(/'/g, "\\'")} (${(s.location||'').replace(/'/g, "\\'")} • ${propLabel})', '', '', null, '${s.id}')"
                             class="flex-1 bg-[#ED1C24] text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-lg lang-en active:scale-95 transition-transform">Send a Match for this Search</button>
-                        <button onclick="openSendPropertyModal('${agentName.replace(/'/g, "\\'")}', 'Comprador: ${(s.client_name||'').replace(/'/g, "\\'")} (${(s.location||'').replace(/'/g, "\\'")} • ${propLabel})')"
-                            class="flex-1 bg-[#ED1C24] text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-lg lang-es hidden active:scale-95 transition-transform">Enviar un Match para esta B\u00fasqueda</button>
+                        <button onclick="openSendPropertyModal('${agentName.replace(/'/g, "\\'")}', 'Comprador: ${(s.client_name||'').replace(/'/g, "\\'")} (${(s.location||'').replace(/'/g, "\\'")} • ${propLabel})', '', '', null, '${s.id}')"
+                            class="flex-1 bg-[#ED1C24] text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-lg lang-es hidden active:scale-95 transition-transform">Enviar un Match para esta B\\u00fasqueda</button>
                     </div>
                 </div>
             </div>`;
