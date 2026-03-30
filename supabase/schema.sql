@@ -278,11 +278,13 @@ CREATE POLICY "Users can mark own as read" ON notifications FOR UPDATE USING (us
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-    INSERT INTO public.profiles (id, email, full_name)
+    INSERT INTO public.profiles (id, email, full_name, phone, brand)
     VALUES (
         new.id,
         new.email,
-        COALESCE(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1))
+        COALESCE(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
+        COALESCE(new.raw_user_meta_data->>'phone', ''),
+        COALESCE(new.raw_user_meta_data->>'brand', 'Independent')
     );
     RETURN new;
 END;
