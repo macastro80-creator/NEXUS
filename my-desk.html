@@ -158,70 +158,6 @@
             <!-- DYNAMIC SUPABASE SEARCHES (populated by loadMySearches) -->
             <div id="mySearchesContainer" class="space-y-4"></div>
 
-            <!-- Existing Demo Buyer Card (hidden when Supabase data exists) -->
-            <div id="buyerCard_Roberto" class="transition-all duration-500 bg-white dark:bg-slate-800 p-6 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
-                <div onclick="openPropertyInbox()" class="cursor-pointer active:opacity-70 transition">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="bg-blue-600 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase">
-                                    <span class="lang-en">FOR BUY</span><span class="lang-es hidden">COMPRA</span>
-                                </span>
-                                <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest">• Land / Finca</span>
-                            </div>
-                            <h3 class="font-black text-xl italic text-slate-900 dark:text-slate-100 leading-none">Roberto M.</h3>
-                            <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Pérez Zeledón • $250k - $450k</p>
-                        </div>
-                        <div class="bg-blue-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase">
-                            4 <span class="lang-en">NEW MATCHES</span><span class="lang-es hidden">NUEVOS MATCHES</span>
-                        </div>
-                    </div>
-
-                    <div class="flex gap-1 border-t border-b py-4 my-4">
-                        <div class="flex-1 text-center">
-                            <p class="text-[16px] font-black text-red-500">1</p>
-                            <p class="text-[7px] font-black text-slate-400 uppercase">
-                                <span class="lang-en">Rejected</span><span class="lang-es hidden">Rechazado</span>
-                            </p>
-                        </div>
-                        <div class="flex-1 text-center border-x">
-                            <p class="text-[16px] font-black text-blue-600">1</p>
-                            <p class="text-[7px] font-black text-slate-400 uppercase">
-                                <span class="lang-en">Visit</span><span class="lang-es hidden">Visitas</span>
-                            </p>
-                        </div>
-                        <div class="flex-1 text-center border-r">
-                            <p class="text-[16px] font-black text-amber-500">1</p>
-                            <p class="text-[7px] font-black text-slate-400 uppercase">
-                                <span class="lang-en">Contract</span><span class="lang-es hidden">Contrato</span>
-                            </p>
-                        </div>
-                        <div class="flex-1 text-center">
-                            <p class="text-[16px] font-black text-slate-300">1</p>
-                            <p class="text-[7px] font-black text-slate-400 uppercase">
-                                <span class="lang-en">New</span><span class="lang-es hidden">Nuevos</span>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-900 p-3 rounded-2xl">
-                    <div class="flex gap-4">
-                        <a href="add-search.html" class="text-blue-600 text-[10px] font-black uppercase flex items-center gap-1.5 hover:text-blue-800 transition">
-                            <i class="fa-solid fa-pen-to-square"></i> <span class="lang-en">Edit</span><span class="lang-es hidden">Editar</span>
-                        </a>
-                        <button class="text-slate-400 text-[10px] font-black uppercase flex items-center gap-1.5 hover:text-slate-600 transition">
-                            <i class="fa-solid fa-pause"></i> <span class="lang-en">Pause</span><span class="lang-es hidden">Pausar</span>
-                        </button>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <i class="fa-solid fa-money-bill-1-wave text-blue-600 text-xs"></i>
-                        <span class="text-[8px] font-black text-slate-400 uppercase">Cash</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- EMPTY STATE (Hidden by default, shown if no searches) -->
             <div id="buyerEmptyState" class="hidden flex flex-col items-center justify-center py-12 text-center animate-fade">
                 <div class="w-24 h-24 mb-6 rounded-full bg-blue-50 dark:bg-slate-800 flex items-center justify-center text-blue-300 dark:text-slate-600">
                     <i class="fa-solid fa-folder-open text-4xl"></i>
@@ -235,130 +171,12 @@
                 </a>
             </div>
 
-            <!-- New Dummy Buyer Card -->
-            <div class="bg-white dark:bg-slate-800 p-6 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm space-y-4 opacity-80 cursor-pointer hover:opacity-100 transition-opacity">
-                <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="bg-blue-600 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase">FOR BUY</span>
-                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest">• House / Casa</span>
-                    </div>
-                    <h3 class="font-black text-xl italic text-slate-900 dark:text-slate-100 leading-none">Family Gómez</h3>
-                    <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Escazú • $600k - $850k</p>
-                </div>
-                <!-- Mini Stats -->
-                <div class="flex gap-4 items-center mt-2 border-t pt-2">
-                    <div class="flex gap-2 text-[10px] font-bold text-slate-500 uppercase">
-                        <span class="text-slate-400"><i class="fa-solid fa-check mr-1"></i>3 Shortlisted</span>
-                        <span class="text-blue-500"><i class="fa-solid fa-car mr-1"></i>2 Visits</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Needs Renewal Buyer Card -->
-            <div class="bg-red-50 p-6 rounded-[32px] border border-red-200 shadow-sm space-y-4 relative">
-                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[9px] font-black px-4 py-1 rounded-full uppercase tracking-widest flex items-center gap-2 shadow-lg z-10">
-                    <i class="fa-solid fa-clock"></i> <span class="lang-en">Action Required (30 Days Old)</span><span class="lang-es hidden">Acción Requerida (30 Días)</span>
-                </div>
-
-                <div class="flex justify-between items-start pt-2 opacity-50">
-                    <div>
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="bg-red-600 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase">FOR RENT</span>
-                            <span class="text-[8px] font-black text-slate-500 uppercase tracking-widest">• House / Casa</span>
-                        </div>
-                        <h3 class="font-black text-xl italic text-slate-900 dark:text-slate-100 leading-none">Sarah W.</h3>
-                        <p class="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-widest">Escazú • $1.5k - $2k/mo</p>
-                    </div>
-                </div>
-
-                <!-- Renewal Prompt Box -->
-                <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-red-100 shadow-sm text-center">
-                    <i class="fa-solid fa-triangle-exclamation text-3xl text-red-500 mb-3 block"></i>
-                    <h4 class="font-black text-slate-900 dark:text-slate-100 text-sm mb-1 uppercase lang-en">Is this search still active?</h4>
-                    <h4 class="font-black text-slate-900 dark:text-slate-100 text-sm mb-1 uppercase lang-es hidden">¿Sigue activa esta búsqueda?</h4>
-                    <p class="text-xs text-slate-500 font-bold mb-4 lang-en">If your client is still looking, renew it. Otherwise, archive it to keep the Match Board clean.</p>
-                    <p class="text-xs text-slate-500 font-bold mb-4 lang-es hidden">Si tu cliente sigue buscando, renuévala. De lo contrario, archívala para mantener limpio el Feed.</p>
-                    
-                    <div class="flex gap-2">
-                        <button onclick="renewSearch(this)" class="flex-1 bg-green-500 text-white py-3 rounded-xl font-black uppercase text-[10px] shadow active:scale-95 transition">
-                            <i class="fa-solid fa-rotate-right mr-1"></i> <span class="lang-en">Renew 30 Days</span><span class="lang-es hidden">Renovar 30 Días</span>
-                        </button>
-                        <button onclick="archiveSearch(this)" class="flex-1 bg-slate-200 dark:bg-slate-600 text-slate-500 py-3 rounded-xl font-black uppercase text-[10px] shadow-inner active:scale-95 transition hover:bg-slate-300">
-                            <i class="fa-solid fa-box-archive mr-1"></i> <span class="lang-en">Archive</span><span class="lang-es hidden">Archivar</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="flex justify-between items-center bg-white/50 p-3 rounded-2xl">
-                    <div class="flex gap-4">
-                        <a href="add-search.html" class="text-blue-600 text-[10px] font-black uppercase flex items-center gap-1.5 hover:text-blue-800 transition">
-                            <i class="fa-solid fa-pen-to-square"></i> <span class="lang-en">Edit Details</span><span class="lang-es hidden">Editar</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            </div>
-
-        </div> <!-- End Buyer Tab -->
+            </div> <!-- End Buyer Tab -->
 
         <!-- SELLER TAB CONTENT (MATCHES SENT) -->
         <div id="sellerTabContent" class="space-y-4 hidden animate-fade">
             
-            <div class="bg-blue-50 dark:bg-slate-800 p-6 rounded-[32px] border border-blue-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
-                <div class="absolute top-0 right-4 bg-blue-600 text-white text-[8px] font-black px-3 py-1 rounded-b-lg uppercase tracking-widest shadow-md">
-                    <span class="lang-en">VISITED YESTERDAY</span><span class="lang-es hidden">VISITADO AYER</span>
-                </div>
-                
-                <div class="flex flex-col gap-1 mb-4">
-                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                        <i class="fa-solid fa-paper-plane text-blue-500"></i> <span class="lang-en">Sent to Search:</span><span class="lang-es hidden">Enviado a Búsqueda:</span>
-                    </p>
-                    <h3 class="font-black text-xl text-slate-900 dark:text-slate-100 italic leading-none">Roberto M.</h3>
-                    <p class="text-[10px] font-bold text-slate-500 uppercase">Agent: Sarah Smith (RE/MAX)</p>
-                </div>
-                
-                <div class="bg-white dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50 mb-4">
-                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Your Listing / Tu Propiedad</p>
-                    <p class="text-sm font-black text-slate-800 dark:text-slate-200 italic">Mountain View Land — Pérez Zeledón</p>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2 border-t border-blue-100 dark:border-slate-700 pt-4">
-                    <button onclick="requestFeedback('Mountain View Land', 'Roberto M. (Sarah Smith)')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-black uppercase text-[9px] shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5 focus:outline-none">
-                        <i class="fa-solid fa-comment-dots"></i> <span class="lang-en">Request Feedback</span><span class="lang-es hidden">Solicitar Feedback</span>
-                    </button>
-                    <button class="w-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 py-3 rounded-xl font-black uppercase text-[9px] shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5 focus:outline-none">
-                        <i class="fa-solid fa-chart-bar"></i> <span class="lang-en">Match Report</span><span class="lang-es hidden">Ver Reporte</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="bg-white dark:bg-slate-800 p-6 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
-                <div class="absolute top-0 right-4 bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-300 text-[8px] font-black px-3 py-1 rounded-b-lg uppercase tracking-widest shadow-md">
-                    <span class="lang-en">WAITING REVIEW</span><span class="lang-es hidden">ESPERANDO REVISIÓN</span>
-                </div>
-                
-                <div class="flex flex-col gap-1 mb-4 mt-2">
-                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                        <i class="fa-solid fa-paper-plane text-slate-400"></i> <span class="lang-en">Sent to Search:</span><span class="lang-es hidden">Enviado a Búsqueda:</span>
-                    </p>
-                    <h3 class="font-black text-xl text-slate-900 dark:text-slate-100 italic leading-none">Family Gómez</h3>
-                    <p class="text-[10px] font-bold text-slate-500 uppercase">Agent: John Doe</p>
-                </div>
-                
-                <div class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50 mb-4">
-                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Your Listing / Tu Propiedad</p>
-                    <p class="text-sm font-black text-slate-800 dark:text-slate-200 italic">Modern Suburb Home — Escazú</p>
-                </div>
-
-                <div class="border-t border-slate-100 dark:border-slate-700 pt-4">
-                    <button onclick="openMatchReport('Roberto M. - Specific Requirements')" class="w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 py-3 rounded-xl font-black uppercase text-[9px] shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5 focus:outline-none group-hover:text-blue-600 group-hover:dark:text-blue-400">
-                        <i class="fa-solid fa-chart-bar"></i> <span class="lang-en">Match Report</span><span class="lang-es hidden">Ver Reporte</span>
-                    </button>
-                </div>
-            </div>
-
-        </div> <!-- End Seller Tab -->
+            </div> <!-- End Seller Tab -->
 
         <!-- DEALS TAB CONTENT (NEW KANBAN DESIGN) -->
         <div id="dealsTabContent" class="hidden animate-fade h-[calc(100vh-150px)]">
@@ -378,41 +196,7 @@
                         </h4>
                     </div>
 
-                    <!-- Pending Review / Counter Offer -->
-                    <div id="dealsCard1" class="transition-colors bg-white dark:bg-slate-800 rounded-3xl p-5 border-l-4 border-l-purple-500 shadow-sm relative overflow-hidden group">
-                        <div class="mb-3">
-                            <p class="text-[9px] font-black text-purple-600 dark:text-purple-400 uppercase flex justify-between items-center mb-1">
-                                <span><i class="fa-solid fa-reply mr-1"></i> <span class="lang-en">Counter Offer</span><span class="lang-es hidden">Contraoferta</span></span>
-                                <span class="text-[8px] text-slate-400"><i class="fa-solid fa-location-dot"></i> Dominical</span>
-                            </p>
-                            <p class="text-sm font-bold text-slate-900 dark:text-white italic leading-tight">Ocean View Villa</p>
-                            
-                            <!-- Agent Header -->
-                            <div class="flex items-center gap-2 mt-2 bg-slate-50 dark:bg-slate-700/50 p-2 rounded-xl border border-slate-100 dark:border-slate-700">
-                                <div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 text-blue-600 dark:text-blue-300 flex items-center justify-center shadow-sm"><i class="fa-solid fa-user text-[10px]"></i></div>
-                                <div class="flex-1">
-                                    <p class="text-[9px] font-black text-slate-800 dark:text-slate-200">John Doe <span class="text-slate-400 font-normal">(Listing Agent)</span></p>
-                                </div>
-                                <a href="https://wa.me/50688888888" target="_blank" class="w-6 h-6 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center transition-colors shadow-sm">
-                                    <i class="fa-brands fa-whatsapp text-[10px]"></i>
-                                </a>
-                            </div>
-
-                            <p class="text-[10px] text-slate-500 font-bold mt-2 mb-2 bg-slate-50 dark:bg-slate-700 p-2 rounded-lg italic border border-slate-100 dark:border-slate-600">"Owner wants $300k and firm 30 day close..."</p>
-                        </div>
-                        <div class="relative z-10">
-                            <select onchange="handleCounter(this, 'dealsCard1')" class="w-full bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 text-[10px] font-black px-3 py-2.5 rounded-xl uppercase tracking-widest appearance-none outline-none pr-8 cursor-pointer shadow-sm border border-purple-100 dark:border-purple-800 transition-colors hover:bg-purple-100/50">
-                                <option value="none" selected disabled>Review Action...</option>
-                                <option value="accept">Accept it</option>
-                                <option value="counter">Counter again</option>
-                                <option value="reject">Reject & Walk</option>
-                            </select>
-                            <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-purple-500 text-[10px]"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- COLUMN 2: UNDER CONTRACT -->
+                    <!-- COLUMN 2: UNDER CONTRACT -->
                 <div id="colDealsContract" class="w-[85vw] sm:w-80 lg:w-96 flex-shrink-0 bg-slate-100/50 dark:bg-slate-800/30 rounded-[32px] p-4 flex flex-col gap-4 border border-slate-200/50 dark:border-slate-700/50 h-full overflow-y-auto no-scrollbar">
                     <div class="sticky top-0 bg-slate-100/90 dark:bg-slate-800/90 backdrop-blur-md z-10 py-2 -mt-2 mb-2">
                         <h4 class="text-xs font-black text-amber-500 uppercase tracking-widest flex items-center justify-between">
@@ -421,41 +205,7 @@
                         </h4>
                     </div>
 
-                    <!-- Under Contract Card -->
-                    <div id="dealsCard2" class="transition-colors bg-white dark:bg-slate-800 rounded-3xl p-5 border-l-4 border-l-amber-500 shadow-sm relative group overflow-hidden">
-                        <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-transparent to-amber-500/10 rounded-bl-full"></div>
-                        <div class="mb-3">
-                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest flex justify-between items-center mb-1">
-                                <span><i class="fa-solid fa-file-signature"></i> Under Contract</span>
-                                <span class="text-[8px] text-slate-400"><i class="fa-solid fa-location-dot"></i> Escazú</span>
-                            </p>
-                            <p class="text-sm font-bold text-slate-900 dark:text-white italic leading-tight">Condo Jaboncillos</p>
-                            
-                            <!-- Agent Header -->
-                            <div class="flex items-center gap-2 mt-2 mb-2 bg-slate-50 dark:bg-slate-700/50 p-2 rounded-xl border border-slate-100 dark:border-slate-700">
-                                <div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 text-blue-600 dark:text-blue-300 flex items-center justify-center shadow-sm"><i class="fa-solid fa-user text-[10px]"></i></div>
-                                <div class="flex-1">
-                                    <p class="text-[9px] font-black text-slate-800 dark:text-slate-200">Sarah Smith <span class="text-slate-400 font-normal">(Listing Agent)</span></p>
-                                </div>
-                                <a href="https://wa.me/50688888888" target="_blank" class="w-6 h-6 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center transition-colors shadow-sm">
-                                    <i class="fa-brands fa-whatsapp text-[10px]"></i>
-                                </a>
-                            </div>
-
-                            <p class="text-[10px] text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded-lg font-bold mt-1 inline-block border border-amber-100 dark:border-amber-800">Pending Inspections</p>
-                        </div>
-                        <div class="relative z-10">
-                            <select onchange="handleCompactStatus(this, 'dealsCard2')" class="w-full bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-500 text-[10px] font-black px-3 py-2.5 rounded-xl uppercase tracking-widest appearance-none outline-none pr-8 cursor-pointer shadow-sm border border-amber-100 dark:border-amber-800 transition-colors">
-                                <option value="contract" selected disabled>Under Contract...</option>
-                                <option value="sold">Mark as Sold</option>
-                                <option value="fell_through">Fell Through</option>
-                            </select>
-                            <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-amber-500 text-[10px]"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- COLUMN 3: CLOSED DEALS -->
+                    <!-- COLUMN 3: CLOSED DEALS -->
                 <div id="colDealsSold" class="w-[85vw] sm:w-80 lg:w-96 flex-shrink-0 bg-slate-100/50 dark:bg-slate-800/30 rounded-[32px] p-4 flex flex-col gap-4 border border-slate-200/50 dark:border-slate-700/50 h-full overflow-y-auto no-scrollbar">
                     <div class="sticky top-0 bg-slate-100/90 dark:bg-slate-800/90 backdrop-blur-md z-10 py-2 -mt-2 mb-2">
                         <h4 class="text-xs font-black text-green-500 uppercase tracking-widest flex items-center justify-between">
@@ -464,34 +214,7 @@
                         </h4>
                     </div>
 
-                    <!-- Deal Closed -->
-                    <div class="transition-colors bg-white dark:bg-slate-800 rounded-3xl p-5 border-l-4 border-l-green-500 shadow-sm opacity-80">
-                        <div class="mb-2">
-                            <p class="text-[9px] font-black text-green-500 uppercase flex justify-between items-center mb-1">
-                                <span><i class="fa-solid fa-check mr-1"></i> Closed & Funded</span>
-                                <span class="text-[8px] text-slate-400"><i class="fa-solid fa-location-dot"></i> La Sabana</span>
-                            </p>
-                            <div class="flex justify-between items-start mt-1">
-                                <p class="text-sm font-bold text-slate-900 dark:text-white italic leading-tight">Casa Sabana</p>
-                                <div class="bg-green-100 text-green-700 text-[10px] font-black px-2 py-1 rounded-lg shadow-sm">
-                                    $215K
-                                </div>
-                            </div>
-                            
-                            <!-- Agent Header -->
-                            <div class="flex items-center gap-2 mt-3 bg-slate-50 dark:bg-slate-700/50 p-2 rounded-xl border border-slate-100 dark:border-slate-700">
-                                <div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 text-blue-600 dark:text-blue-300 flex items-center justify-center shadow-sm"><i class="fa-solid fa-user text-[10px]"></i></div>
-                                <div class="flex-1">
-                                    <p class="text-[9px] font-black text-slate-800 dark:text-slate-200">Maria Lopez <span class="text-slate-400 font-normal">(Listing Agent)</span></p>
-                                </div>
-                                <a href="https://wa.me/50688888888" target="_blank" class="w-6 h-6 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center transition-colors shadow-sm">
-                                    <i class="fa-brands fa-whatsapp text-[10px]"></i>
-                                </a>
-                            </div>
-                        </div>
                     </div>
-                </div>
-
             </div>
         </div> <!-- End Deals Tab -->
 
@@ -518,81 +241,7 @@
                     </h4>
                 </div>
                 
-                <!-- RICH PROPERTY CARD 1 -->
-                <div id="reviewCard1" class="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden shadow-sm relative transition-all duration-300 border border-transparent hover:border-blue-500/30 dark:hover:border-blue-400/30">
-                    
-                    <!-- STATUS OVERLAY -->
-                    <div id="statusOverlay_reviewCard1" class="absolute inset-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm z-20 flex flex-col items-center justify-center hidden animate-fade">
-                        <div id="statusIconBg_reviewCard1" class="w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-3 shadow-lg">
-                            <i id="statusIcon_reviewCard1" class="fa-solid fa-check"></i>
-                        </div>
-                        <h3 id="statusText_reviewCard1" class="text-xl font-black uppercase tracking-widest lang-en text-center leading-none">Status</h3>
-                        <h3 id="statusText_reviewCard1_es" class="text-xl font-black uppercase tracking-widest lang-es hidden text-center leading-none">Estado</h3>
-                        <p id="statusSubtext_reviewCard1" class="text-[9px] font-bold mt-2 text-slate-500 uppercase tracking-widest lang-en text-center"></p>
-                        <p id="statusSubtext_reviewCard1_es" class="text-[9px] font-bold mt-2 text-slate-500 uppercase tracking-widest lang-es hidden text-center"></p>
-                    </div>
-
-                    <!-- Image Placeholder -->
-                    <div class="h-40 w-full bg-slate-200 dark:bg-slate-700 relative overflow-hidden group">
-                        <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80" class="object-cover w-full h-full opacity-90 group-hover:scale-105 transition-transform duration-700" alt="Luxury Loft">
-                        
-                        <!-- Agent Badge Overlaid -->
-                        <div class="absolute top-3 left-3 flex gap-2 items-center bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-sm">
-                            <div class="w-6 h-6 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 text-blue-600 dark:text-blue-300 rounded-full flex items-center justify-center shadow-sm"><i class="fa-solid fa-user text-[8px]"></i></div>
-                            <p class="text-[8px] font-black text-slate-800 dark:text-slate-200 uppercase">John Doe</p>
-                        </div>
-                        
-                        <!-- Comm Badge -->
-                        <div class="absolute top-3 right-3 bg-green-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm">5.0%</div>
-                    </div>
-
-                    <div class="p-5">
-                        <div class="flex justify-between items-start mb-2">
-                            <div>
-                                <h3 class="text-lg font-black italic text-[#003DA5] dark:text-blue-400 leading-tight mb-0.5">Luxury Loft San Rafael</h3>
-                                <p class="text-[10px] font-bold text-slate-500">Escazú, San José</p>
-                            </div>
-                        </div>
-                        <p class="text-xl font-black text-slate-900 dark:text-white mb-1">$325,000</p>
-                        <a href="https://remax-altitud.cr/property/luxury-loft" target="_blank" class="text-[9px] font-black text-[#003DA5] dark:text-amber-400 hover:underline flex items-center gap-1 mb-3"><i class="fa-solid fa-arrow-up-right-from-square"></i> <span class="lang-en">View Full Listing</span><span class="lang-es hidden">Ver Listado Completo</span></a>
-
-                        <div class="flex gap-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-700 pb-3 mb-3">
-                            <span>2 Beds</span>
-                            <span>2 Baths</span>
-                            <span>180 m²</span>
-                        </div>
-
-                        <!-- STAGE 1: QUICK ACTIONS (Triage) -->
-                        <div id="quickActions_reviewCard1" class="flex justify-between gap-2">
-                            <!-- Pass/Reject -->
-                            <button onclick="handleQuickAction('reviewCard1', 'reject', 'John Doe')" class="flex-1 py-2.5 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">
-                                <i class="fa-solid fa-xmark"></i> <span class="lang-en">Pass</span><span class="lang-es hidden">Descartar</span>
-                            </button>
-                            
-                            <!-- Shortlist/Like (Moves to Stage 2) -->
-                            <button onclick="handleQuickAction('reviewCard1', 'liked', 'John Doe')" class="flex-1 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-[#003DA5] dark:text-blue-400 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors">
-                                <i class="fa-solid fa-heart"></i> <span class="lang-en">Save</span><span class="lang-es hidden">Guardar</span>
-                            </button>
-                        </div>
-
-                        <!-- STAGE 2: PIPELINE DROPDOWN (Hidden initially) -->
-                        <div id="pipelineDropdown_reviewCard1" class="hidden animate-fade relative z-30">
-                            <select onchange="handlePipelineSelect(this, 'reviewCard1', 'John Doe')" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 pl-3 pr-8 text-[10px] font-black uppercase tracking-widest text-[#003DA5] dark:text-blue-400 focus:outline-none appearance-none cursor-pointer transition-colors shadow-sm">
-                                <option value="none" selected disabled>-- Action --</option>
-                                <option value="visit">Request Visit</option>
-                                <option value="offer">Make Offer</option>
-                                <option value="contract">Under Contract</option>
-                                <option value="reject">Reject</option>
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#003DA5] dark:text-blue-400">
-                                <i class="fa-solid fa-chevron-down text-[10px]"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- COLUMN: LIKED IT -->
+                <!-- COLUMN: LIKED IT -->
             <div id="colLiked" class="w-[85vw] max-w-[280px] sm:max-w-none sm:w-80 flex-shrink-0 snap-center bg-slate-100/50 dark:bg-slate-800/30 rounded-[32px] p-4 flex flex-col gap-4 border border-slate-200/50 dark:border-slate-700/50 h-full overflow-y-auto no-scrollbar">
                 <div class="sticky top-0 bg-slate-100/90 dark:bg-slate-800/90 backdrop-blur-md z-10 py-2 -mt-2 mb-2">
                     <h4 class="text-xs font-black text-pink-500 dark:text-pink-400 uppercase tracking-widest flex items-center justify-between">
@@ -611,28 +260,7 @@
                     </h4>
                 </div>
                 
-                <!-- Dummy Visited Property -->
-                <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-transparent hover:border-blue-500/30 dark:hover:border-blue-400/30 transition-colors">
-                    <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <p class="text-[8px] font-black text-blue-500 uppercase flex items-center gap-1 mb-1"><i class="fa-solid fa-check-double"></i> <span class="lang-en">Visited Yesterday</span><span class="lang-es hidden">Visitado Ayer</span></p>
-                            <p class="text-sm font-black text-slate-900 dark:text-slate-100 italic leading-tight">Sabana Park Tower</p>
-                            <p class="text-[9px] font-bold text-slate-500 mt-0.5">$210,000</p>
-                        </div>
-                    </div>
-                    
-                    <div class="relative z-10">
-                        <select class="w-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[9px] font-black px-3 py-2.5 rounded-xl uppercase tracking-widest appearance-none outline-none pr-8 cursor-pointer transition-colors shadow-sm border border-blue-100 dark:border-blue-800">
-                            <option value="none" selected disabled>Update Status...</option>
-                            <option value="offer">Make Offer</option>
-                            <option value="reject">Reject</option>
-                        </select>
-                        <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-blue-600 dark:text-blue-400 text-[9px]"></i>
-                    </div>
-                </div>
-            </div>
-
-            <!-- COLUMN 3: CONTRACT -->
+                <!-- COLUMN 3: CONTRACT -->
             <div id="colContract" class="w-[85vw] max-w-[280px] sm:max-w-none sm:w-80 flex-shrink-0 snap-center bg-slate-100/50 dark:bg-slate-800/30 rounded-[32px] p-4 flex flex-col gap-4 border border-slate-200/50 dark:border-slate-700/50 h-full overflow-y-auto no-scrollbar">
                 <div class="sticky top-0 bg-slate-100/90 dark:bg-slate-800/90 backdrop-blur-md z-10 py-2 -mt-2 mb-2">
                     <h4 class="text-xs font-black text-amber-500 uppercase tracking-widest flex items-center justify-between">
@@ -641,23 +269,7 @@
                     </h4>
                 </div>
 
-                <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-amber-200 dark:border-amber-900/40 relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-transparent to-amber-500/10 rounded-bl-full"></div>
-                    <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <p class="text-[8px] font-black text-amber-500 uppercase flex items-center gap-1 mb-1"><i class="fa-solid fa-hourglass-half"></i> <span class="lang-en">Pending Escrow</span><span class="lang-es hidden">Pendiente</span></p>
-                            <p class="text-sm font-black text-slate-900 dark:text-slate-100 italic leading-tight">Ocean View Villa</p>
-                            <p class="text-[10px] font-black text-slate-800 dark:text-white mt-1">$450,000</p>
-                        </div>
-                    </div>
-                    
-                    <button onclick="switchDeskTab('deals'); closePropertyInbox();" class="w-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-500 text-[9px] font-black px-3 py-2.5 rounded-xl uppercase tracking-widest flex justify-center items-center gap-2 transition-colors border border-amber-100 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/40">
-                        <span class="lang-en">View in Pipeline</span><span class="lang-es hidden">Ver en Embudo</span> <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- NEW COLUMN: SOLD -->
+                <!-- NEW COLUMN: SOLD -->
             <div id="colSold" class="w-[85vw] max-w-[280px] sm:max-w-none sm:w-80 flex-shrink-0 snap-center bg-slate-100/50 dark:bg-slate-800/30 rounded-[32px] p-4 flex flex-col gap-4 border border-slate-200/50 dark:border-slate-700/50 h-full overflow-y-auto no-scrollbar">
                 <div class="sticky top-0 bg-slate-100/90 dark:bg-slate-800/90 backdrop-blur-md z-10 py-2 -mt-2 mb-2">
                     <h4 class="text-xs font-black text-green-500 uppercase tracking-widest flex items-center justify-between">
@@ -676,14 +288,7 @@
                     </h4>
                 </div>
 
-                <!-- Dummy Rejected Property -->
-                <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-700 grayscale">
-                    <p class="text-[8px] font-black text-red-500 uppercase flex items-center gap-1 mb-1"><i class="fa-solid fa-xmark"></i> <span class="lang-en">Too small</span><span class="lang-es hidden">Muy pequeño</span></p>
-                    <p class="text-sm font-black text-slate-500 italic leading-tight line-through">Tiny Studio Downtown</p>
-                    <p class="text-[9px] font-bold text-slate-400 mt-1">$95,000</p>
                 </div>
-            </div>
-
         </div>
     </div>
 
