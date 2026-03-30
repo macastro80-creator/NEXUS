@@ -461,16 +461,7 @@
                     const phone = document.getElementById('signUpPhone').value.trim();
                     const agency = document.getElementById('signUpAgency').value;
                     
-                    if (!window.supabase) throw new Error("Database connection lost. Please refresh the page.");
-                    
-                    const { data, error } = await window.supabase.auth.signUp({
-                        email: email,
-                        password: password,
-                        options: {
-                            data: { full_name: fullName, phone: phone, brand: agency }
-                        }
-                    });
-                    if (error) throw error;
+                    await signUp(email, password, fullName, phone, agency);
                     
                     setLoading(false);
                     showSuccess(dict[currentLang].signupSuccess);
@@ -480,25 +471,10 @@
                     }, 3000);
                 } else {
                     // SIGN IN
-                    if (!window.supabase) throw new Error("Database connection lost. Please refresh the page.");
-                    
-                    const { data, error } = await window.supabase.auth.signInWithPassword({
-                        email: email,
-                        password: password
-                    });
-                    if (error) throw error;
+                    const { user, session } = await signIn(email, password);
 
                     // Fetch profile to get role
-                    const { data: userData } = await window.supabase.auth.getUser();
-                    let profile = null;
-                    if (userData && userData.user) {
-                        const { data: profileRes } = await window.supabase
-                            .from('profiles')
-                            .select('*, offices(name, brand, area)')
-                            .eq('id', userData.user.id)
-                            .single();
-                        profile = profileRes;
-                    }
+                    const profile = await getCurrentProfile();
 
                     // Store essentials in localStorage for quick access across pages
                     localStorage.setItem('userEmail', email);
