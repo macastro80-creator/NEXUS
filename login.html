@@ -205,6 +205,19 @@
                         <i id="loadingSpinner" class="fa-solid fa-circle-notch fa-spin hidden text-lg"></i>
                     </button>
                     
+                    <div id="googleLoginDiv" class="mt-4 space-y-4">
+                        <div class="relative flex py-2 items-center">
+                            <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+                            <span class="shrink-0 mx-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest" data-i18n="orLoginWith">OR</span>
+                            <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+                        </div>
+
+                        <button type="button" onclick="loginWithGoogle()" class="w-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 py-4 rounded-2xl font-black uppercase tracking-widest shadow-sm hover:shadow-md hover:-translate-y-1 active:translate-y-0 transition-all flex items-center justify-center gap-3 group">
+                            <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5 group-hover:scale-110 transition-transform" alt="Google">
+                            <span data-i18n="loginGoogle">LOGIN WITH GMAIL</span>
+                        </button>
+                    </div>
+
                 </form>
 
                 <!-- Create Account Link -->
@@ -238,16 +251,18 @@
                 forgotPassword: "Forgot Password?",
                 loginBtn: "ACCESS WORKSPACE",
                 signupBtn: "CREATE ACCOUNT",
-                noAccount: "Don't have an account?",
+                noAccount: "Don't you have an account?",
                 hasAccount: "Already have an account?",
-                createAccount: "Create Account",
+                createAccount: "create it HERE",
                 backToLogin: "Sign In",
                 needHelp: "Need assistance? Contact",
                 loading: "AUTHENTICATING...",
                 resetSent: "Password reset email sent! Check your inbox.",
                 signupSuccess: "Account created! Check your email to confirm, then sign in.",
                 invalidCredentials: "Invalid email or password.",
-                emailRequired: "Please enter your email address."
+                emailRequired: "Please enter your email address.",
+                orLoginWith: "OR",
+                loginGoogle: "LOGIN WITH GMAIL"
             },
             es: {
                 poweredBy: "Impulsado por",
@@ -264,14 +279,16 @@
                 signupBtn: "CREAR CUENTA",
                 noAccount: "¿No tienes una cuenta?",
                 hasAccount: "¿Ya tienes una cuenta?",
-                createAccount: "Crear Cuenta",
+                createAccount: "créala AQUÍ",
                 backToLogin: "Iniciar Sesión",
                 needHelp: "¿Necesitas ayuda? Contacta a",
                 loading: "AUTENTICANDO...",
                 resetSent: "¡Email de recuperación enviado! Revisa tu bandeja.",
                 signupSuccess: "¡Cuenta creada! Revisa tu email para confirmar, luego inicia sesión.",
                 invalidCredentials: "Email o contraseña inválidos.",
-                emailRequired: "Por favor ingresa tu correo electrónico."
+                emailRequired: "Por favor ingresa tu correo electrónico.",
+                orLoginWith: "O",
+                loginGoogle: "INICIAR SESIÓN CON GMAIL"
             }
         };
 
@@ -315,6 +332,14 @@
             else document.getElementById('fullName').required = false;
             hideMessages();
             updateModeLabels();
+
+            const googleDiv = document.getElementById('googleLoginDiv');
+            if (googleDiv) {
+                if (isSignupMode) googleDiv.classList.add('hidden');
+                else googleDiv.classList.remove('hidden');
+            }
+            // Clear password on failed attempts
+            if(isSignupMode && document.getElementById('password')) document.getElementById('password').value = '';
         }
 
         function togglePassword() {
@@ -447,6 +472,23 @@
             }
         });
 
+        async function loginWithGoogle() {
+            if (!isSupabaseConfigured() || typeof supabase === 'undefined') {
+                showError("Supabase client not loaded or missing keys.");
+                return;
+            }
+            try {
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + window.location.pathname.replace('login.html', 'index.html')
+                    }
+                });
+                if (error) throw error;
+            } catch (err) {
+                showError(err.message);
+            }
+        }
     </script>
 </body>
 </html>
