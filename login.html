@@ -460,7 +460,18 @@
                     const fullName = document.getElementById('fullName').value.trim();
                     const phone = document.getElementById('signUpPhone').value.trim();
                     const agency = document.getElementById('signUpAgency').value;
-                    await signUp(email, password, fullName, phone, agency);
+                    
+                    if (!window.supabase) throw new Error("Database connection lost. Please refresh the page.");
+                    
+                    const { data, error } = await window.supabase.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            data: { full_name: fullName, phone: phone, brand: agency }
+                        }
+                    });
+                    if (error) throw error;
+                    
                     setLoading(false);
                     showSuccess(dict[currentLang].signupSuccess);
                     // Switch back to login mode
@@ -469,10 +480,25 @@
                     }, 3000);
                 } else {
                     // SIGN IN
-                    const { user, session } = await signIn(email, password);
+                    if (!window.supabase) throw new Error("Database connection lost. Please refresh the page.");
+                    
+                    const { data, error } = await window.supabase.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+                    if (error) throw error;
 
                     // Fetch profile to get role
-                    const profile = await getCurrentProfile();
+                    const { data: userData } = await window.supabase.auth.getUser();
+                    let profile = null;
+                    if (userData && userData.user) {
+                        const { data: profileRes } = await window.supabase
+                            .from('profiles')
+                            .select('*, offices(name, brand, area)')
+                            .eq('id', userData.user.id)
+                            .single();
+                        profile = profileRes;
+                    }
 
                     // Store essentials in localStorage for quick access across pages
                     localStorage.setItem('userEmail', email);
