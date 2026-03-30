@@ -28,12 +28,16 @@ if (!supabase) {
 /**
  * Sign up a new user with email and password
  */
-async function signUp(email, password, fullName) {
+async function signUp(email, password, fullName, phone, brand) {
     const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-            data: { full_name: fullName }
+            data: { 
+                full_name: fullName,
+                phone: phone,
+                brand: brand
+            }
         }
     });
     if (error) throw error;

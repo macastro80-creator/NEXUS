@@ -167,6 +167,30 @@
                         <i class="fa-solid fa-user absolute right-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
                     </div>
 
+                    <!-- Phone Input -->
+                    <div id="phoneField" class="relative hidden">
+                        <input type="tel" id="signUpPhone" placeholder=" " 
+                            class="float-input input-glow w-full bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all placeholder-transparent"
+                        >
+                        <label for="signUpPhone" class="float-label absolute left-5 top-4 text-xs font-black uppercase tracking-widest text-slate-400 transition-all pointer-events-none bg-white dark:bg-slate-900 px-1 rounded-md" data-i18n="phone">
+                            Phone Number
+                        </label>
+                        <i class="fa-solid fa-phone absolute right-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    </div>
+
+                    <!-- Agency Input -->
+                    <div id="agencyField" class="relative hidden">
+                        <select id="signUpAgency" class="w-full bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all focus:ring-2 focus:ring-[#003DA5]/30 appearance-none text-slate-600 dark:text-slate-400 hover:cursor-pointer">
+                            <option value="" disabled selected data-i18n="agency">Select Agency</option>
+                            <option value="REMAX">REMAX</option>
+                            <option value="Century 21">Century 21</option>
+                            <option value="Coldwell Banker">Coldwell Banker</option>
+                            <option value="Independent">Independent</option>
+                            <option value="Other">Other...</option>
+                        </select>
+                        <i class="fa-solid fa-building absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                    </div>
+
                     <!-- Email Input -->
                     <div class="relative">
                         <input type="email" id="email" required placeholder=" " 
@@ -248,6 +272,8 @@
                 createDetails: "Sign up to start using NEXUS",
                 emailAddress: "Email Address",
                 fullName: "Full Name",
+                phone: "Phone Number",
+                agency: "Select Agency",
                 password: "Password",
                 rememberMe: "Remember me",
                 forgotPassword: "Forgot Password?",
@@ -260,7 +286,7 @@
                 needHelp: "Need assistance? Contact",
                 loading: "AUTHENTICATING...",
                 resetSent: "Password reset email sent! Check your inbox.",
-                signupSuccess: "Account created! Check your email to confirm, then sign in.",
+                signupSuccess: "ACCOUNT CREATED! 🚨 PLEASE CHECK YOUR EMAIL AND VERIFY TO LOG IN.",
                 invalidCredentials: "Invalid email or password.",
                 emailRequired: "Please enter your email address.",
                 orLoginWith: "OR",
@@ -274,6 +300,8 @@
                 createDetails: "Regístrate para usar NEXUS",
                 emailAddress: "Correo Electrónico",
                 fullName: "Nombre Completo",
+                phone: "Número de Teléfono",
+                agency: "Seleccione Agencia",
                 password: "Contraseña",
                 rememberMe: "Recordarme",
                 forgotPassword: "¿Olvidaste tu contraseña?",
@@ -286,7 +314,7 @@
                 needHelp: "¿Necesitas ayuda? Contacta a",
                 loading: "AUTENTICANDO...",
                 resetSent: "¡Email de recuperación enviado! Revisa tu bandeja.",
-                signupSuccess: "¡Cuenta creada! Revisa tu email para confirmar, luego inicia sesión.",
+                signupSuccess: "¡CUENTA CREADA! 🚨 POR FAVOR, REVISA TU CORREO PARA VERIFICAR TU CUENTA Y PODER ENTRAR.",
                 invalidCredentials: "Email o contraseña inválidos.",
                 emailRequired: "Por favor ingresa tu correo electrónico.",
                 orLoginWith: "O",
@@ -334,8 +362,18 @@
         function setAuthMode(signup) {
             isSignupMode = signup;
             document.getElementById('nameField').classList.toggle('hidden', !isSignupMode);
-            if (isSignupMode) document.getElementById('fullName').required = true;
-            else document.getElementById('fullName').required = false;
+            document.getElementById('phoneField').classList.toggle('hidden', !isSignupMode);
+            document.getElementById('agencyField').classList.toggle('hidden', !isSignupMode);
+            
+            if (isSignupMode) {
+                document.getElementById('fullName').required = true;
+                document.getElementById('signUpPhone').required = true;
+                document.getElementById('signUpAgency').required = true;
+            } else {
+                document.getElementById('fullName').required = false;
+                document.getElementById('signUpPhone').required = false;
+                document.getElementById('signUpAgency').required = false;
+            }
             hideMessages();
             updateModeLabels();
 
@@ -420,7 +458,9 @@
                 if (isSignupMode) {
                     // SIGN UP
                     const fullName = document.getElementById('fullName').value.trim();
-                    await signUp(email, password, fullName);
+                    const phone = document.getElementById('signUpPhone').value.trim();
+                    const agency = document.getElementById('signUpAgency').value;
+                    await signUp(email, password, fullName, phone, agency);
                     setLoading(false);
                     showSuccess(dict[currentLang].signupSuccess);
                     // Switch back to login mode
