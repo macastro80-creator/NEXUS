@@ -131,9 +131,15 @@
                 <!-- Inner decorative glow -->
                 <div class="absolute -top-24 -right-24 w-48 h-48 bg-amber-400 rounded-full blur-[80px] opacity-20 dark:opacity-10 pointer-events-none"></div>
 
-                <div class="mb-8">
+                <div class="mb-6">
                     <h2 id="formTitle" class="text-2xl font-black italic text-slate-800 dark:text-white mb-2" data-i18n="welcomeBack">Welcome Back</h2>
                     <p id="formSubtitle" class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1" data-i18n="enterDetails">Enter your credentials to access your workspace</p>
+                </div>
+
+                <!-- Auth Tabs -->
+                <div class="flex bg-slate-100 dark:bg-slate-800/80 p-1.5 rounded-xl mb-6 shadow-inner border border-slate-200 dark:border-slate-700">
+                    <button type="button" id="tabLogin" onclick="setAuthMode(false)" class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-lg bg-white dark:bg-slate-700 shadow-sm text-remax-blue dark:text-white transition-all" data-i18n="backToLogin">Sign In</button>
+                    <button type="button" id="tabSignup" onclick="setAuthMode(true)" class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition-all" data-i18n="signupBtn">CREATE ACCOUNT</button>
                 </div>
 
                 <!-- Error Message -->
@@ -220,11 +226,7 @@
 
                 </form>
 
-                <!-- Create Account Link -->
-                <div class="mt-6 text-center text-xs font-bold text-slate-500">
-                    <span id="toggleText" data-i18n="noAccount">Don't have an account?</span> 
-                    <a href="#" onclick="toggleAuthMode(event)" id="toggleLink" class="text-remax-blue dark:text-amber-400 font-black hover:underline hover:underline-offset-4 ml-1" data-i18n="createAccount">Create Account</a>
-                </div>
+                <!-- Create Account Link Removed for Tabs -->
 
                 <!-- Help Link -->
                 <div class="mt-6 text-center text-[10px] font-bold text-slate-400">
@@ -320,13 +322,17 @@
             document.getElementById('formTitle').innerText = isSignupMode ? d.createTitle : d.welcomeBack;
             document.getElementById('formSubtitle').innerText = isSignupMode ? d.createDetails : d.enterDetails;
             document.getElementById('btnText').innerText = isSignupMode ? d.signupBtn : d.loginBtn;
-            document.getElementById('toggleText').innerText = isSignupMode ? d.hasAccount : d.noAccount;
-            document.getElementById('toggleLink').innerText = isSignupMode ? d.backToLogin : d.createAccount;
+            
+            const tabLogin = document.getElementById('tabLogin');
+            const tabSignup = document.getElementById('tabSignup');
+            if(tabLogin && tabSignup) {
+                tabLogin.innerText = d.backToLogin;
+                tabSignup.innerText = d.signupBtn;
+            }
         }
 
-        function toggleAuthMode(e) {
-            e.preventDefault();
-            isSignupMode = !isSignupMode;
+        function setAuthMode(signup) {
+            isSignupMode = signup;
             document.getElementById('nameField').classList.toggle('hidden', !isSignupMode);
             if (isSignupMode) document.getElementById('fullName').required = true;
             else document.getElementById('fullName').required = false;
@@ -338,8 +344,19 @@
                 if (isSignupMode) googleDiv.classList.add('hidden');
                 else googleDiv.classList.remove('hidden');
             }
-            // Clear password on failed attempts
             if(isSignupMode && document.getElementById('password')) document.getElementById('password').value = '';
+
+            const tabLogin = document.getElementById('tabLogin');
+            const tabSignup = document.getElementById('tabSignup');
+            if(tabLogin && tabSignup) {
+                if(isSignupMode) {
+                    tabSignup.className = "flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-lg bg-white dark:bg-slate-700 shadow-sm text-remax-blue dark:text-white transition-all";
+                    tabLogin.className = "flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition-all bg-transparent";
+                } else {
+                    tabLogin.className = "flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-lg bg-white dark:bg-slate-700 shadow-sm text-remax-blue dark:text-white transition-all";
+                    tabSignup.className = "flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition-all bg-transparent";
+                }
+            }
         }
 
         function togglePassword() {
@@ -408,9 +425,7 @@
                     showSuccess(dict[currentLang].signupSuccess);
                     // Switch back to login mode
                     setTimeout(() => {
-                        isSignupMode = false;
-                        document.getElementById('nameField').classList.add('hidden');
-                        updateModeLabels();
+                        setAuthMode(false);
                     }, 3000);
                 } else {
                     // SIGN IN
