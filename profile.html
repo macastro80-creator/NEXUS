@@ -46,13 +46,26 @@
             
             <button onclick="toggleNotifications()" class="relative text-slate-400 hover:text-[#003DA5] text-xl px-1 hover:scale-110 transition-transform">
                 <i class="fa-solid fa-bell"></i>
-                <span class="absolute top-0 right-0 w-2.5 h-2.5 bg-[#ED1C24] rounded-full border-2 border-white animate-pulse"></span>
+                <span id="notif-badge" style="display:none;" class="absolute -top-1 -right-1 min-w-[15px] h-[15px] bg-[#ED1C24] text-white text-[9px] font-black rounded-full border-2 border-white flex items-center justify-center px-[4px] shadow-sm leading-none">0</span>
             </button>
             <a href="login.html" onclick="localStorage.removeItem('userEmail')" class="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-95 transition-all shadow-sm" title="Log Out">
                 <i class="fa-solid fa-arrow-right-from-bracket text-sm"></i>
             </a>
         </div>
 </nav>
+
+                            <!-- ONBOARDING WARNING (Hidden by default) -->
+    <div id="onboardingBanner" class="hidden bg-red-50 dark:bg-red-900/40 border-b border-red-200 dark:border-red-800 p-4 sticky top-[72px] z-[50]">
+        <div class="flex items-start gap-3 max-w-lg mx-auto">
+            <i class="fa-solid fa-triangle-exclamation text-red-500 mt-0.5 mt-1"></i>
+            <div>
+                <h3 class="text-[10px] font-black text-red-700 dark:text-red-400 uppercase tracking-widest lang-en">Action Required</h3>
+                <h3 class="text-[10px] font-black text-red-700 dark:text-red-400 uppercase tracking-widest lang-es hidden">Acción Requerida</h3>
+                <p class="text-[10px] text-red-600 dark:text-red-300 font-bold mt-1 leading-tight lang-en">You must complete all required profile fields (expertise zones & specializations) to access the NEXUS platform.</p>
+                <p class="text-[10px] text-red-600 dark:text-red-300 font-bold mt-1 leading-tight lang-es hidden">Debes completar los campos requeridos (zonas y especialidades) para acceder a la plataforma NEXUS.</p>
+            </div>
+        </div>
+    </div>
 
                             <!-- PREMIUM TOP NAV -->
     <div id="premium-top-nav" class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-amber-500/30 flex justify-between items-center mt-2 mb-4 mx-4 rounded-2xl overflow-hidden shadow-2xl relative shadow-amber-500/10">
@@ -142,6 +155,8 @@
                     <option value="REMAX">REMAX</option>
                     <option value="Century 21">Century 21</option>
                     <option value="Coldwell Banker">Coldwell Banker</option>
+                    <option value="Keller Williams">Keller Williams</option>
+                    <option value="eXp Realty">eXp Realty</option>
                     <option value="Independent">Independent</option>
                     <option value="Other">Other Agency...</option>
                 </select>
@@ -539,7 +554,7 @@
     </div>
 
                             <!-- BOTTOM NAVIGATION -->
-    <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t py-4 px-6 flex justify-between items-center text-slate-600 dark:text-slate-400 z-50 shadow-xl pb-6 overflow-x-auto no-scrollbar gap-4">
+    <div id="bottomNavContainer" class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t py-4 px-6 flex justify-between items-center text-slate-600 dark:text-slate-400 z-50 shadow-xl pb-6 overflow-x-auto no-scrollbar gap-4">
         <a href="index.html" data-nav="index.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
             <i class="fa-solid fa-house mb-1 text-xl hover:scale-110 transition-transform"></i>
             <span class="text-[10px] font-bold" data-i18n="navFeed">Match Board</span>
@@ -1070,7 +1085,7 @@
                             .from('profiles')
                             .select('*')
                             .eq('id', user.id)
-                            .single();
+                            .maybeSingle();
                         if (!error && data) {
                             populateProfileFields(data);
                             loaded = true;
@@ -1165,16 +1180,19 @@
                     const avatarImg = document.getElementById('avatarImage');
                     const avatarUrl = (avatarImg && !avatarImg.classList.contains('hidden')) ? avatarImg.src : '';
                     
-                    if (user) {
-                        const profileData = {
-                            full_name: document.getElementById('phName').value.trim(),
-                            phone: document.getElementById('phPhone').value.trim(),
-                            brand: document.getElementById('agencySelect').value,
-                            tx_volume: document.getElementById('txClosed').value,
-                            expert_zones: selectedAreas,
-                            avatar_url: avatarUrl
-                        };
-                        await supabase.from('profiles').update(profileData).eq('id', user.id);
+                        const rawBrand = document.getElementById('agencySelect').value;
+                        const finalBrand = rawBrand === 'Other' ? document.getElementById('otherAgencyDiv').value.trim() : rawBrand;
+
+                        if (user) {
+                            const profileData = {
+                                full_name: document.getElementById('phName').value.trim(),
+                                phone: document.getElementById('phPhone').value.trim(),
+                                brand: finalBrand || 'Independent',
+                                tx_volume: document.getElementById('txClosed').value,
+                                expert_zones: selectedAreas,
+                                avatar_url: avatarUrl
+                            };
+                            await supabase.from('profiles').update(profileData).eq('id', user.id);
                     }
                 }
             } catch (dbErr) { console.warn('DB save skipped:', dbErr.message); }
@@ -1196,12 +1214,15 @@
                 var avatarImg = document.getElementById('avatarImage');
                 var avatarUrl = (avatarImg && !avatarImg.classList.contains('hidden')) ? avatarImg.src : '';
 
+                const rawBrandLocal = document.getElementById('agencySelect').value;
+                const finalBrandLocal = rawBrandLocal === 'Other' ? document.getElementById('otherAgencyDiv').value.trim() : rawBrandLocal;
+
                 var localProfile = {
                     full_name: document.getElementById('phName').value.trim(),
                     email: document.getElementById('phEmail').value.trim(),
                     phone: document.getElementById('phPhone').value.trim(),
                     country_code: document.getElementById('phCountryCode').value,
-                    brand: document.getElementById('agencySelect').value,
+                    brand: finalBrandLocal || 'Independent',
                     tx_volume: document.getElementById('txClosed').value,
                     expert_zones: selectedAreas,
                     languages: langs,
@@ -1223,6 +1244,7 @@
 
         // Load profile on page init
         document.addEventListener('DOMContentLoaded', async () => {
+            try { await loadDynamicAgencies(); } catch(e) {}
             try { await loadProfile(); } catch(e) { console.warn('Profile load error:', e); }
         });
     </script>
@@ -1230,6 +1252,21 @@
         document.addEventListener('DOMContentLoaded', () => {
             const isPremium = localStorage.getItem('isPremium') === 'true';
             const isAdmin = localStorage.getItem('isAdmin') === 'true';
+
+            // Check Onboarding State
+            const urlParams = new URLSearchParams(window.location.search);
+            const isOnboarding = urlParams.get('onboarding') === 'true';
+
+            if (isOnboarding) {
+                // Remove Navs
+                document.getElementById('bottomNavContainer').classList.add('hidden');
+                document.getElementById('premium-top-nav').classList.add('hidden');
+                // Show Warning
+                document.getElementById('onboardingBanner').classList.remove('hidden');
+                // Remove App UI padding that was for bottom nav
+                document.body.classList.remove('pb-24');
+                document.body.classList.add('pb-10');
+            }
 
             // Hide Admin feature
             if (!isAdmin) {
