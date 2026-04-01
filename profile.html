@@ -12,7 +12,7 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="global-theme.js"></script>
-    <script src="db-service.js?v=4"></script>
+    <script src="db-service.js?v=6"></script>
     <script src="locations.js?v=3"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -166,7 +166,7 @@
                     <div>
                         <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2 lang-en">Month & Year Started</label>
                         <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2 lang-es hidden">Mes y Año de Inicio</label>
-                        <input type="month" id="startMonth" value="2018-01" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-600 dark:text-slate-300">
+                        <input type="month" id="startMonth" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-slate-600 dark:text-slate-300">
                     </div>
                     <div>
                         <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2 lang-en">TX Closed Last Year</label>
@@ -185,7 +185,7 @@
                 <div>
                     <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2 lang-en">Expected TX This Year</label>
                     <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2 lang-es hidden">Desempeño Esperado (Este Año)</label>
-                    <input type="number" id="txExpected" placeholder="20" class="w-full p-4 border border-blue-100 rounded-2xl bg-blue-50/30 font-bold outline-none text-xs text-blue-800 focus:ring-2 focus:ring-blue-500">
+                    <input type="number" id="txExpected" placeholder="e.g. 20" class="w-full p-4 border border-blue-100 rounded-2xl bg-blue-50/30 font-bold outline-none text-xs text-blue-800 focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
         </section>
@@ -216,25 +216,7 @@
 
             <!-- Draggable/Sortable List Container -->
             <div id="selectedLanguagesContainer" class="flex flex-col gap-2 min-h-[40px] pt-2">
-                <!-- Example populated data to match existing agent state -->
-                <div class="flex items-center justify-between p-3.5 bg-blue-50/50 border border-blue-100 rounded-xl shadow-sm group lang-item" draggable="true">
-                    <div class="flex items-center gap-3">
-                        <i class="fa-solid fa-grip-vertical text-slate-300 cursor-grab active:cursor-grabbing hover:text-blue-500"></i>
-                        <span class="text-xs font-black text-blue-900 uppercase tracking-tight lang-name">1. Spanish (Español)</span>
-                    </div>
-                    <button type="button" onclick="this.parentElement.remove(); updateLanguageNumbers();" class="text-slate-400 hover:text-red-500 transition-colors w-8 h-8 flex items-center justify-center">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
-                </div>
-                <div class="flex items-center justify-between p-3.5 bg-blue-50/50 border border-blue-100 rounded-xl shadow-sm group lang-item" draggable="true">
-                    <div class="flex items-center gap-3">
-                        <i class="fa-solid fa-grip-vertical text-slate-300 cursor-grab active:cursor-grabbing hover:text-blue-500"></i>
-                        <span class="text-xs font-black text-blue-900 uppercase tracking-tight lang-name">2. English</span>
-                    </div>
-                    <button type="button" onclick="this.parentElement.remove(); updateLanguageNumbers();" class="text-slate-400 hover:text-red-500 transition-colors w-8 h-8 flex items-center justify-center">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
-                </div>
+                <!-- Languages will be injected here -->
             </div>
         </section>
 
@@ -246,6 +228,15 @@
                 <p class="text-[11px] text-slate-400 font-medium italic lang-es hidden">Selecciona hasta 3 distritos que representas.</p>
             </div>
             
+            <div class="w-full flex items-center justify-between p-4 mb-4 border border-slate-200 dark:border-slate-700/50 rounded-2xl bg-slate-100 dark:bg-slate-800/80 cursor-not-allowed">
+                <span class="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center">
+                    <i class="fa-solid fa-earth-americas mr-2 text-slate-400"></i>
+                    <span class="lang-en">Country</span>
+                    <span class="lang-es hidden">País</span>
+                </span>
+                <span class="text-sm font-black text-[#003DA5] dark:text-blue-400">Costa Rica 🇨🇷</span>
+            </div>
+
             <div class="space-y-3 relative">
                 <div class="relative w-full">
                     <input type="text" id="locationSearch" oninput="showSuggestions(this.value)" autocomplete="off" placeholder="Search area (e.g. Rivas)" class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs pl-12">
@@ -337,43 +328,14 @@
             </div>
         </div>
 
-        <div class="space-y-4">
-            <!-- Review 1 -->
-            <div class="bg-white dark:bg-slate-800 p-5 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-4 opacity-10">
-                    <i class="fa-solid fa-quote-right text-4xl text-slate-900 dark:text-white"></i>
-                </div>
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-black text-slate-700 dark:text-slate-300 text-xs shadow-inner">
-                        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80" alt="Sarah" class="w-full h-full rounded-full object-cover">
-                    </div>
-                    <div>
-                        <p class="text-sm font-black text-slate-900 dark:text-white italic leading-tight">Sarah Smith</p>
-                        <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Century 21 • <span class="text-amber-500">Fast Closer</span></p>
-                    </div>
-                </div>
-                <p class="text-[11px] text-slate-600 dark:text-slate-300 font-medium italic leading-relaxed relative z-10 px-2 border-l-[3px] border-amber-400">
-                    "Alejandra is incredibly professional and responsive. We closed a challenging deal in Escazú and her communication made all the difference. Highly recommended for collaborations."
-                </p>
-            </div>
-
-            <!-- Review 2 -->
-            <div class="bg-white dark:bg-slate-800 p-5 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-4 opacity-10">
-                    <i class="fa-solid fa-quote-right text-4xl text-slate-900 dark:text-white"></i>
-                </div>
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-black text-slate-700 dark:text-slate-300 text-xs shadow-inner">
-                        <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80" alt="David" class="w-full h-full rounded-full object-cover">
-                    </div>
-                    <div>
-                        <p class="text-sm font-black text-slate-900 dark:text-white italic leading-tight">David R.</p>
-                        <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Coldwell Banker • <span class="text-amber-500">Clear Comm</span></p>
-                    </div>
-                </div>
-                <p class="text-[11px] text-slate-600 dark:text-slate-300 font-medium italic leading-relaxed relative z-10 px-2 border-l-[3px] border-amber-400">
-                    "Excellent partner in the Rivas area. She knows her market and didn't waste my buyer's time. A true asset to the Costa Rican network."
-                </p>
+        <div class="space-y-4" id="reviewsContainer">
+            <!-- Empty State -->
+            <div class="bg-indigo-50/50 dark:bg-slate-800/50 p-6 rounded-[32px] border border-dashed border-indigo-200 dark:border-slate-700 flex flex-col items-center justify-center text-center">
+                <i class="fa-solid fa-star-half-stroke text-2xl text-indigo-300 dark:text-slate-600 mb-2"></i>
+                <p class="text-[10px] font-black text-indigo-900 dark:text-slate-400 uppercase tracking-widest lang-en">No reviews yet</p>
+                <p class="text-[10px] font-black text-indigo-900 dark:text-slate-400 uppercase tracking-widest lang-es hidden">Aún no hay reseñas</p>
+                <p class="text-[10px] text-slate-500 font-bold mt-1 lang-en">Ask a colleague to rate your collaboration!</p>
+                <p class="text-[10px] text-slate-500 font-bold mt-1 lang-es hidden">¡Pídele a un colega que califique tu colaboración!</p>
             </div>
         </div>
     </section>
@@ -1275,43 +1237,6 @@
             }
 
             // Premium Access Control - Visible to all, but restricted access
-            // PHASE 1 LAUNCH LOCK (Hardcoded for ALL users)
-            const launchLockedElements = [
-                document.getElementById('nav-market'),
-                document.getElementById('nav-office'),
-                document.getElementById('nav-business'),
-                document.getElementById('nav-resources'),
-                ...Array.from(document.querySelectorAll('.premium-only')),
-                ...Array.from(document.querySelectorAll('a[href="office.html"]')),
-                ...Array.from(document.querySelectorAll('a[href="my-business.html"]')),
-                ...Array.from(document.querySelectorAll('a[href="resources.html"]')),
-                ...Array.from(document.querySelectorAll('a[href="market.html"]'))
-            ];
-            
-            // Remove nulls and apply locks unconditionally for everyone
-            launchLockedElements.filter(Boolean).forEach(el => {
-                if (el && el.tagName === 'A' || el.tagName === 'BUTTON' || el.tagName === 'DIV' && el.getAttribute('onclick')) {
-                    // Apply visual lock
-                    el.classList.add('grayscale', 'opacity-60', 'relative');
-                    
-                    // Don't add duplicate lock icons if it already has one
-                    if (!el.innerHTML.includes('fa-lock')) {
-                        el.insertAdjacentHTML('beforeend', '<div class="absolute top-1 right-1 lg:top-2 lg:right-2 bg-slate-900 border border-[#003DA5] rounded-full w-4 h-4 flex items-center justify-center shadow-lg z-20"><i class="fa-solid fa-lock text-[8px] text-white"></i></div>');
-                    }
-
-                    // Remove existing hrefs or onclicks
-                    if (el.tagName === 'A') el.removeAttribute('href');
-                    if (el.hasAttribute('onclick')) el.removeAttribute('onclick');
-
-                    // Add new click listener
-                    el.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const lang = localStorage.getItem('nexusLang') || 'en';
-                        alert(lang === 'es' ? '🔒 Función Premium — Mejora tu plan para acceder' : '🔒 Premium Feature — Upgrade your plan for access');
-                    });
-                }
-            });
         });
     </script>
 
@@ -1382,52 +1307,6 @@
                 panel.classList.remove('flex');
             }
         }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // PHASE 1 LAUNCH LOCK (Hardcoded for ALL users)
-            const launchLockedElements = [
-                document.getElementById('nav-market'),
-                document.getElementById('nav-office'),
-                document.getElementById('nav-business'),
-                document.getElementById('nav-resources'),
-                ...Array.from(document.querySelectorAll('.premium-only')),
-                ...Array.from(document.querySelectorAll('a[href="office.html"]')),
-                ...Array.from(document.querySelectorAll('a[href="my-business.html"]')),
-                ...Array.from(document.querySelectorAll('a[href="resources.html"]')),
-                ...Array.from(document.querySelectorAll('a[href="market.html"]'))
-            ];
-            
-            // Remove nulls and apply locks unconditionally for everyone
-            launchLockedElements.filter(Boolean).forEach(el => {
-                if (el && el.tagName === 'A' || el.tagName === 'BUTTON' || el.tagName === 'DIV' && el.getAttribute('onclick')) {
-                    // Apply visual lock and make it a group for hover effects
-                    el.classList.add('grayscale', 'opacity-60', 'relative', 'group');
-                    
-                    // Don't add duplicate lock icons if it already has one
-                    if (!el.innerHTML.includes('fa-lock')) {
-                        el.insertAdjacentHTML('beforeend', '<div class="absolute top-1 right-1 lg:top-2 lg:right-2 bg-slate-900 border border-[#003DA5] rounded-full w-4 h-4 flex items-center justify-center shadow-lg z-20"><i class="fa-solid fa-lock text-[8px] text-white"></i></div>');
-                        
-                        // Add the hover tooltip
-                        el.insertAdjacentHTML('beforeend', `
-                            <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-xl border border-slate-700">
-                                <span class="lang-en inline" style="display: var(--lang-en-display, inline);">Premium Feature</span>
-                                <span class="lang-es hidden" style="display: var(--lang-es-display, none);">Función Premium</span>
-                            </div>
-                        `);
-                    }
-
-                    // Remove existing hrefs or onclicks to disable it natively
-                    if (el.tagName === 'A') el.removeAttribute('href');
-                    if (el.hasAttribute('onclick')) el.removeAttribute('onclick');
-                    
-                    // Prevent default click gracefully without alert
-                    el.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    });
-                }
-            });
-        });
     </script>
 </body>
 </html>
