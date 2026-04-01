@@ -460,7 +460,14 @@ const DEMO_AGENTS = [
 
 let agents = JSON.parse(localStorage.getItem('nexusAgents')) || DEMO_AGENTS;
 let defaultBrands = ['REMAX','Century 21','Coldwell Banker','Keller Williams','eXp Realty','Sotheby\'s','Independent'];
-let brands = JSON.parse(localStorage.getItem('nexusBrands')) || defaultBrands;
+let brands = [];
+try {
+    const stored = localStorage.getItem('nexusBrands');
+    if (stored) brands = JSON.parse(stored);
+    if (!brands || brands.length === 0) brands = [...defaultBrands];
+} catch(e) {
+    brands = [...defaultBrands];
+}
 
 async function loadAgents() {
     if (isSupabaseConfigured() && supabase) {
@@ -598,7 +605,12 @@ async function adminToggleBlockAgent(id, block) {
 }
 
 function renderBrandManager() {
-    document.getElementById('brandList').innerHTML = brands.map(b => `
+    const container = document.getElementById('brandList');
+    if (!brands || brands.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-400 font-bold w-full text-center py-2">No brands added yet.</p>';
+        return;
+    }
+    container.innerHTML = brands.map(b => `
         <div class="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 text-[#003DA5] dark:text-blue-400 px-3 py-1.5 rounded-lg text-[10px] font-black border border-blue-100 dark:border-blue-800">
             ${b}
             <i class="fa-solid fa-xmark ml-1 cursor-pointer opacity-50 hover:opacity-100 hover:text-red-500 transition-all" onclick="removeBrand('${b.replace(/'/g,"\\'")}')"></i>
