@@ -56,7 +56,7 @@
             
             <button onclick="toggleNotifications()" class="relative text-slate-400 hover:text-[#003DA5] text-xl px-1 hover:scale-110 transition-transform">
                 <i class="fa-solid fa-bell"></i>
-                <span class="absolute top-0 right-0 w-2.5 h-2.5 bg-[#ED1C24] rounded-full border-2 border-white animate-pulse"></span>
+                <span id="notif-badge" style="display:none;" class="absolute -top-1 -right-1 min-w-[15px] h-[15px] bg-[#ED1C24] text-white text-[9px] font-black rounded-full border-2 border-white flex items-center justify-center px-[4px] shadow-sm leading-none">0</span>
             </button>
             <a href="login.html" onclick="localStorage.removeItem('userEmail')" class="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-95 transition-all shadow-sm" title="Log Out">
                 <i class="fa-solid fa-arrow-right-from-bracket text-sm"></i>
@@ -73,7 +73,7 @@
             <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Oficina</span>
         </a>
         <div class="w-[1px] h-8 bg-amber-500/20 relative z-10"></div>
-        <a href="my-business.html" id="nav-business" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
+        <a href="my-business.html" id="nav-business" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group ">
             <i class="fa-solid fa-briefcase-medical mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
             <span class="text-[9px] font-black uppercase tracking-widest lang-en">Business</span>
             <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Negocio</span>
@@ -569,50 +569,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // PHASE 1 LAUNCH LOCK (Hardcoded for ALL users)
-            const launchLockedElements = [
-                document.getElementById('nav-market'),
-                document.getElementById('nav-office'),
-                document.getElementById('nav-business'),
-                document.getElementById('nav-resources'),
-                ...Array.from(document.querySelectorAll('.premium-only')),
-                ...Array.from(document.querySelectorAll('a[href="office.html"]')),
-                ...Array.from(document.querySelectorAll('a[href="my-business.html"]')),
-                ...Array.from(document.querySelectorAll('a[href="resources.html"]')),
-                ...Array.from(document.querySelectorAll('a[href="market.html"]'))
-            ];
-            
-            // Remove nulls and apply locks unconditionally for everyone
-            launchLockedElements.filter(Boolean).forEach(el => {
-                if (el && el.tagName === 'A' || el.tagName === 'BUTTON' || el.tagName === 'DIV' && el.getAttribute('onclick')) {
-                    // Apply visual lock and make it a group for hover effects
-                    el.classList.add('grayscale', 'opacity-60', 'relative', 'group');
-                    
-                    // Don't add duplicate lock icons if it already has one
-                    if (!el.innerHTML.includes('fa-lock')) {
-                        el.insertAdjacentHTML('beforeend', '<div class="absolute top-1 right-1 lg:top-2 lg:right-2 bg-slate-900 border border-[#003DA5] rounded-full w-4 h-4 flex items-center justify-center shadow-lg z-20"><i class="fa-solid fa-lock text-[8px] text-white"></i></div>');
-                        
-                        // Add the hover tooltip
-                        el.insertAdjacentHTML('beforeend', `
-                            <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-xl border border-slate-700">
-                                <span class="lang-en inline" style="display: var(--lang-en-display, inline);">Premium Feature</span>
-                                <span class="lang-es hidden" style="display: var(--lang-es-display, none);">Función Premium</span>
-                            </div>
-                        `);
-                    }
-
-                    // Remove existing hrefs or onclicks to disable it natively
-                    if (el.tagName === 'A') el.removeAttribute('href');
-                    if (el.hasAttribute('onclick')) el.removeAttribute('onclick');
-                    
-                    // Prevent default click gracefully without alert
-                    el.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    });
-                }
-            });
-        });
-    </script>
+            </script>
 </body>
 </html>

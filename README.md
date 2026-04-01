@@ -1,84 +1,82 @@
-# NEXUS App
+# NEXUS Real Estate Platform
 
-**NEXUS** is a real estate collaboration platform powered by REMAX Altitud. It features a tiered, role-based architecture designed to streamline property matching, agent collaboration, and office workflow.
+**NEXUS** is a next-generation real estate collaboration B2B SaaS platform powered by REMAX Altitud. It features a tiered, role-based architecture designed to streamline property matching, eliminate "WhatsApp chaos", and provide enterprise-grade analytics for Brokers and Regional Admins.
 
-## Overview
+## Built With
 
-NEXUS connects real estate professionals with a unified "Match Board" for buyer searches, an automated property matching system, and powerful pipeline and office management tools tailored to an agent's specific role level. 
+- **Frontend**: Vanilla HTML5, CSS3, JavaScript (ES6+).
+- **Styling**: Tailwind CSS (Dark Mode & Glassmorphism enabled).
+- **Icons & Typography**: Font Awesome 6, Google 'Outfit' Font.
+- **Backend/Database**: [Supabase](https://supabase.com/) (PostgreSQL, Auth, RLS, Storage).
+- **Hosting**: Vercel.
 
-## Technology Stack
+---
 
-- **Frontend**: Vanilla HTML, CSS, JavaScript
-- **Styling**: Tailwind CSS (via CDN)
-- **Backend/Database**: Supabase (Auth, DB, RLS, Storage)
-- **Deployment**: Vercel
+## The Core Value Proposition
 
-The platform uses a lightweight vanilla HTML/JS approach for immediate iteration without complex build steps, relying heavily on Supabase for a robust backend foundation. 
+NEXUS revolves around two distinct workflows that solve immediate pain points in the real estate industry:
 
-## Access Levels and Roles
+### 1. The Collaborative Network (Free Tier - The Hook)
+Agents spend hours losing data in WhatsApp group chats. NEXUS replaces this with a structured database.
+- **Match Board**: Agents log exact buyer demands (Searches) and other agents supply exact inventory (Matches).
+- **My Desk & My Business Kanban**: A free, visual pipeline where agents manage their leads and property flow dynamically.
 
-NEXUS assigns features dynamically based on `userRole`:
+### 2. The Premium Experience (B2B Pro Tier - The Monetization)
+Acquired by the Office/Broker, granting "Pro" roles to their agents.
+- **Tinder-Style Co-Buyer Client Portal**: Agents can invite clients (and their spouses) via magic "NexLinks". Clients interact with property matches playfully via a swipe interface, generating qualified hot-leads automatically.
+- **Auto-Match Engine API**: Automated suggestions crossing office inventory with active searches.
 
-1. **Every Agent (`agent`)**: Base tier. Access to Match Board, My Hub (inbox), and My Profile. Can post buyer searches and manually send property matches.
-2. **REMAX Agent (`remax`)**: Premium tier. Access to everything above plus: My Office, My Business (Canban pipeline), Market Analytics, internal resources, and **Premium Auto-Match Alerts** via the REMAX API.
-3. **Team Leader (`teamleader`)**: Can create and manage Junior Agents, track team performance, and schedule mentoring.
-4. **Broker (`broker`)**: Access to the full office statistics dashboard, agent leaderboards, pipeline overviews, and reporting. Can switch contexts between multiple managed offices.
-5. **Office Admin (`officeadmin`)**: Data entry roles controlled by the Broker workspace.
-6. **Main Admin (`mainadmin`)**: Platform owner view. Access to the visual Admin Panel (`admin.html`) to manage roles, agencies, offices, and platform-wide settings dynamically.
+---
 
-## Phased Rollout Plan
+## Enterprise Dashboards (Phase A & B Expansion)
 
-NEXUS is being actively developed and released in strategic phases:
+NEXUS isn't just for agents; it's a profound management tool:
 
-- **Phase 1: EveryAgent Module (Live)**
-  - Users: All registered agents.
-  - Pages: Login, Match Board, My Hub, My Profile, Post Search.
-  - Features: "The Matchmaker Flow" allowing agents to post buyer needs and send/receive exact property matches. 
+### Broker Dashboard (`broker-dashboard.html`)
+An 8-module ERP system analyzing agent and office performance:
+1. **National Ranking**: MTD (Month-To-Date) and YTD billing rank against all other offices in Costa Rica.
+2. **Recruitment & Retention**: Demographics (age, gender, nationality), churn rates, and active agent tracking.
+3. **Property & API Management**: Inventory syncing and listing pipeline tracking.
+4. **Agent Consolidation**: Tracking transactions, billing volume, and comparing agent income against the *Costa Rican National Average Salary* to predict agent survival ("The Green/Red Zone").
+5. **Reservómetro (Forecasting)**: Pipeline of deals under contract and pending cash-flow.
+6. **Sales Analysis**: Lead origin tracking and exclusivity ratios.
+7. **Opex (Expenses)**: Office expense tracking (rent, brand fees, payroll, marketing).
+8. **Profitability (P&L)**: Real-time net profit margins.
 
-- **Phase 2: REMAXAgent Module**
-  - Users: Verified REMAX Altitud agents.
-  - Features: My Office resources, My Business pipeline view, Market Analytics, and integration with the REMAX Central America & Caribbean (CCA) API for automatic matching against active inventory.
+### Main Admin Region (`admin-dashboard.html`)
+Master Franchisee (Region) view aggregating the performance of every office to track macro-economic metrics.
 
-- **Phase 3: Team Leaders Module**
-  - Features: Team management and junior agent onboarding.
+---
 
-- **Phase 4: Broker Module**
-  - Features: Office-level performance insights, agent leaderboards, pipeline roll-ups.
+## Application Structure (Core Pages)
 
-- **Phase 5: REMAX RECONNECT Integration**
-  - Features: Seamless backend sync with RECONNECT API to automate agent provisioning and manage credentials automatically based on the official REMAX roster.
+- **`login.html`**: Entry Auth. Roles dynamically fetched from Supabase.
+- **`index.html`**: Global Deal Board / Match Board.
+- **`profile.html`**: Agent identity, metrics, and specialization configuration.
+- **`buyer-matches.html`**: Client match-voting UI (The "Tinder" Board).
+- **`my-desk.html`**: Personal Deal Inbox and fast interactions.
+- **`my-business.html`**: Deal flow Kanban board (Free for all users!).
+- **`broker-dashboard.html`**: The comprehensive Office ERP.
+- **`premium-upgrade.html`**: The High-aesthetic B2B Paywall hooking free users.
 
-## Core Features Flow (Matchmaker)
+## Supabase Database Schema
 
-1. Agent A posts a buyer's property requirement on the **Match Board**.
-2. **Auto-Match (Premium):** The system checks the REMAX API and notifies REMAX Agents of high-percentage matches in their inventory instantly.
-3. Agent B sees the post and clicks "Send a Match," attaching their MLS Link.
-4. Agent A receives the match in **My Hub** for review and coordinates next steps.
+The NEXUS schema (`schema.sql`) utilizes standard relational models paired with strict **Row Level Security (RLS)**:
+- `profiles`
+- `regions` and `offices`
+- `searches` and `matches`
+- `deals` and `properties`
+- `expenses`
+- `tickets` (Support & Upgrade requests)
+- `notifications`
 
-## Application Pages
+*All metrics and dashboards use internal PostgreSQL logic (Views and JSONB aggregations) for maximum performance.*
 
-Here is a comprehensive list of the core HTML pages in NEXUS and their primary functions:
+## Local Development
 
-- **`login.html`**: Auth entry point. Role is determined upon login.
-- **`index.html`**: The Match Board. A universal feed of buyer searches where agents can post searches, send matches, and filter by location.
-- **`add-search.html`**: The Post Search page. Used by agents to manually create a new search card OR generate a "NexLink" to invite clients.
-- **`client-onboarding.html`**: Client Portal. Real clients fill out their property criteria and invite their spouses/co-buyers using their NexLink.
-- **`buyer-matches.html`**: Client Match Board. A private view for clients to review properties their agent has shortlisted for them.
-- **`my-desk.html`**: My Hub / CRM. A personal inbox tracking active searches, incoming matches, lead protection, and the Co-Swiping feedback flow.
-- **`profile.html`**: My Profile. Displays agent info, settings, team info, and performance data.
-- **`network.html`**: Agent Network Directory. View all active agents, teams, and offices within the REMAX network.
-- **`network-profile.html`**: Public Agent Profile view, showing their contact info, stats, and expert zones.
-- **`Mi_Oficina.html`**: My Office (Premium). Contains office resources, booking links (rooms, photographer, mentoring), and the real estate dictionary.
-- **`my-business.html`**: My Business (Premium). A Kanban pipeline (Under Contract → DD → Sold) and OKR reporting dashboard.
-- **`market.html`**: Market Analytics (Premium). Shows market trends, charts, and includes the REMAX API auth modal.
-- **`broker-dashboard.html`**: Broker Dashboard (Premium). Full office analytics, performance metrics (Red/Green survival zones), leaderboards, and pipeline overviews.
-- **`admin.html`**: Platform Admin Panel (Main Admin). Visual interface to manage roles, agencies, offices, and platform-wide settings.
-- **`REMAX_APP.html`**: Consolidated prototype for REMAX Agent capabilities.
+The project is structured entirely around standard static assets and requires **no build step** (No Webpack, Vite, or npm scripts natively required).
 
-## Development Setup
-
-1. The project has no `npm build` requirement for Phase 1 and 2. Open any `.html` file locally or serve them using a basic local web server (e.g., `python3 -m http.server 8000` or VS Code Live Server).
-2. Updates to common UI elements like navbars across static files are handled by running the provided python sync scripts:
-   - `python3 update_navbars.py`
-   - `python3 update_navbars_fast.py`
-3. Push changes to the `main` branch to trigger the automatic Vercel deployment.
+1. Clone repo.
+2. Ensure your Supabase URL / Anon Key are correct in `db-service.js` and `supabase-client.js`.
+3. Open in a live server (e.g. `npx serve .` or VS Code Live Server extension).
+4. For sweeping Navbar changes, run `python3 update_navbars.py`.

@@ -89,7 +89,7 @@ async function getCurrentProfile() {
         .from('profiles')
         .select('*, offices(name, brand, area)')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
     if (error) throw error;
     return data;
@@ -775,3 +775,51 @@ console.log(isSupabaseConfigured()
     ? '✅ Supabase client initialized and global auth guard active'
     : '⚠️ Supabase not configured. Replace URL and KEY in supabase-client.js'
 );
+
+// ============================================
+// GLOBAL BADGE UPDATER (WhatsApp Style)
+// ============================================
+async function updateNotificationBadge() {
+    if(!isSupabaseConfigured() || !supabase) return;
+    try {
+        const user = await getCurrentUser();
+        if(!user) return;
+        
+        let totalUnread = 0;
+        
+        // 1. Get Unread General Notifications
+        const { data: notifs } = await supabase.from('notifications').select('id', { count: 'exact' }).eq('user_id', user.id).eq('is_read', false);
+        if(notifs) totalUnread += notifs.length;
+        
+        // 2. Get New Matches for this Agent's Searches
+        const { data: searches } = await supabase.from('searches').select('id').eq('agent_id', user.id);
+        if(searches && searches.length > 0) {
+            const searchIds = searches.map(s => s.id);
+            // Fetch matches that are new and not read/liked/rejected yet
+            const { data: matches } = await supabase.from('matches').select('id', { count: 'exact' }).in('search_id', searchIds).eq('status', 'new');
+            if(matches) totalUnread += matches.length;
+        }
+        
+        // Update DOM Elements
+        document.querySelectorAll('#notif-badge').forEach(badge => {
+            if(totalUnread > 0) {
+                badge.innerText = totalUnread > 99 ? '99+' : totalUnread;
+                badge.style.display = 'flex';
+                badge.classList.remove('hidden');
+                badge.classList.add('animate-bounce-short'); // Small bounce effect
+            } else {
+                badge.style.display = 'none';
+                badge.classList.add('hidden');
+            }
+        });
+    } catch(e) {
+        // Silently fail if table doesn't exist yet or connection problem
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Run once on load
+    updateNotificationBadge();
+    // Poll every 30 seconds
+    setInterval(updateNotificationBadge, 30000);
+});

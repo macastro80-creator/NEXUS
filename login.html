@@ -42,7 +42,7 @@
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/global-theme.js?v=3"></script>
-    <script src="/db-service.js?v=3"></script>
+    <script src="/db-service.js?v=6"></script>
 
     <style>
         body {
@@ -544,8 +544,25 @@
                     localStorage.setItem('userRole', profile?.role || 'agent');
                     localStorage.setItem('isAdmin', profile?.role === 'mainadmin' ? 'true' : 'false');
 
-                    // Redirect
-                    window.location.href = 'index.html';
+                    // Enforce Profile Completion on Login
+                    let isComplete = false;
+                    if (profile) {
+                        const ez = profile.expert_zones;
+                        const hasExpertZones = Array.isArray(ez) ? ez.length > 0 && ez[0] !== "" : (typeof ez === 'string' && ez.length > 0 && ez !== "{}" && ez !== "[]");
+                        
+                        const sp = profile.specializations;
+                        const hasSpecializations = Array.isArray(sp) ? sp.length > 0 && sp[0] !== "" : (typeof sp === 'string' && sp.length > 0 && sp !== "{}" && sp !== "[]");
+                        
+                        isComplete = hasExpertZones || hasSpecializations;
+                    }
+
+                    if (!isComplete) {
+                        const hash = window.location.hash || '';
+                        window.location.href = 'profile.html?onboarding=true' + hash;
+                    } else {
+                        // Redirect
+                        window.location.href = 'index.html';
+                    }
                 }
             } catch (err) {
                 setLoading(false);
@@ -581,8 +598,25 @@
                 try {
                     const user = await getCurrentUser();
                     if (user) {
-                        // Already logged in, redirect
-                        window.location.href = 'index.html';
+                        // Check if profile is complete before blindly redirecting
+                        const profile = await getCurrentProfile();
+                        let isComplete = false;
+                        if (profile) {
+                            const ez = profile.expert_zones;
+                            const hasExpertZones = Array.isArray(ez) ? ez.length > 0 && ez[0] !== "" : (typeof ez === 'string' && ez.length > 0 && ez !== "{}" && ez !== "[]");
+                            
+                            const sp = profile.specializations;
+                            const hasSpecializations = Array.isArray(sp) ? sp.length > 0 && sp[0] !== "" : (typeof sp === 'string' && sp.length > 0 && sp !== "{}" && sp !== "[]");
+                            
+                            isComplete = hasExpertZones || hasSpecializations;
+                        }
+
+                        if (!isComplete) {
+                            const hash = window.location.hash || '';
+                            window.location.href = 'profile.html?onboarding=true' + hash;
+                        } else {
+                            window.location.href = 'index.html';
+                        }
                     }
                 } catch (e) {
                     // Not logged in, stay on login page

@@ -3,505 +3,348 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NEXUS - Broker Dashboard</title>
+    <title>Broker ERP - NEXUS</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .hidden-scrollbar::-webkit-scrollbar { display: none; }
-        .hidden-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    </style>
     <script>
         tailwind.config = {
             darkMode: 'class',
-            theme: { extend: {} }
+            theme: {
+                extend: {
+                    colors: {
+                        broker: {
+                            50: '#f4f6f8',
+                            900: '#1a202c',
+                            accent: '#D4AF37', /* Gold/Premium */
+                        }
+                    }
+                }
+            }
         }
     </script>
+    <!-- FontAwesome & Google Fonts -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Supabase & Services -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="global-theme.js"></script>
+    <script src="db-service.js?v=7"></script>
+
+    <style>
+        body { font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        .dark .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+    </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-300 antialiased pb-24">
+<body class="bg-slate-100 dark:bg-[#0B1120] text-slate-800 dark:text-slate-200 transition-colors duration-300 pb-24">
 
     <!-- Header -->
-    <header class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50">
+    <header class="glass-panel sticky top-0 z-50">
         <div class="px-6 py-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-[#ED1C24] rounded-full flex items-center justify-center text-white shadow-lg shadow-red-500/30">
-                    <i class="fa-solid fa-crown text-sm"></i>
+                <div class="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-500/30">
+                    <i class="fa-solid fa-chart-pie text-lg"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-black text-slate-900 dark:text-white italic tracking-tighter leading-none lang-en">Broker Hub</h1>
-                    <h1 class="text-xl font-black text-slate-900 dark:text-white italic tracking-tighter leading-none lang-es hidden">Panel del Broker</h1>
-                    <p class="text-[9px] font-black text-[#003DA5] uppercase tracking-widest mt-0.5 lang-en">REMAX Altitude OKRs</p>
-                    <p class="text-[9px] font-black text-[#003DA5] uppercase tracking-widest mt-0.5 lang-es hidden">REMAX Altitude OKRs</p>
+                    <h1 class="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-none lang-en flex items-center gap-2">Broker ERP <span class="bg-amber-100 text-amber-700 text-[9px] px-2 py-0.5 rounded-full">PRO</span></h1>
+                    <h1 class="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-none lang-es hidden flex items-center gap-2">Panel Broker <span class="bg-amber-100 text-amber-700 text-[9px] px-2 py-0.5 rounded-full">PRO</span></h1>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1" id="office-name-display">Cargando Oficina...</p>
                 </div>
             </div>
             
-            <div class="flex gap-3">
-                <button onclick="toggleDarkMode()" class="w-10 h-10 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 active:scale-95 transition-transform">
-                    <i class="fa-solid fa-moon dark:hidden"></i>
-                    <i class="fa-solid fa-sun hidden dark:block"></i>
+            <div class="flex gap-3 items-center">
+                <!-- Theme Toggle -->
+                <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-amber-500 transition-colors">
+                    <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-lg"></i>
+                </button>
+                <!-- Lang Toggle -->
+                <button onclick="toggleLang()" class="text-[10px] font-black uppercase bg-slate-200 dark:bg-slate-800 px-3 py-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-white hover:bg-amber-500 transition-all">
+                    <span class="lang-en block">ESP</span>
+                    <span class="lang-es hidden">ENG</span>
                 </button>
             </div>
         </div>
     </header>
 
-                            <!-- PREMIUM TOP NAV -->
-    <div id="premium-top-nav" class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-amber-500/30 flex justify-between items-center mt-2 mb-4 mx-4 rounded-2xl overflow-hidden shadow-2xl relative shadow-amber-500/10">
-        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-        <a href="Mi_Oficina.html" id="nav-office" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
-            <i class="fa-solid fa-building mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
-            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Office</span>
-            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Oficina</span>
-        </a>
-        <div class="w-[1px] h-8 bg-amber-500/20 relative z-10"></div>
-        <a href="my-business.html" id="nav-business" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
-            <i class="fa-solid fa-briefcase-medical mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
-            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Business</span>
-            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Negocio</span>
-        </a>
-        <div class="w-[1px] h-8 bg-amber-500/20 relative z-10"></div>
-        <a href="#" id="nav-resources" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
-            <i class="fa-solid fa-book-open mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
-            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Resources</span>
-            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Recursos</span>
-        </a>
-    </div>
-    <!-- Main Content -->
-    <main class="p-4 space-y-6">
-
-        <!-- KPI Overview Cards -->
+    <!-- Main Content Grid -->
+    <main class="p-4 lg:p-6 lg:max-w-7xl mx-auto space-y-6">
+        
+        <!-- Module 1: National Ranking (Gamification) -->
         <section>
-            <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 px-2 lang-en">Agency Performance</h2>
-            <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 px-2 lang-es hidden">Rendimiento de la Agencia</h2>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest lang-en"><i class="fa-solid fa-trophy text-amber-500 mr-2"></i> National Rank</h2>
+                <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest lang-es hidden"><i class="fa-solid fa-trophy text-amber-500 mr-2"></i> Ranking Nacional</h2>
+            </div>
             
-            <div class="grid grid-cols-2 gap-3">
-                <div class="bg-white dark:bg-slate-800 p-5 rounded-[24px] border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
-                    <div class="absolute -right-2 -top-2 text-indigo-100 dark:text-slate-700 opacity-50">
-                        <i class="fa-solid fa-chart-line text-6xl"></i>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- MTD Rank -->
+                <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group hover:border-amber-500/50 transition-colors">
+                    <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <i class="fa-solid fa-crown text-9xl text-amber-500"></i>
                     </div>
-                    <div class="relative z-10 w-full">
-                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 lang-en">Pipeline Value</p>
-                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 lang-es hidden">Valor del Embudo</p>
-                        <p class="text-xl font-black text-indigo-600 dark:text-indigo-400 leading-none">$14.2M</p>
-                        <p class="text-[9px] font-bold text-green-500 mt-2 flex items-center gap-1"><i class="fa-solid fa-arrow-up"></i> 12% vs last month</p>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 lang-en">This Month (MTD) Position</p>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 lang-es hidden">Posición del Mes (MTD)</p>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-4xl font-black text-slate-800 dark:text-white" id="rank-mtd">#--</span>
+                        <span class="text-xs font-bold text-emerald-500 flex items-center"><i class="fa-solid fa-caret-up mr-1"></i> Top Tier</span>
                     </div>
-                </div>
-
-                <div class="bg-white dark:bg-slate-800 p-5 rounded-[24px] border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
-                    <div class="absolute -right-2 -top-2 text-emerald-100 dark:text-slate-700 opacity-50">
-                        <i class="fa-solid fa-handshake text-6xl"></i>
-                    </div>
-                    <div class="relative z-10 w-full">
-                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 lang-en">Closed YTD</p>
-                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 lang-es hidden">Cerrado (Año)</p>
-                        <p class="text-xl font-black text-emerald-600 dark:text-emerald-400 leading-none">28 TX</p>
-                        <p class="text-[9px] font-bold text-slate-400 mt-2 flex items-center gap-1">45 expected</p>
+                    <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+                        <p class="text-[10px] uppercase tracking-widest text-slate-400">Gross Sales Volume</p>
+                        <p class="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-1" id="vol-mtd">$0</p>
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-slate-800 p-5 rounded-[24px] border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
-                    <div class="relative z-10 w-full">
-                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 lang-en">Active Agents</p>
-                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 lang-es hidden">Agentes Activos</p>
-                        <p class="text-xl font-black text-slate-800 dark:text-slate-200 leading-none">12</p>
+                <!-- YTD Rank -->
+                <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group hover:border-blue-500/50 transition-colors">
+                    <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <i class="fa-solid fa-globe text-9xl text-blue-500"></i>
                     </div>
-                </div>
-
-                <div class="bg-white dark:bg-slate-800 p-5 rounded-[24px] border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
-                    <div class="relative z-10 w-full">
-                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 lang-en">Total Active Listings</p>
-                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 lang-es hidden">Listados Activos</p>
-                        <p class="text-xl font-black text-[#003DA5] leading-none">134</p>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 lang-en">Year-to-Date (YTD) Position</p>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 lang-es hidden">Posición Anual (YTD)</p>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-4xl font-black text-slate-800 dark:text-white" id="rank-ytd">#--</span>
+                        <span class="text-xs font-bold text-slate-400">Nationwide</span>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+                        <p class="text-[10px] uppercase tracking-widest text-slate-400">Total YTD Volume</p>
+                        <p class="text-lg font-black text-blue-600 dark:text-blue-400 mt-1" id="vol-ytd">$0</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Detailed Agent OKR Tracker -->
-        <section>
-            <div class="flex justify-between items-end mb-3 px-2">
-                <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest lang-en">Agent OKR Tracker</h2>
-                <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest lang-es hidden">Seguimiento OKR de Agentes</h2>
-            </div>
-
-            <div class="bg-white dark:bg-slate-800 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden text-sm">
-                <!-- Agent 1 -->
-                <div class="p-5 border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-600 overflow-hidden">
-                                <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80" alt="Sarah" class="w-full h-full object-cover">
-                            </div>
-                            <div>
-                                <p class="text-sm font-black text-slate-900 dark:text-white leading-tight">Sarah Smith</p>
-                                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Pipeline: <span class="text-indigo-600 dark:text-indigo-400 font-black">$3.2M</span></p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[12px] font-black text-slate-900 dark:text-white">8 <span class="text-slate-400 lowercase font-bold">/</span> 15 TX</p>
-                            <p class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">53% de Meta</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Funnel Bars -->
-                    <div class="space-y-2 mt-4 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-700/50">
-                        <!-- Captacion Funnel -->
-                        <div>
-                            <div class="flex justify-between text-[10px] font-bold mb-1">
-                                <span class="text-slate-500">CAPTACIÓN (Exclusivas)</span>
-                                <span class="text-slate-700 dark:text-slate-300">1 / 2</span>
-                            </div>
-                            <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
-                                <div class="bg-blue-500 h-1.5 rounded-full" style="width: 50%"></div>
-                            </div>
-                        </div>
-                        <!-- Ventas Funnel -->
-                        <div>
-                            <div class="flex justify-between text-[10px] font-bold mb-1">
-                                <span class="text-slate-500">VENTAS (Cierres)</span>
-                                <span class="text-slate-700 dark:text-slate-300">1 / 1</span>
-                            </div>
-                            <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
-                                <div class="bg-emerald-500 h-1.5 rounded-full" style="width: 100%"></div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <button class="mt-3 w-full text-center text-[10px] font-bold text-[#003DA5] uppercase tracking-widest bg-blue-50 dark:bg-blue-900/20 py-2 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/40 transition">Ver Embudo Completo</button>
-                </div>
-
-                <!-- Agent 2 -->
-                <div class="p-5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-600 overflow-hidden">
-                                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80" alt="David" class="w-full h-full object-cover">
-                            </div>
-                            <div>
-                                <p class="text-sm font-black text-slate-900 dark:text-white leading-tight">David R.</p>
-                                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Pipeline: <span class="text-indigo-600 dark:text-indigo-400 font-black">$850k</span></p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[12px] font-black text-slate-900 dark:text-white">5 <span class="text-slate-400 lowercase font-bold">/</span> 20 TX</p>
-                            <p class="text-[10px] font-bold text-amber-500 uppercase tracking-widest">25% de Meta</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Funnel Bars -->
-                    <div class="space-y-2 mt-4 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-700/50">
-                        <!-- Captacion Funnel -->
-                        <div>
-                            <div class="flex justify-between text-[10px] font-bold mb-1">
-                                <span class="text-slate-500">CAPTACIÓN (Exclusivas)</span>
-                                <span class="text-slate-700 dark:text-slate-300">0 / 2</span>
-                            </div>
-                            <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
-                                <div class="bg-blue-500 h-1.5 rounded-full" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <!-- Ventas Funnel -->
-                        <div>
-                            <div class="flex justify-between text-[10px] font-bold mb-1">
-                                <span class="text-slate-500">VENTAS (Cierres)</span>
-                                <span class="text-slate-700 dark:text-slate-300">0 / 2</span>
-                            </div>
-                            <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
-                                <div class="bg-emerald-500 h-1.5 rounded-full" style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Attendance Tracking Section -->
+        <!-- Module 2: Recruitment & Retention -->
         <section class="mt-8">
-            <div class="flex justify-between items-end mb-3 px-2">
-                <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest lang-en">Attendance Tracking</h2>
-                <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest lang-es hidden">Control de Asistencia</h2>
-                
-                <button onclick="document.getElementById('modal-add-event').style.display='flex'" class="bg-[#003DA5] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-blue-800 transition shadow flex items-center gap-1">
-                    <i class="fa-solid fa-plus"></i> <span class="lang-en">Add Event</span><span class="lang-es hidden">Nuevo Evento</span>
+            <div class="flex justify-between items-end mb-4 pr-2">
+                <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest lang-en"><i class="fa-solid fa-users text-indigo-500 mr-2"></i> Recruitment & Agents</h2>
+                <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest lang-es hidden"><i class="fa-solid fa-users text-indigo-500 mr-2"></i> Reclutamiento y Agentes</h2>
+                <button class="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold uppercase tracking-wide px-3 py-1.5 rounded flex items-center gap-1 hover:bg-indigo-500/20 transition">
+                    <i class="fa-solid fa-plus"></i> <span class="lang-en">Invite Agent</span><span class="lang-es hidden">Invitar</span>
                 </button>
             </div>
 
-            <!-- List of Events -->
-            <div id="events-list" class="space-y-4">
-                <!-- Static Example Event -->
-                <div class="bg-white dark:bg-slate-800 rounded-[24px] border border-slate-200 dark:border-slate-700 shadow-sm p-5">
-                    <div class="flex justify-between items-start mb-4 border-b border-slate-100 dark:border-slate-700 pb-3">
-                        <div>
-                            <span class="bg-indigo-100 text-indigo-700 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest mb-2 inline-block">Capacitación</span>
-                            <h3 class="text-sm font-black text-slate-900 dark:text-white leading-tight">Masterclass de Captación Exclusiva</h3>
-                            <p class="text-[10px] font-bold text-slate-500 mt-1"><i class="fa-regular fa-calendar mr-1"></i> Hoy, 10:00 AM</p>
-                        </div>
-                        <button onclick="toggleAttendanceList('event-1')" class="text-slate-400 hover:text-[#003DA5] transition">
-                            <i class="fa-solid fa-chevron-down text-lg"></i>
-                        </button>
-                    </div>
-
-                    <!-- Rosters Array -->
-                    <div id="roster-event-1" class="space-y-3 hidden">
-                        <!-- Roster Item Sarah -->
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80" class="w-6 h-6 rounded-full object-cover">
-                                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Sarah Smith</span>
-                            </div>
-                            <div class="flex gap-1 text-[9px] font-black">
-                                <button class="px-2 py-1 rounded border-2 border-emerald-500 bg-emerald-50 text-emerald-600 transition hover:bg-emerald-500 hover:text-white">P</button>
-                                <button class="px-2 py-1 rounded border-2 border-red-500 text-red-500 transition hover:bg-red-500 hover:text-white">A</button>
-                                <button class="px-2 py-1 rounded border-2 border-blue-500 text-blue-500 transition hover:bg-blue-500 hover:text-white">O</button>
-                                <button class="px-2 py-1 rounded border-2 border-slate-300 text-slate-400 transition hover:bg-slate-400 hover:text-white">N/A</button>
-                            </div>
-                        </div>
-                        <!-- Roster Item David -->
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80" class="w-6 h-6 rounded-full object-cover">
-                                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">David R.</span>
-                            </div>
-                            <div class="flex gap-1 text-[9px] font-black">
-                                <button class="px-2 py-1 rounded border-2 border-emerald-500 text-emerald-500 transition hover:bg-emerald-500 hover:text-white">P</button>
-                                <button class="px-2 py-1 rounded border-2 border-red-500 bg-red-50 text-red-600 transition hover:bg-red-500 hover:text-white">A</button>
-                                <button class="px-2 py-1 rounded border-2 border-blue-500 text-blue-500 transition hover:bg-blue-500 hover:text-white">O</button>
-                                <button class="px-2 py-1 rounded border-2 border-slate-300 text-slate-400 transition hover:bg-slate-400 hover:text-white">N/A</button>
-                            </div>
-                        </div>
-
-                        <div class="pt-3 border-t border-slate-100 dark:border-slate-700 flex justify-end">
-                            <button class="bg-slate-800 text-white text-[10px] font-bold px-4 py-2 rounded-lg lang-en hover:bg-slate-700 transition">Save Attendance</button>
-                            <button class="bg-slate-800 text-white text-[10px] font-bold px-4 py-2 rounded-lg lang-es hidden hover:bg-slate-700 transition">Guardar Asistencia</button>
-                        </div>
-                    </div>
+            <!-- Agent KPIs -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                <div class="glass-panel p-4 rounded-2xl text-center">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 lang-en">Total Headcount</p>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 lang-es hidden">Agentes Totales</p>
+                    <p class="text-2xl font-black text-slate-800 dark:text-white" id="metric-headcount">0</p>
                 </div>
+                <div class="glass-panel p-4 rounded-2xl text-center">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 lang-en">Active / Retained</p>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 lang-es hidden">Activos (Retención)</p>
+                    <p class="text-2xl font-black text-emerald-500" id="metric-retention">0%</p>
+                </div>
+                <div class="glass-panel p-4 rounded-2xl text-center">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 lang-en">Avg Tenure</p>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 lang-es hidden">Antigüedad Promedio</p>
+                    <p class="text-2xl font-black text-blue-500" id="metric-tenure">-- M</p>
+                </div>
+                <div class="glass-panel p-4 rounded-2xl text-center">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 lang-en">Gender Split (M/F)</p>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 lang-es hidden">Demografía (M/F)</p>
+                    <p class="text-2xl font-black text-amber-500" id="metric-gender">0 / 0</p>
+                </div>
+            </div>
+
+            <!-- Roster Table (Simplified for MVP) -->
+            <div class="glass-panel rounded-3xl overflow-hidden overflow-x-auto border border-slate-200 dark:border-slate-800">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+                        <tr>
+                            <th class="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Agent Name</th>
+                            <th class="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Recruited</th>
+                            <th class="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Status</th>
+                            <th class="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="agent-roster-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+                        <!-- Filled by JS -->
+                        <tr><td colspan="4" class="p-6 text-center text-xs text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading Roster...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </section>
 
-        <!-- Transaction Feed -->
-        <section class="mt-8">
-            <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 px-2 lang-en">Live Transaction Feed</h2>
-            <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 px-2 lang-es hidden">Flujo de Transacciones</h2>
-
-            <div class="space-y-3 relative pl-4 border-l-2 border-slate-200 dark:border-slate-700 ml-4">
-                
-                <!-- Feed Item -->
-                <div class="relative">
-                    <div class="absolute -left-[23px] top-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-slate-50 dark:border-slate-900"></div>
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
-                        <div class="flex justify-between items-start mb-1">
-                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">2 MINS AGO</p>
-                            <span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-[8px] font-black uppercase">Contract</span>
-                        </div>
-                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-snug">
-                            <span class="font-black">Sarah Smith</span> moved <span class="text-indigo-600 dark:text-indigo-400">Ocean Villa (Jaco)</span> to Under Contract.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Feed Item -->
-                <div class="relative">
-                    <div class="absolute -left-[23px] top-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-slate-50 dark:border-slate-900"></div>
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
-                        <div class="flex justify-between items-start mb-1">
-                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">1 HOUR AGO</p>
-                            <span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full text-[8px] font-black uppercase">Negotiation</span>
-                        </div>
-                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-snug">
-                            <span class="font-black">David R.</span> started negotiations for <span class="text-indigo-600 dark:text-indigo-400">Downtown Condo (San Jose)</span>.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Feed Item -->
-                <div class="relative">
-                    <div class="absolute -left-[23px] top-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-slate-50 dark:border-slate-900"></div>
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
-                        <div class="flex justify-between items-start mb-1">
-                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">YESTERDAY</p>
-                            <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[8px] font-black uppercase">New Match</span>
-                        </div>
-                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-snug">
-                            <span class="font-black">Marcelo R.</span> accepted a Matchmaker showing request for <span class="text-indigo-600 dark:text-indigo-400">Tamarindo Lot 4</span>.
-                        </p>
-                    </div>
-                </div>
-
+        <!-- Placeholder for Future Modules -->
+        <section class="mt-8 opacity-50">
+            <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 px-2"><i class="fa-solid fa-lock mr-2"></i> Modules 3-8 (Next Sprint)</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div class="glass-panel p-4 rounded-xl text-center border-dashed border-2 dark:border-slate-700">API Properties (Locked)</div>
+                <div class="glass-panel p-4 rounded-xl text-center border-dashed border-2 dark:border-slate-700">Agent Consolidation (Locked)</div>
+                <div class="glass-panel p-4 rounded-xl text-center border-dashed border-2 dark:border-slate-700">Reservómetro (Locked)</div>
             </div>
         </section>
-
+        
     </main>
 
-    <!-- MODAL: ADD EVENT -->
-    <div id="modal-add-event" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-[35px] p-6 shadow-2xl relative">
-            
-            <button onclick="document.getElementById('modal-add-event').style.display='none'" class="absolute right-6 top-6 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
-                <i class="fa-solid fa-xmark text-xl"></i>
-            </button>
-
-            <h3 class="text-2xl font-black text-slate-900 dark:text-white italic tracking-tighter mb-1 lang-en">New Event</h3>
-            <h3 class="text-2xl font-black text-slate-900 dark:text-white italic tracking-tighter mb-1 lang-es hidden">Nuevo Evento</h3>
-            <p class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest lang-en">Create a meeting/training session</p>
-            <p class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest lang-es hidden">Crear reunión o capacitación</p>
-
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest mb-2 lang-en">Event Name</label>
-                    <label class="block text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest mb-2 lang-es hidden">Nombre del Evento</label>
-                    <input type="text" placeholder="Ej: Masterclass de Captación" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-[#003DA5] transition">
-                </div>
-
-                <div>
-                    <label class="block text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest mb-2 lang-en">Select Type</label>
-                    <label class="block text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest mb-2 lang-es hidden">Tipo de Evento</label>
-                    <select class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-[#003DA5] transition">
-                        <option class="lang-en" value="training">Training / Masterclass</option>
-                        <option class="lang-es hidden" value="training">Capacitación / Masterclass</option>
-                        <option class="lang-en" value="meeting">Team Meeting</option>
-                        <option class="lang-es hidden" value="meeting">Reunión de Equipo</option>
-                        <option class="lang-en" value="other">Other</option>
-                        <option class="lang-es hidden" value="other">Otro</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest mb-2 lang-en">Date & Time</label>
-                    <label class="block text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest mb-2 lang-es hidden">Fecha y Hora</label>
-                    <input type="datetime-local" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-[#003DA5] transition">
-                </div>
-
-                <button onclick="document.getElementById('modal-add-event').style.display='none'; alert('Event Added successfully. Time to track attendance!');" class="w-full mt-4 bg-[#ED1C24] hover:bg-red-700 text-white font-black uppercase tracking-widest text-[11px] py-4 rounded-xl shadow-lg shadow-red-500/30 transition transform active:scale-95">
-                    <span class="lang-en">Create & Track Attendance</span>
-                    <span class="lang-es hidden">Crear y Controlar Asistencia</span>
-                </button>
-            </div>
-        </div>
+    <!-- Bottom Navigation -->
+    <div class="fixed bottom-0 left-0 right-0 glass-panel border-t border-slate-200 dark:border-slate-800 py-4 px-6 flex justify-around items-center text-slate-400 z-50">
+        <a href="index.html" class="flex flex-col items-center justify-center hover:text-amber-500 transition-colors">
+            <i class="fa-solid fa-house mb-1 text-lg"></i>
+            <span class="text-[9px] font-bold uppercase tracking-widest">Board</span>
+        </a>
+        <a href="my-business.html" class="flex flex-col items-center justify-center hover:text-amber-500 transition-colors">
+            <i class="fa-solid fa-briefcase-medical mb-1 text-lg"></i>
+            <span class="text-[9px] font-bold uppercase tracking-widest">Business</span>
+        </a>
+        <a href="broker-dashboard.html" class="flex flex-col items-center justify-center text-amber-500">
+            <i class="fa-solid fa-chart-pie mb-1 text-lg drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest">ERP</span>
+            <div class="absolute -top-1 w-1 h-1 bg-amber-500 rounded-full"></div>
+        </a>
+        <a href="profile.html" class="flex flex-col items-center justify-center hover:text-amber-500 transition-colors">
+            <i class="fa-solid fa-user mb-1 text-lg"></i>
+            <span class="text-[9px] font-bold uppercase tracking-widest">Profile</span>
+        </a>
     </div>
 
-                            <!-- BOTTOM NAVIGATION -->
-    <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t py-4 px-6 flex justify-between items-center text-slate-600 dark:text-slate-400 z-50 shadow-xl pb-6 overflow-x-auto no-scrollbar gap-4">
-        <a href="index.html" data-nav="index.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
-            <i class="fa-solid fa-house mb-1 text-xl hover:scale-110 transition-transform"></i>
-            <span class="text-[10px] font-bold" data-i18n="navFeed">Match Board</span>
-        </a>
-        <a href="my-desk.html" data-nav="my-desk.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
-            <i class="fa-solid fa-briefcase mb-1 text-xl hover:scale-110 transition-transform"></i>
-            <span class="text-[10px] font-bold" data-i18n="navMyDesk">My Hub</span>
-        </a>
+    <!-- Initialization Scripts -->
+    <script>
+        // Language control
+        let currentLang = localStorage.getItem('language') || 'en';
+        function applyLanguage(lang) {
+            document.querySelectorAll('.lang-en').forEach(el => lang === 'en' ? el.classList.remove('hidden') : el.classList.add('hidden'));
+            document.querySelectorAll('.lang-es').forEach(el => lang === 'es' ? el.classList.remove('hidden') : el.classList.add('hidden'));
+        }
+        function toggleLang() {
+            currentLang = currentLang === 'en' ? 'es' : 'en';
+            localStorage.setItem('language', currentLang);
+            applyLanguage(currentLang);
+        }
         
-        <!-- Premium Links -->
-        <a href="market.html" data-nav="market.html" id="nav-market" class="flex flex-col items-center justify-center min-w-[3.5rem] text-amber-500 hover:text-amber-400 transition-all relative group premium-only">
-            <div class="absolute inset-0 bg-amber-500/10 blur-xl rounded-full group-hover:bg-amber-500/20 transition"></div>
-            <i class="fa-solid fa-chart-line mb-1 text-xl drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] group-hover:scale-110 transition-transform"></i>
-            <span class="text-[10px] font-black uppercase tracking-widest lang-en">Market</span>
-            <span class="text-[10px] font-black uppercase tracking-widest lang-es hidden" data-i18n="navMarket">Mercado</span>
-        </a>
-
-        <!-- Universal Link -->
-        <a href="profile.html" data-nav="profile.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
-            <i class="fa-solid fa-user mb-1 text-xl hover:scale-110 transition-transform"></i>
-            <span class="text-[10px] font-bold" data-i18n="navProfile">Profile</span>
-        </a>
-    </div>
-    <script>
-    (function(){
-        var page = location.pathname.split('/').pop() || 'index.html';
-        var links = document.querySelectorAll('[data-nav]');
-        links.forEach(function(a){
-            if(a.getAttribute('data-nav') === page){
-                a.classList.remove('text-slate-400','text-amber-500');
-                a.classList.add('text-[#003DA5]');
-                var dot = document.createElement('div');
-                dot.className = 'absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full';
-                a.appendChild(dot);
-            }
-        });
-    })();
-    </script>
-    <script>
-    (function(){
-        var page = location.pathname.split('/').pop() || 'index.html';
-        var links = document.querySelectorAll('[data-nav]');
-        links.forEach(function(a){
-            if(a.getAttribute('data-nav') === page){
-                a.classList.remove('text-slate-400','text-amber-500');
-                a.classList.add('text-[#003DA5]');
-                var dot = document.createElement('div');
-                dot.className = 'absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full';
-                a.appendChild(dot);
-            }
-        });
-    })();
-    </script>
-
-    <!-- Scripts -->
-    <script>
-        // --- TRANSLATION AND THEME LOGIC ---
+        // Theme control
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
             localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
         }
-
-        // Initialize Theme
-        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         }
-
-        // Initialize Language
-        let currentLang = localStorage.getItem('language') || 'en';
-        function applyLanguage(lang) {
-            currentLang = lang;
-            const en = document.querySelectorAll('.lang-en');
-            const es = document.querySelectorAll('.lang-es');
-            en.forEach(el => lang === 'en' ? el.classList.remove('hidden') : el.classList.add('hidden'));
-            es.forEach(el => lang === 'es' ? el.classList.remove('hidden') : el.classList.add('hidden'));
-        }
         applyLanguage(currentLang);
-        // --- TOGGLE ATTENDANCE LIST ---
-        function toggleAttendanceList(eventId) {
-            const roster = document.getElementById('roster-' + eventId);
-            if (roster) {
-                roster.classList.toggle('hidden');
+
+        // Format Currency Helper
+        function formatCurrency(val) {
+            if(!val) return "$0";
+            return "$" + parseInt(val).toLocaleString('en-US');
+        }
+
+        // --- SUPABASE DATA FETCHING ---
+        async function loadBrokerERP() {
+            try {
+                if(!supabase) throw new Error("Supabase NO inicializado");
+                
+                // 1. Obtener User
+                const { data: { user }, error: authErr } = await supabase.auth.getUser();
+                if (authErr || !user) throw new Error("No estás logueado.");
+
+                // 2. Obtener Profile & Security Check
+                const { data: profile, error: profErr } = await supabase.from('profiles').select('office_id, role, offices(name)').eq('id', user.id).single();
+                if (profErr) throw profErr;
+
+                if (!['broker', 'officeadmin', 'mainadmin'].includes(profile.role)) {
+                    alert("Acceso Denegado. Se requiere nivel de Broker o Admin regional.");
+                    window.location.href = "index.html";
+                    return;
+                }
+
+                // Titulo
+                document.getElementById('office-name-display').innerText = profile.offices ? profile.offices.name : "NEXUS Core DB";
+                const myOfficeId = profile.office_id;
+
+                // 3. Module 1: FETCH NATIONAL RANKINGS
+                if (myOfficeId) {
+                    const { data: ranks, error: rankErr } = await supabase.from('office_national_ranking').select('*').eq('office_id', myOfficeId).single();
+                    if (!rankErr && ranks) {
+                        document.getElementById('rank-mtd').innerText = `#${ranks.mtd_rank}`;
+                        document.getElementById('vol-mtd').innerText = formatCurrency(ranks.mtd_sales);
+                        document.getElementById('rank-ytd').innerText = `#${ranks.ytd_rank}`;
+                        document.getElementById('vol-ytd').innerText = formatCurrency(ranks.ytd_sales);
+                    } else {
+                        console.log("No deals recorded for this office yet, or ranking View not deployed.");
+                    }
+                }
+
+                // 4. Module 2: FETCH RECRUITMENT & RETENTION (Profiles)
+                const { data: agents, error: agentErr } = await supabase.from('profiles').select('*').eq('office_id', myOfficeId).eq('role', 'agent');
+                if (agentErr) throw agentErr;
+
+                if (agents && agents.length > 0) {
+                    const totalAgents = agents.length;
+                    const activeAgents = agents.filter(a => a.is_active !== false).length;
+                    
+                    let maleCount = agents.filter(a => a.gender === 'male').length;
+                    let femaleCount = agents.filter(a => a.gender === 'female').length;
+
+                    // Calculate Avg Tenure
+                    let totalMonths = 0;
+                    agents.forEach(a => {
+                        let d1 = a.recruitment_date ? new Date(a.recruitment_date) : new Date(a.created_at);
+                        let d2 = new Date();
+                        let months = (d2.getFullYear() - d1.getFullYear()) * 12;
+                        months -= d1.getMonth();
+                        months += d2.getMonth();
+                        totalMonths += months;
+                    });
+                    const avgTenure = Math.round(totalMonths / totalAgents);
+
+                    document.getElementById('metric-headcount').innerText = totalAgents;
+                    document.getElementById('metric-retention').innerText = Math.round((activeAgents / totalAgents) * 100) + '%';
+                    document.getElementById('metric-tenure').innerText = `${avgTenure} M`;
+                    document.getElementById('metric-gender').innerText = `${maleCount} / ${femaleCount}`;
+
+                    // Fill Roster Table
+                    const tbody = document.getElementById('agent-roster-body');
+                    tbody.innerHTML = '';
+                    agents.forEach(agent => {
+                        const dateObj = agent.recruitment_date ? new Date(agent.recruitment_date) : new Date(agent.created_at);
+                        const dateStr = dateObj.toLocaleDateString();
+                        const statusBadge = agent.is_active !== false 
+                            ? `<span class="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[9px] font-black uppercase">Active</span>`
+                            : `<span class="bg-red-500/10 text-red-500 border border-red-500/20 px-2 py-0.5 rounded-full text-[9px] font-black uppercase">Inactive</span>`;
+                        
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors">
+                                <td class="px-5 py-3 flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden flex-shrink-0 flex items-center justify-center font-bold text-slate-500 text-xs text-white uppercase">${agent.full_name?.substring(0,2) || '--'}</div>
+                                    <div class="font-bold text-slate-800 dark:text-slate-200">${agent.full_name || 'Agent'} <br><span class="text-[9px] text-slate-400 font-normal select-all">${agent.email}</span></div>
+                                </td>
+                                <td class="px-5 py-3 text-xs text-slate-500 font-medium">${dateStr}</td>
+                                <td class="px-5 py-3">${statusBadge}</td>
+                                <td class="px-5 py-3 text-right">
+                                    <button class="text-slate-400 hover:text-amber-500 transition"><i class="fa-solid fa-ellipsis-vertical px-2 py-1"></i></button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                } else {
+                    document.getElementById('agent-roster-body').innerHTML = `<tr><td colspan="4" class="p-6 text-center text-xs text-slate-400">Sin agentes registrados en tu oficina.</td></tr>`;
+                }
+
+            } catch (err) {
+                console.error("Dashboard Error:", err);
+                document.getElementById('agent-roster-body').innerHTML = `<tr><td colspan="4" class="p-6 text-center text-xs text-red-400">Database connection error. Confirm schema update.</td></tr>`;
             }
         }
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const isPremium = localStorage.getItem('isPremium') === 'true';
-            const isAdmin = localStorage.getItem('isAdmin') === 'true';
 
-            // Premium Access Control - Visible to all, but restricted access
-            if (!isPremium) {
-                const premiumElements = [
-                    document.getElementById('nav-market'),
-                    document.getElementById('nav-office'),
-                    document.getElementById('nav-business'),
-                    document.getElementById('nav-resources'),
-                    ...Array.from(document.querySelectorAll('.premium-only'))
-                ];
-                
-                                premiumElements.forEach(el => {
-                    if (el && el.tagName === 'A') {
-                        // Apply visual lock
-                        el.classList.add('grayscale', 'opacity-60', 'relative');
-                        el.insertAdjacentHTML('beforeend', '<div class="absolute top-1 right-1 lg:top-2 lg:right-2 bg-slate-900 border border-slate-700 rounded-full w-4 h-4 flex items-center justify-center shadow-lg z-20"><i class="fa-solid fa-lock text-[8px] text-slate-400"></i></div>');
+        // Initialize Call
+        document.addEventListener('DOMContentLoaded', loadBrokerERP);
 
-                        el.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            alert(currentLang === 'es' ? '💎 ¡Esta es una función Premium! Actualiza tu cuenta para acceder a increíbles herramientas de Productores Top.' : '💎 This is a Premium feature! Upgrade tu cuenta para acceder a increíbles herramientas de Productores Top.');
-                        });
-                    }
-                });
-            }
-
-            // Hide Admin feature
-            if (!isAdmin) {
-                const navBroker = document.getElementById('nav-broker');
-                if (navBroker) navBroker.style.display = 'none';
-            }
-        });
     </script>
 </body>
 </html>

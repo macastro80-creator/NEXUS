@@ -89,7 +89,7 @@ async function getCurrentProfile() {
         .from('profiles')
         .select('*, offices(name, brand, area)')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
     if (error) throw error;
     return data;
@@ -814,17 +814,61 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             // Enforce Profile Completion
+            let isComplete = false;
             if (profile) {
-                // We consider the profile complete if they have set up expert_zones or specializations
-                const hasExpertZones = profile.expert_zones && profile.expert_zones.length > 0;
-                const hasSpecializations = profile.specializations && profile.specializations.length > 0;
-                const isComplete = hasExpertZones || hasSpecializations;
-
-                if (!isComplete && !path.includes('profile.html')) {
-                    window.location.href = 'profile.html?onboarding=true';
-                    return;
-                }
+                const ez = profile.expert_zones;
+                const hasExpertZones = Array.isArray(ez) ? ez.length > 0 && ez[0] !== "" : (typeof ez === 'string' && ez.length > 0 && ez !== "{}" && ez !== "[]");
+                
+                const sp = profile.specializations;
+                const hasSpecializations = Array.isArray(sp) ? sp.length > 0 && sp[0] !== "" : (typeof sp === 'string' && sp.length > 0 && sp !== "{}" && sp !== "[]");
+                
+                isComplete = hasExpertZones || hasSpecializations;
             }
+            
+            if (!isComplete && !path.includes('profile.html')) {
+                const hash = window.location.hash || '';
+                window.location.href = 'profile.html?onboarding=true' + hash;
+                return;
+            }
+
+            // --- PREMIUM UX GATING (BMAD METHOD) ---
+            const isPremiumUser = profile && ['remax', 'teamleader', 'broker', 'officeadmin', 'mainadmin'].includes(profile.role);
+            
+            // Only lock if NOT premium and NOT already on the upgrade page
+            if (!isPremiumUser && !path.includes('premium-upgrade.html')) {
+                const premiumElements = [
+                    document.getElementById('nav-market'),
+                    document.getElementById('nav-office'),
+                    document.getElementById('nav-resources'),
+                    ...Array.from(document.querySelectorAll('.premium-only')),
+                    ...Array.from(document.querySelectorAll('a[href="Mi_Oficina.html"]')),
+                    ...Array.from(document.querySelectorAll('a[href="market.html"]')),
+                    ...Array.from(document.querySelectorAll('button[onclick*="invite-client"]'))
+                ];
+                
+                premiumElements.filter(Boolean).forEach(el => {
+                    if (el && (el.tagName === 'A' || el.tagName === 'BUTTON' || (el.tagName === 'DIV' && el.getAttribute('onclick')))) {
+                        el.classList.add('premium-locked', 'relative', 'group');
+                        
+                        // Add lock icon styling
+                        if (!el.innerHTML.includes('fa-lock')) {
+                            el.insertAdjacentHTML('beforeend', '<div class="absolute -top-1 -right-1 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full w-[18px] h-[18px] flex items-center justify-center shadow-[0_0_10px_rgba(245,158,11,0.5)] z-20 group-hover:scale-110 transition-transform cursor-pointer"><i class="fa-solid fa-lock text-[8px] text-slate-900"></i></div>');
+                        }
+
+                        // Remove existing navigation actions
+                        if (el.tagName === 'A') el.removeAttribute('href');
+                        if (el.hasAttribute('onclick')) el.removeAttribute('onclick');
+                        
+                        // Override click to trigger premium upsell bounce
+                        el.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.location.href = 'premium-upgrade.html';
+                        });
+                    }
+                });
+            }
+
         } catch (e) {
             window.location.href = 'login.html';
         }

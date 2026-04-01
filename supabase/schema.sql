@@ -369,3 +369,106 @@ JOIN regions r ON o.region_id = r.id
 LEFT JOIN deals d ON (p.id = d.buyer_agent_id OR p.id = d.seller_agent_id)
 WHERE p.role = 'agent'
 GROUP BY p.id, p.full_name, p.employment_type, p.split_percentage, p.start_date, o.name, r.name, r.baseline_income;
+
+-- ==========================================
+-- 10. BROKER/REGION EXPANSION (PHASE A/B)
+-- ==========================================
+
+-- Alter PROFILES to add new recruitment demographics
+ALTER TABLE profiles 
+ADD COLUMN IF NOT EXISTS gender TEXT DEFAULT 'unknown' CHECK (gender IN ('male', 'female', 'unknown', 'other')),
+ADD COLUMN IF NOT EXISTS dob DATE,
+ADD COLUMN IF NOT EXISTS nationality TEXT,
+ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true,
+ADD COLUMN IF NOT EXISTS recruitment_date DATE DEFAULT CURRENT_DATE,
+ADD COLUMN IF NOT EXISTS commission_rules JSONB DEFAULT '{}';
+
+-- Alter DEALS for Reservometro & Origination
+ALTER TABLE deals
+ADD COLUMN IF NOT EXISTS lead_origin TEXT DEFAULT 'organic',
+ADD COLUMN IF NOT EXISTS estimated_closing_date DATE,
+ADD COLUMN IF NOT EXISTS actual_closing_date DATE,
+ADD COLUMN IF NOT EXISTS agent_commission_split JSONB DEFAULT '{}', -- stores exact fractional splits
+ADD COLUMN IF NOT EXISTS is_exclusive BOOLEAN DEFAULT false;
+
+-- Create PROPERTIES table (for API Syncs & Inventory management)
+CREATE TABLE IF NOT EXISTS properties (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    office_id UUID REFERENCES offices(id) ON DELETE CASCADE,
+    agent_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+    external_api_id TEXT UNIQUE, -- to avoid duplicates upon API sync
+    title TEXT NOT NULL,
+    description TEXT,
+    prop_type TEXT NOT NULL DEFAULT 'house' CHECK (prop_type IN ('house', 'lot', 'commercial', 'apartment')),
+    status TEXT NOT NULL DEFAULT 'for_sale' CHECK (status IN ('for_sale', 'for_rent', 'sold', 'rented', 'off_market')),
+    is_exclusive BOOLEAN DEFAULT false,
+    capture_date DATE DEFAULT CURRENT_DATE,
+    price INTEGER DEFAULT 0,
+    currency TEXT DEFAULT 'USD',
+    location TEXT DEFAULT '',
+    metrics JSONB DEFAULT '{}', -- to store dynamic stats
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Create EXPENSES table (for Office Profitability / P&L)
+CREATE TABLE IF NOT EXISTS expenses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    office_id UUID NOT NULL REFERENCES offices(id) ON DELETE CASCADE,
+    category TEXT NOT NULL CHECK (category IN ('rent', 'brand', 'salaries', 'marketing', 'legal', 'other')),
+    amount NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+    currency TEXT DEFAULT 'USD',
+    expense_date DATE DEFAULT CURRENT_DATE,
+    description TEXT DEFAULT '',
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- RLS FOR PROPERTIES
+ALTER TABLE properties ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Properties viewable by active users" ON properties FOR SELECT USING (true);
+CREATE POLICY "Brokers can manage office properties" ON properties FOR ALL USING (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('broker', 'officeadmin', 'mainadmin'))
+);
+CREATE POLICY "Agents can update own properties" ON properties FOR UPDATE USING (agent_id = auth.uid());
+
+-- RLS FOR EXPENSES
+ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Only Brokers and Admins see expenses" ON expenses FOR ALL USING (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND (role = 'mainadmin' OR (role IN ('broker', 'officeadmin') AND office_id = expenses.office_id)))
+);
+
+-- ==========================================
+-- 11. NATIONAL RANKING VIEWS (PHASE A/B)
+-- ==========================================
+CREATE OR REPLACE VIEW office_national_ranking AS
+WITH office_stats AS (
+    SELECT 
+        o.id AS office_id,
+        o.name AS office_name,
+        r.name AS region_name,
+        -- MTD (Month-to-Date) Gross Sales
+        COALESCE(SUM(d.price) FILTER (
+            WHERE d.stage = 'sold' 
+            AND EXTRACT(MONTH FROM d.updated_at) = EXTRACT(MONTH FROM CURRENT_DATE)
+            AND EXTRACT(YEAR FROM d.updated_at) = EXTRACT(YEAR FROM CURRENT_DATE)
+        ), 0) AS mtd_sales,
+        -- YTD (Year-to-Date) Gross Sales
+        COALESCE(SUM(d.price) FILTER (
+            WHERE d.stage = 'sold' 
+            AND EXTRACT(YEAR FROM d.updated_at) = EXTRACT(YEAR FROM CURRENT_DATE)
+        ), 0) AS ytd_sales
+    FROM offices o
+    JOIN regions r ON o.region_id = r.id
+    LEFT JOIN profiles p ON p.office_id = o.id
+    LEFT JOIN deals d ON (p.id = d.buyer_agent_id OR p.id = d.seller_agent_id)
+    GROUP BY o.id, o.name, r.name
+)
+SELECT 
+    office_id,
+    office_name,
+    region_name,
+    mtd_sales,
+    RANK() OVER (ORDER BY mtd_sales DESC) AS mtd_rank,
+    ytd_sales,
+    RANK() OVER (ORDER BY ytd_sales DESC) AS ytd_rank
+FROM office_stats;
