@@ -663,7 +663,6 @@ async function getAllAgents() {
     const { data, error } = await supabase
         .from('profiles')
         .select('*, offices(name)')
-        .neq('role', 'mainadmin')
         .order('created_at', { ascending: false });
 
     if (error) throw error;
