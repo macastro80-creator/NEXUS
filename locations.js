@@ -1,8 +1,13 @@
 // ==========================================
 // NEXUS: Dynamic Locations Fetching (Lazy Load)
 // ==========================================
-// This replaces the old static array with dynamic calls to Supabase.
-// It uses localStorage to cache data so the app remains lightning fast.
+
+// Ensure we have a local guaranteed client just in case db-service parsing failed due to caches
+function getLocationsClient() {
+    if (typeof supabase !== 'undefined' && supabase) return supabase;
+    if (window.supabase) return window.supabase.createClient('https://oprrfbsrihkjtiafyuxn.supabase.co', 'sb_publishable_vcgGRA09bHX1suZrkqYcAg_hpumhYHl');
+    throw new Error('Supabase library not loaded. Disable adblockers.');
+}
 
 // Helper to ignore accents in search
 function normalizeStr(str) {
@@ -33,21 +38,21 @@ const LocationService = {
     // 1. Fetch Provinces
     async getProvinces() {
         return this.fetchFromSupabase('provinces', () => 
-            supabase.from('locations').select('province').eq('is_active', true)
+            getLocationsClient().from('locations').select('province').eq('is_active', true)
         );
     },
 
     // 2. Fetch Cantons based on a chosen Province
     async getCantons(province) {
         return this.fetchFromSupabase(`cantons_${province}`, () => 
-            supabase.from('locations').select('canton').eq('province', province).eq('is_active', true)
+            getLocationsClient().from('locations').select('canton').eq('province', province).eq('is_active', true)
         );
     },
 
     // 3. Fetch Districts based on Canton
     async getDistricts(canton) {
         return this.fetchFromSupabase(`districts_${canton}`, () => 
-            supabase.from('locations').select('district').eq('canton', canton).eq('is_active', true)
+            getLocationsClient().from('locations').select('district').eq('canton', canton).eq('is_active', true)
         );
     },
 
@@ -55,7 +60,7 @@ const LocationService = {
     // This will format data the old way: "San José > Pérez Zeledón > San Isidro de El General"
     async getAllAsStrings() {
         return this.fetchFromSupabase('all_locations_formatted', async () => {
-            const { data, error } = await supabase.from('locations').select('province, canton, district').eq('is_active', true);
+            const { data, error } = await getLocationsClient().from('locations').select('province, canton, district').eq('is_active', true);
             if (error) throw error;
             
             // Format to match your old array style
