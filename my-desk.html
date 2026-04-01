@@ -192,20 +192,20 @@
                     <div class="sticky top-0 bg-slate-100/90 dark:bg-slate-800/90 backdrop-blur-md z-10 py-2 -mt-2 mb-2">
                         <h4 class="text-xs font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest flex items-center justify-between">
                             <span class="flex items-center gap-2"><i class="fa-solid fa-comments"></i> <span class="lang-en">In Negotiation</span><span class="lang-es hidden">En Negociación</span></span>
-                            <span class="bg-purple-600 text-white rounded-full px-2 py-0.5 text-[10px]">1</span>
                         </h4>
                     </div>
+                </div>
 
-                    <!-- COLUMN 2: UNDER CONTRACT -->
+                <!-- COLUMN 2: UNDER CONTRACT -->
                 <div id="colDealsContract" class="w-[85vw] sm:w-80 lg:w-96 flex-shrink-0 bg-slate-100/50 dark:bg-slate-800/30 rounded-[32px] p-4 flex flex-col gap-4 border border-slate-200/50 dark:border-slate-700/50 h-full overflow-y-auto no-scrollbar">
                     <div class="sticky top-0 bg-slate-100/90 dark:bg-slate-800/90 backdrop-blur-md z-10 py-2 -mt-2 mb-2">
                         <h4 class="text-xs font-black text-amber-500 uppercase tracking-widest flex items-center justify-between">
                             <span class="flex items-center gap-2"><i class="fa-solid fa-file-signature"></i> <span class="lang-en">Under Contract</span><span class="lang-es hidden">Bajo Contrato</span></span>
-                            <span class="bg-amber-500 text-white rounded-full px-2 py-0.5 text-[10px]">1</span>
                         </h4>
                     </div>
+                </div>
 
-                    <!-- COLUMN 3: CLOSED DEALS -->
+                <!-- COLUMN 3: CLOSED DEALS -->
                 <div id="colDealsSold" class="w-[85vw] sm:w-80 lg:w-96 flex-shrink-0 bg-slate-100/50 dark:bg-slate-800/30 rounded-[32px] p-4 flex flex-col gap-4 border border-slate-200/50 dark:border-slate-700/50 h-full overflow-y-auto no-scrollbar">
                     <div class="sticky top-0 bg-slate-100/90 dark:bg-slate-800/90 backdrop-blur-md z-10 py-2 -mt-2 mb-2">
                         <h4 class="text-xs font-black text-green-500 uppercase tracking-widest flex items-center justify-between">
@@ -240,8 +240,9 @@
                         <span class="bg-[#003DA5] text-white rounded-full px-2 py-0.5 text-[10px]">1</span>
                     </h4>
                 </div>
+            </div>
                 
-                <!-- COLUMN: LIKED IT -->
+            <!-- COLUMN: LIKED IT -->
             <div id="colLiked" class="w-[85vw] max-w-[280px] sm:max-w-none sm:w-80 flex-shrink-0 snap-center bg-slate-100/50 dark:bg-slate-800/30 rounded-[32px] p-4 flex flex-col gap-4 border border-slate-200/50 dark:border-slate-700/50 h-full overflow-y-auto no-scrollbar">
                 <div class="sticky top-0 bg-slate-100/90 dark:bg-slate-800/90 backdrop-blur-md z-10 py-2 -mt-2 mb-2">
                     <h4 class="text-xs font-black text-pink-500 dark:text-pink-400 uppercase tracking-widest flex items-center justify-between">
@@ -259,8 +260,9 @@
                         <span class="bg-blue-500 text-white rounded-full px-2 py-0.5 text-[10px]">1</span>
                     </h4>
                 </div>
+            </div>
                 
-                <!-- COLUMN 3: CONTRACT -->
+            <!-- COLUMN 3: CONTRACT -->
             <div id="colContract" class="w-[85vw] max-w-[280px] sm:max-w-none sm:w-80 flex-shrink-0 snap-center bg-slate-100/50 dark:bg-slate-800/30 rounded-[32px] p-4 flex flex-col gap-4 border border-slate-200/50 dark:border-slate-700/50 h-full overflow-y-auto no-scrollbar">
                 <div class="sticky top-0 bg-slate-100/90 dark:bg-slate-800/90 backdrop-blur-md z-10 py-2 -mt-2 mb-2">
                     <h4 class="text-xs font-black text-amber-500 uppercase tracking-widest flex items-center justify-between">
@@ -268,8 +270,9 @@
                         <span class="bg-amber-500 text-white rounded-full px-2 py-0.5 text-[10px]">1</span>
                     </h4>
                 </div>
+            </div>
 
-                <!-- NEW COLUMN: SOLD -->
+            <!-- NEW COLUMN: SOLD -->
             <div id="colSold" class="w-[85vw] max-w-[280px] sm:max-w-none sm:w-80 flex-shrink-0 snap-center bg-slate-100/50 dark:bg-slate-800/30 rounded-[32px] p-4 flex flex-col gap-4 border border-slate-200/50 dark:border-slate-700/50 h-full overflow-y-auto no-scrollbar">
                 <div class="sticky top-0 bg-slate-100/90 dark:bg-slate-800/90 backdrop-blur-md z-10 py-2 -mt-2 mb-2">
                     <h4 class="text-xs font-black text-green-500 uppercase tracking-widest flex items-center justify-between">
@@ -1826,6 +1829,74 @@
                 panel.classList.add('hidden');
                 panel.classList.remove('flex');
             }
+        }
+        
+        async function loadSupabaseSearches() {
+            if (!window.supabase) return;
+            const { data: { user } } = await window.supabase.auth.getUser();
+            if (!user) return;
+
+            // 1. Fetch Searches
+            const { data: searches } = await window.supabase
+                .from('searches')
+                .select('*')
+                .eq('agent_id', user.id)
+                .eq('status', 'active');
+                
+            const activeSearchCount = searches ? searches.length : 0;
+            const metricBuyersEl = document.getElementById('metricBuyers');
+            if (metricBuyersEl) {
+                metricBuyersEl.innerHTML = activeSearchCount + ' <span class="lang-en">Active</span><span class="lang-es hidden">Activas</span>';
+            }
+
+            const container = document.getElementById('mySearchesContainer');
+            const emptyState = document.getElementById('buyerEmptyState');
+            if (!searches || searches.length === 0) {
+                if(container) container.innerHTML = '';
+                if(emptyState) emptyState.classList.remove('hidden');
+            } else if (container) {
+                if(emptyState) emptyState.classList.add('hidden');
+                let html = '';
+                searches.forEach(s => { html += renderMySearchCard(s); });
+                container.innerHTML = html;
+            }
+
+            // 2. Fetch Matches Sent
+            const { data: matches } = await window.supabase
+                .from('matches')
+                .select('*')
+                .eq('sender_id', user.id)
+                .in('status', ['new', 'visited', 'liked', 'contract', 'waiting_partner']);
+            
+            if(matches) {
+                const activeMatches = matches.length;
+                const metricListingsEl = document.getElementById('metricListings');
+                if(metricListingsEl) {
+                    metricListingsEl.innerHTML = activeMatches + ' <span class="lang-en">Active</span><span class="lang-es hidden">Activos</span>';
+                }
+            }
+
+            // 3. Fetch Deals for Kanban Metrics
+            const { data: deals } = await window.supabase
+                .from('deals')
+                .select('*')
+                .or(`buyer_agent_id.eq.${user.id},seller_agent_id.eq.${user.id}`);
+
+            let pipelineSum = 0;
+            let contractSum = 0;
+
+            if (deals) {
+                deals.forEach(d => {
+                    if (d.stage === 'negotiation') pipelineSum += d.price || 0;
+                    if (d.stage === 'contract') contractSum += d.price || 0;
+                });
+            }
+
+            const mPipe = document.getElementById('metricPipelinePotential');
+            if (mPipe) mPipe.innerText = window.formatBudget ? window.formatBudget(pipelineSum) : '$' + pipelineSum;
+
+            const mCont = document.getElementById('metricUnderContract');
+            if (mCont) mCont.innerText = window.formatBudget ? window.formatBudget(contractSum) : '$' + contractSum;
         }
     </script>
 </body>
