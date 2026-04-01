@@ -494,10 +494,22 @@
                     
                     setLoading(false);
                     showSuccess(dict[currentLang].signupSuccess);
-                    // Switch back to login mode
-                    setTimeout(() => {
-                        setAuthMode(false);
-                    }, 3000);
+                    
+                    if (data.session) {
+                        // User is auto-logged in (email confirmations likely disabled)
+                        localStorage.setItem('userEmail', email);
+                        localStorage.setItem('userName', fullName);
+                        localStorage.setItem('userRole', 'agent');
+                        
+                        setTimeout(() => {
+                            window.location.href = 'profile.html';
+                        }, 1500);
+                    } else {
+                        // Switch back to login mode if email confirmation is required
+                        setTimeout(() => {
+                            setAuthMode(false);
+                        }, 3000);
+                    }
                 } else {
                     // SIGN IN
                     if (!window.supabase) {
