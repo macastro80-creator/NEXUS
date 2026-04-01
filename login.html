@@ -547,13 +547,17 @@
                     // Enforce Profile Completion on Login
                     let isComplete = false;
                     if (profile) {
-                        const ez = profile.expert_zones;
-                        const hasExpertZones = Array.isArray(ez) ? ez.length > 0 && ez[0] !== "" : (typeof ez === 'string' && ez.length > 0 && ez !== "{}" && ez !== "[]");
+                        const checkComplete = (val) => {
+                            if (!val) return false;
+                            if (Array.isArray(val)) return val.length > 0 && val[0] !== "" && val[0] !== null;
+                            if (typeof val === 'string') {
+                                const str = val.trim().replace(/"/g, '').replace(/'/g, '');
+                                return str.length > 0 && str !== "{}" && str !== "[]" && str !== "null" && str !== "undefined" && str !== "[null]";
+                            }
+                            return false;
+                        };
                         
-                        const sp = profile.specializations;
-                        const hasSpecializations = Array.isArray(sp) ? sp.length > 0 && sp[0] !== "" : (typeof sp === 'string' && sp.length > 0 && sp !== "{}" && sp !== "[]");
-                        
-                        isComplete = hasExpertZones || hasSpecializations;
+                        isComplete = checkComplete(profile.expert_zones) || checkComplete(profile.specializations);
                     }
 
                     if (!isComplete) {
@@ -602,19 +606,24 @@
                         const profile = await getCurrentProfile();
                         let isComplete = false;
                         if (profile) {
-                            const ez = profile.expert_zones;
-                            const hasExpertZones = Array.isArray(ez) ? ez.length > 0 && ez[0] !== "" : (typeof ez === 'string' && ez.length > 0 && ez !== "{}" && ez !== "[]");
+                            const checkComplete = (val) => {
+                                if (!val) return false;
+                                if (Array.isArray(val)) return val.length > 0 && val[0] !== "" && val[0] !== null;
+                                if (typeof val === 'string') {
+                                    const str = val.trim().replace(/"/g, '').replace(/'/g, '');
+                                    return str.length > 0 && str !== "{}" && str !== "[]" && str !== "null" && str !== "undefined" && str !== "[null]";
+                                }
+                                return false;
+                            };
                             
-                            const sp = profile.specializations;
-                            const hasSpecializations = Array.isArray(sp) ? sp.length > 0 && sp[0] !== "" : (typeof sp === 'string' && sp.length > 0 && sp !== "{}" && sp !== "[]");
-                            
-                            isComplete = hasExpertZones || hasSpecializations;
+                            isComplete = checkComplete(profile.expert_zones) || checkComplete(profile.specializations);
                         }
 
                         if (!isComplete) {
                             const hash = window.location.hash || '';
                             window.location.href = 'profile.html?onboarding=true' + hash;
                         } else {
+                            alert("DEBUG ERROR: Profile evaluated as complete! ez=" + JSON.stringify(profile.expert_zones) + " sp=" + JSON.stringify(profile.specializations));
                             window.location.href = 'index.html';
                         }
                     }

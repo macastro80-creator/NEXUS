@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS teams (
 );
 
 -- Add FK from profiles to offices (deferred because of circular reference)
+ALTER TABLE profiles DROP CONSTRAINT IF EXISTS fk_profiles_office;
 ALTER TABLE profiles ADD CONSTRAINT fk_profiles_office
     FOREIGN KEY (office_id) REFERENCES offices(id) ON DELETE SET NULL;
 

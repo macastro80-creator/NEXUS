@@ -87,7 +87,7 @@ async function getCurrentProfile() {
 
     const { data, error } = await supabase
         .from('profiles')
-        .select('*, offices(name, brand, area)')
+        .select('*, offices!office_id(name, brand, area)')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -815,20 +815,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Enforce Profile Completion
             let isComplete = false;
-            if (profile) {
-                const ez = profile.expert_zones;
-                const hasExpertZones = Array.isArray(ez) ? ez.length > 0 && ez[0] !== "" : (typeof ez === 'string' && ez.length > 0 && ez !== "{}" && ez !== "[]");
-                
-                const sp = profile.specializations;
-                const hasSpecializations = Array.isArray(sp) ? sp.length > 0 && sp[0] !== "" : (typeof sp === 'string' && sp.length > 0 && sp !== "{}" && sp !== "[]");
-                
-                isComplete = hasExpertZones || hasSpecializations;
-            }
+                        if (profile) {
+                            const checkComplete = (val) => {
+                                if (!val) return false;
+                                if (Array.isArray(val)) return val.length > 0 && val[0] !== "" && val[0] !== null;
+                                if (typeof val === 'string') {
+                                    const str = val.trim().replace(/"/g, '').replace(/'/g, '');
+                                    return str.length > 0 && str !== "{}" && str !== "[]" && str !== "null" && str !== "undefined" && str !== "[null]";
+                                }
+                                return false;
+                            };
+                            
+                            isComplete = checkComplete(profile.expert_zones) || checkComplete(profile.specializations);
+                        }
             
             if (!isComplete && !path.includes('profile.html')) {
                 const hash = window.location.hash || '';
                 window.location.href = 'profile.html?onboarding=true' + hash;
                 return;
+            } else if (isComplete && !path.includes('profile.html') && path.includes('index.html')) {
+                // If they are on index.html and they are complete, let's see why
+                if (profile) {
+                    console.log("DEBUG DB-SERVICE: isComplete=true. ez=", JSON.stringify(profile.expert_zones));
+                }
             }
 
             // --- PREMIUM UX GATING (BMAD METHOD) ---

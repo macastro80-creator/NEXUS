@@ -1,21 +1,19 @@
-const p = require('puppeteer');
+const { createClient } = require('@supabase/supabase-js');
 
-(async () => {
-    const browser = await p.launch({ headless: 'new', args: ['--no-sandbox'] });
-    const page = await browser.newPage();
+const SUPABASE_URL = 'https://oprrfbsrihkjtiafyuxn.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_vcgGRA09bHX1suZrkqYcAg_hpumhYHl';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    page.on('console', msg => console.log('PAGE LOG:', msg.text()));
-    page.on('pageerror', error => console.log('PAGE ERROR:', error.message));
-    page.on('requestfailed', request =>
-      console.log('REQUEST FAILED:', request.url(), request.failure()?.errorText || 'Unknown error')
-    );
+async function testDisambiguate() {
+    let { error: e1 } = await supabase.from('profiles').select('id, offices!office_id(name)').limit(1);
+    console.log("Using !office_id:", e1 ? e1.message : "OK");
 
-    console.log('Navigating to https://nexus-gray-seven.vercel.app/login');
-    await page.goto('https://nexus-gray-seven.vercel.app/login', { waitUntil: 'networkidle0' });
+    let { error: e2 } = await supabase.from('profiles').select('id, offices!fk_profiles_office(name)').limit(1);
+    console.log("Using !fk_profiles_office:", e2 ? e2.message : "OK");
     
-    // Check if signUp is defined
-    const hasSignUp = await page.evaluate(() => typeof window.signUp !== 'undefined');
-    console.log('Is signUp defined in browser?', hasSignUp);
+    // Also test db-service.js getCurrentProfile method which probably broke too:
+    let { error: e3 } = await supabase.from('profiles').select('id, offices!office_id(name, brand, area)').limit(1);
+    console.log("Using getCurrentProfile fix:", e3 ? e3.message : "OK");
+}
 
-    await browser.close();
-})();
+testDisambiguate();

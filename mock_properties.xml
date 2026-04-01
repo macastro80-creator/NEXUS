@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfPropertiesInRegion xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.datacontract.org/2004/07/CostaRicaAPI.Models">
+<PropertiesInRegion>
+<AssociateId>2400</AssociateId>
+<ListingKey>10001</ListingKey>
+<ListingTitle_es>Hermosa Casa en Pérez</ListingTitle_es>
+<ListingTitle_en>Beautiful House in Perez</ListingTitle_en>
+<Status>Active</Status>
+<PropertyTypeName_en>House</PropertyTypeName_en>
+<ListPrice>150000</ListPrice>
+<Location>Perez Zeledon</Location>
+<BedroomsTotal>3</BedroomsTotal>
+<BathroomsFull>2</BathroomsFull>
+<LotSizeArea>500</LotSizeArea>
+</PropertiesInRegion>
+<PropertiesInRegion>
+<AssociateId>3792</AssociateId>
+<ListingKey>10002</ListingKey>
+<ListingTitle_es>Lote Comercial</ListingTitle_es>
+<ListingTitle_en>Commercial Lot</ListingTitle_en>
+<Status>Active</Status>
+<PropertyTypeName_en>Commercial Land</PropertyTypeName_en>
+<ListPrice>350000</ListPrice>
+<Location>Dominical</Location>
+<BedroomsTotal>0</BedroomsTotal>
+<BathroomsFull>0</BathroomsFull>
+<LotSizeArea>2000</LotSizeArea>
+</PropertiesInRegion>
+</ArrayOfPropertiesInRegion>

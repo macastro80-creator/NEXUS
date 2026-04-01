@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfMembersInRegion xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.datacontract.org/2004/07/CostaRicaAPI.Models">
+<MembersInRegion>
+<AssociateID>2400</AssociateID>
+<FirstName>Emma</FirstName>
+<LastName>Bennett</LastName>
+<Gender>F</Gender>
+<Birthday>1991-03-26T00:00:00</Birthday>
+<StartDate>2025-03-12T00:00:00</StartDate>
+<RemaxEmail>emma@remax-altitud.cr</RemaxEmail>
+<UrlImg>https://balloon.remax-cca.com/userfiles/alejandra-castro/image/3.jpg</UrlImg>
+<Title>Associate</Title>
+</MembersInRegion>
+<MembersInRegion>
+<AssociateID>3792</AssociateID>
+<FirstName>Alejandra</FirstName>
+<LastName>Castro</LastName>
+<Gender>F</Gender>
+<Birthday>1977-11-23T00:00:00</Birthday>
+<StartDate>2025-02-01T00:00:00</StartDate>
+<RemaxEmail>acastro@remax-altitud.cr</RemaxEmail>
+<UrlImg>https://balloon.remax-cca.com/userfiles/alejandra-castro/image/14.jpg</UrlImg>
+<Title>Owner</Title>
+</MembersInRegion>
+</ArrayOfMembersInRegion>
