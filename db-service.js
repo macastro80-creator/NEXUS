@@ -22,6 +22,7 @@ var supabase = window.supabaseInstance || null;
 
 if (!supabase) {
     console.warn('⚠️ Supabase SDK not loaded. Make sure to include the script tag in your HTML.');
+    alert("CRITICAL ERROR: Supabase CDN blocked by your browser/network! Match Board will crash. Please disable adblockers or check your connection.");
 }
 
 // ============================================
@@ -796,7 +797,7 @@ function isSupabaseConfigured() {
 // Global Auth Guard
 document.addEventListener('DOMContentLoaded', async () => {
     const path = window.location.pathname;
-    if (path.includes('login.html') || path.includes('client-onboarding.html') || path.includes('test_credentials.md')) {
+    if (path.includes('login') || path.includes('client-onboarding') || path.includes('test_credentials')) {
         return;
     }
 
