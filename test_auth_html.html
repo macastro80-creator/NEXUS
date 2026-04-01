@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://oprrfbsrihkjtiafyuxn.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_vcgGRA09bHX1suZrkqYcAg_hpumhYHl';
+        
+        window.supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const { data, error } = await supabase.auth.getUser();
+                document.body.innerHTML += `<p>User: ${data.user ? data.user.email : 'null'}</p>`;
+                if (error) document.body.innerHTML += `<p>Error: ${error.message}</p>`;
+            } catch (e) {
+                document.body.innerHTML += `<p>Catch Error: ${e.message}</p>`;
+            }
+        });
+    </script>
+</head>
+<body><h1>Test Auth</h1></body>
+</html>

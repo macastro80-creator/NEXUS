@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const files = ['index.html', 'my-desk.html', 'market.html', 'profile.html', 'add-search.html'];
+const files = ['app.html', 'my-desk.html', 'market.html', 'profile.html', 'add-search.html'];
 
 files.forEach(file => {
     if(!fs.existsSync(file)) return;
@@ -9,7 +9,7 @@ files.forEach(file => {
     // Update the JS block that locks premium elements
     // We want to force it to lock these elements ALWAYS for Phase 1
     
-    // In index.html, profile.html, my-desk.html, the script is at the bottom
+    // In app.html, profile.html, my-desk.html, the script is at the bottom
     // We can replace the if (!isPremium) block with a block that just locks them universally
     
     html = html.replace(/if \(!isPremium\) \{[\s\S]*?premiumElements\.forEach\(el => \{[\s\S]*?\}\);\s*\}/, 

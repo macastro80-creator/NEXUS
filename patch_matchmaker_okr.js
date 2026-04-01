@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-// The OKR reporting happens in index.html (My Business OKR section) and the matchmaker modal is in my-desk.html / feed.
+// The OKR reporting happens in app.html (My Business OKR section) and the matchmaker modal is in my-desk.html / feed.
 // Let's see how "Send Match" is handled in my-desk.html
 
 let deskHtml = fs.readFileSync('my-desk.html', 'utf8');
@@ -19,14 +19,14 @@ deskHtml = deskHtml.replace(/showSuccessModal\("Feedback Requested"/,
 fs.writeFileSync('my-desk.html', deskHtml, 'utf8');
 
 
-// Also check index.html for match sending
-let indexHtml = fs.readFileSync('index.html', 'utf8');
+// Also check app.html for match sending
+let indexHtml = fs.readFileSync('app.html', 'utf8');
 if (indexHtml.includes('showSuccessModal("Match Sent"')) {
     indexHtml = indexHtml.replace(/showSuccessModal\("Match Sent"/, 
     `let matches = parseInt(localStorage.getItem('okr_matches_sent') || '0');
                 localStorage.setItem('okr_matches_sent', matches + 1);
                 showSuccessModal("Match Sent"`);
-    fs.writeFileSync('index.html', indexHtml, 'utf8');
+    fs.writeFileSync('app.html', indexHtml, 'utf8');
 }
 
 

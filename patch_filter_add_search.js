@@ -1,8 +1,8 @@
 const fs = require('fs');
 
-// First fix index.html filters 
+// First fix app.html filters 
 // We already replaced the buttons, now check applyFilters
-let indexHtml = fs.readFileSync('index.html', 'utf8');
+let indexHtml = fs.readFileSync('app.html', 'utf8');
 if (!indexHtml.includes('function applyFilters() {')) {
     // If it didn't apply properly, let's inject it forcefully
     const applyFiltersJS = `
@@ -41,7 +41,7 @@ if (!indexHtml.includes('function applyFilters() {')) {
             }
 `;
     indexHtml = indexHtml.replace(/function toggleFilter\(\) {/, applyFiltersJS + '\n            function toggleFilter() {');
-    fs.writeFileSync('index.html', indexHtml, 'utf8');
+    fs.writeFileSync('app.html', indexHtml, 'utf8');
 }
 
 

@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-let html = fs.readFileSync('index.html', 'utf8');
+let html = fs.readFileSync('app.html', 'utf8');
 
 // The Apply Filters buttons just hide the panel, let's make them actually filter.
 html = html.replace(/<button onclick="toggleFilter\(\)"\s*class="w-full bg-\[#003DA5\] text-white py-4 rounded-2xl font-black uppercase text-xs shadow-lg mt-4 lang-en">Apply\s*Filters<\/button>/,
@@ -51,5 +51,5 @@ const applyFiltersJS = `
 
 html = html.replace(/function toggleFilter\(\) {/, applyFiltersJS + '\n            function toggleFilter() {');
 
-fs.writeFileSync('index.html', html, 'utf8');
+fs.writeFileSync('app.html', html, 'utf8');
 

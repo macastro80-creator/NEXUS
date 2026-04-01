@@ -1,5 +1,5 @@
 const fs = require('fs');
-let html = fs.readFileSync('index.html', 'utf8');
+let html = fs.readFileSync('app.html', 'utf8');
 
 // The user said: "Feed: the cards are not clear who is the agent and whi is the client"
 // Looking for the name and properties line
@@ -31,5 +31,5 @@ html = html.replace(/<h3 class="font-black text-xl text-white italic leading-non
                                 </div>
                             </div>`);
 
-fs.writeFileSync('index.html', html, 'utf8');
+fs.writeFileSync('app.html', html, 'utf8');
 

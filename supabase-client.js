@@ -14,8 +14,11 @@
 const SUPABASE_URL = 'https://oprrfbsrihkjtiafyuxn.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_vcgGRA09bHX1suZrkqYcAg_hpumhYHl';
 
-// Initialize Supabase client
-const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+// Initialize Supabase client globally without destroying the original library
+if (window.supabase && typeof window.supabase.createClient === 'function' && !window.supabaseInstance) {
+    window.supabaseInstance = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+var supabase = window.supabaseInstance || null;
 
 if (!supabase) {
     console.warn('⚠️ Supabase SDK not loaded. Make sure to include the script tag in your HTML.');

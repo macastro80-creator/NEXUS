@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     avatar_url TEXT DEFAULT '',
     tx_volume TEXT DEFAULT '1-5',
     expert_zones TEXT[] DEFAULT '{}',
-    is_premium BOOLEAN DEFAULT false,
+    plan_tier TEXT DEFAULT 'core' CHECK (plan_tier IN ('core', 'pulse', 'omni')),
     -- Enterprise Metrics
     start_date DATE DEFAULT CURRENT_DATE,
     employment_type TEXT DEFAULT 'full_time' CHECK (employment_type IN ('full_time', 'part_time')),
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS offices (
     area TEXT NOT NULL DEFAULT '',
     broker_name TEXT DEFAULT '',
     broker_id UUID REFERENCES profiles(id),
-    plan_tier TEXT DEFAULT 'free' CHECK (plan_tier IN ('free', 'silver', 'gold', 'diamond')),
+    plan_tier TEXT DEFAULT 'core' CHECK (plan_tier IN ('core', 'pulse', 'omni')),
     max_agents INTEGER DEFAULT 10,
     created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -473,3 +473,48 @@ SELECT
     ytd_sales,
     RANK() OVER (ORDER BY ytd_sales DESC) AS ytd_rank
 FROM office_stats;
+
+-- ==========================================
+-- 12. AGENT EXPENSES (Cuentas Corrientes)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS agent_expenses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    agent_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    office_id UUID REFERENCES offices(id) ON DELETE CASCADE,
+    description TEXT NOT NULL,
+    amount NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+    status TEXT NOT NULL DEFAULT 'unpaid' CHECK (status IN ('unpaid', 'paid', 'void')),
+    charge_date DATE DEFAULT CURRENT_DATE,
+    created_by UUID REFERENCES profiles(id),
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- RLS FOR AGENT EXPENSES
+ALTER TABLE agent_expenses ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Agents can view own expenses" ON agent_expenses FOR SELECT USING (agent_id = auth.uid());
+CREATE POLICY "Brokers can manage office expenses" ON agent_expenses FOR ALL USING (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND (role = 'mainadmin' OR (role IN ('broker', 'officeadmin') AND office_id = agent_expenses.office_id)))
+);
+
+-- ==========================================
+-- 13. AGENT MEETINGS LOG (Bitácora 1to1)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS agent_meetings_log (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    agent_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    broker_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    meeting_date DATE DEFAULT CURRENT_DATE,
+    notes TEXT,
+    is_private BOOLEAN DEFAULT true,
+    is_skipped BOOLEAN DEFAULT false,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- RLS FOR MEETINGS
+ALTER TABLE agent_meetings_log ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Agents view own meetings if not private" ON agent_meetings_log FOR SELECT USING (agent_id = auth.uid() AND is_private = false);
+CREATE POLICY "Brokers manage meetings" ON agent_meetings_log FOR ALL USING (
+    broker_id = auth.uid() OR 
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'mainadmin')
+);

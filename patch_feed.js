@@ -1,5 +1,5 @@
 const fs = require('fs');
-let html = fs.readFileSync('index.html', 'utf8');
+let html = fs.readFileSync('app.html', 'utf8');
 
 // 1. Fix the top nav border / sticky behavior styling to make it feel premium
 html = html.replace(/<nav class="bg-white dark:bg-slate-800 border-b px-4 py-4 sticky top-0 z-50 flex justify-between items-center shadow-sm">/, 
@@ -31,4 +31,4 @@ html = html.replace(/<!-- PREMIUM TOP NAV -->[\s\S]*?<!-- NOTIFICATIONS PANEL \(
 
     <!-- NOTIFICATIONS PANEL (Matchmaker) -->`);
 
-fs.writeFileSync('index.html', html, 'utf8');
+fs.writeFileSync('app.html', html, 'utf8');

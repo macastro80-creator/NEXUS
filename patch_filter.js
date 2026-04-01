@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-let html = fs.readFileSync('index.html', 'utf8');
+let html = fs.readFileSync('app.html', 'utf8');
 
 // Replace the two filters with a grid of 5 filters
 html = html.replace(/<div class="grid grid-cols-2 gap-2">\s*<button class="p-2 border rounded-xl text-\[9px\] font-black uppercase lang-en">House<\/button>\s*<button class="p-2 border rounded-xl text-\[9px\] font-black uppercase lang-es hidden">Casa<\/button>\s*<button class="p-2 border rounded-xl text-\[9px\] font-black uppercase lang-en">Finca<\/button>\s*<button class="p-2 border rounded-xl text-\[9px\] font-black uppercase lang-es hidden">Finca<\/button>\s*<\/div>/,
@@ -21,5 +21,5 @@ html = html.replace(/<div class="grid grid-cols-2 gap-2">\s*<button class="p-2 b
                     <button onclick="addFilterAreaValue('Comercial')" class="p-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-[9px] font-black uppercase lang-es hidden transition-colors col-span-2">Comercial</button>
                 </div>`);
 
-fs.writeFileSync('index.html', html, 'utf8');
+fs.writeFileSync('app.html', html, 'utf8');
 
