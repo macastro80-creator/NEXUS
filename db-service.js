@@ -670,6 +670,48 @@ async function getAllAgents() {
     return data;
 }
 
+/**
+ * Get all searches (admin view)
+ */
+async function getAllSearchesAdmin() {
+    const { data, error } = await supabase
+        .from('searches')
+        .select('*, profiles!agent_id(full_name, brand)')
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data;
+}
+
+/**
+ * Delete a search (admin only)
+ */
+async function deleteSearchAdmin(searchId) {
+    const { error } = await supabase
+        .from('searches')
+        .delete()
+        .eq('id', searchId);
+
+    if (error) throw error;
+}
+
+/**
+ * Delete a user completely (admin only via RPC)
+ */
+async function deleteUserAdmin(userId) {
+    const { error } = await supabase.rpc('admin_delete_user', { target_user_id: userId });
+    if (error) throw error;
+}
+
+/**
+ * Block a user (admin only via RPC)
+ */
+async function toggleUserBlockAdmin(userId, block) {
+    const status = block ? 'blocked' : 'agent';
+    const { error } = await supabase.rpc('admin_toggle_user_block', { target_user_id: userId, new_role: status });
+    if (error) throw error;
+}
+
 // ============================================
 // AGENT / LEAD PROTECTION FUNCTIONS
 // ============================================
@@ -760,6 +802,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const user = await getCurrentUser();
             if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            // Check if blocked
+            const profile = await getCurrentProfile();
+            if (profile && profile.role === 'blocked') {
+                await signOut();
+                alert('Your account has been deactivated by the administrator.');
                 window.location.href = 'login.html';
             }
         } catch (e) {
