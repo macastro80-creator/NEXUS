@@ -477,6 +477,14 @@ async function loadAgents() {
                 id: a.id, name: a.full_name, brand: a.brand || 'Independent', 
                 role: a.role, tx: a.tx_volume || '1-5', joined: a.created_at?.substring(0,7) || '2024-01'
             }));
+            
+            // Auto-merge distinct brands from current agents
+            const uniqueAgentBrands = [...new Set(agents.map(a => a.brand).filter(b => b))];
+            uniqueAgentBrands.forEach(ub => {
+                if (!brands.includes(ub)) brands.push(ub);
+            });
+            localStorage.setItem('nexusBrands', JSON.stringify(brands));
+            
         } catch(e) { console.warn('Fallback to demo agents'); }
     }
     renderBrandCards();
@@ -606,15 +614,21 @@ async function adminToggleBlockAgent(id, block) {
 
 function renderBrandManager() {
     const container = document.getElementById('brandList');
-    if (!brands || brands.length === 0) {
-        container.innerHTML = '<p class="text-xs text-slate-400 font-bold w-full text-center py-2">No brands added yet.</p>';
-        return;
+    try {
+        if (!brands || !Array.isArray(brands) || brands.length === 0) {
+            brands = [...defaultBrands];
+        }
+        container.innerHTML = brands.map(b => {
+            const safeName = typeof b === 'string' ? b : String(b);
+            return `
+            <div class="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 text-[#003DA5] dark:text-blue-400 px-3 py-1.5 rounded-lg text-[10px] font-black border border-blue-100 dark:border-blue-800">
+                ${safeName}
+                <i class="fa-solid fa-xmark ml-1 cursor-pointer opacity-50 hover:opacity-100 hover:text-red-500 transition-all" onclick="removeBrand('${safeName.replace(/'/g,"\\'")}')"></i>
+            </div>`;
+        }).join('');
+    } catch(e) {
+        container.innerHTML = '<p class="text-xs text-red-400 font-bold">Error loading brands. Please reset.</p>';
     }
-    container.innerHTML = brands.map(b => `
-        <div class="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 text-[#003DA5] dark:text-blue-400 px-3 py-1.5 rounded-lg text-[10px] font-black border border-blue-100 dark:border-blue-800">
-            ${b}
-            <i class="fa-solid fa-xmark ml-1 cursor-pointer opacity-50 hover:opacity-100 hover:text-red-500 transition-all" onclick="removeBrand('${b.replace(/'/g,"\\'")}')"></i>
-        </div>`).join('');
 }
 
 function addBrand() {
