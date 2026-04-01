@@ -1324,80 +1324,12 @@
         // Initialize Language and Metrics on load
         window.onload = async function() {
             setLanguage();
-            try { await loadMySearches(); } catch(e) { console.warn('Search load error:', e); }
-            updateDashboardMetrics();
-        }
-
-        function updateDashboardMetrics() {
-            // Count cards in specific Kanban columns
-            const contractCards = document.querySelectorAll('#colContract > div, #colDealsContract > div').length;
-            const negotiationCards = document.querySelectorAll('#colDealsNegotiation > div').length;
-            const soldCards = document.querySelectorAll('#colSold > div, #colDealsSold > div').length;
-
-            // Update UI elements if they exist
-            const potentialEl = document.getElementById('metricPipelinePotential');
-            const contractEl = document.getElementById('metricUnderContract');
-
-            if(potentialEl && contractEl) {
-                // For the generic demo, we'll assign some arbitrary averages per card stage
-                const contractValue = contractCards * 12000;
-                const negotiationValue = negotiationCards * 15000;
-                const soldValue = soldCards * 11500;
-                
-                const totalPotential = contractValue + negotiationValue + soldValue + 10000; // +10k base
-
-                potentialEl.innerText = "$" + totalPotential.toLocaleString();
-                contractEl.innerText = "$" + contractValue.toLocaleString();
+            if (typeof loadSupabaseSearches === 'function') {
+                try { await loadSupabaseSearches(); } catch(e) { console.warn('Supabase load error:', e); }
             }
         }
 
-        // ===== LOAD USER'S OWN SEARCHES FROM SUPABASE =====
-        async function loadMySearches() {
-            if (!isSupabaseConfigured() || !supabase) return;
-
-            try {
-                const user = await getCurrentUser();
-                if (!user) return;
-
-                const { data, error } = await supabase
-                    .from('searches')
-                    .select('*')
-                    .eq('agent_id', user.id)
-                    .order('created_at', { ascending: false });
-
-                if (error) throw error;
-                if (!data || data.length === 0) {
-                    // Show empty state, hide demo cards
-                    const demoCards = document.querySelectorAll('#buyerTabContent > div:not(#mySearchesContainer):not(#buyerEmptyState)');
-                    demoCards.forEach(c => c.style.display = 'none');
-                    document.getElementById('buyerEmptyState').classList.remove('hidden');
-                    // Update metrics
-                    document.getElementById('metricBuyers').innerHTML = '0 <span class="lang-en">Active</span><span class="lang-es hidden">Activas</span>';
-                    return;
-                }
-
-                const container = document.getElementById('mySearchesContainer');
-                if (!container) return;
-
-                // Hide demo cards
-                const demoCards = document.querySelectorAll('#buyerTabContent > div:not(#mySearchesContainer):not(#buyerEmptyState)');
-                demoCards.forEach(c => c.style.display = 'none');
-
-                container.innerHTML = data.map(s => renderMySearchCard(s)).join('');
-
-                // Update metrics
-                const activeCount = data.filter(s => s.status === 'active').length;
-                document.getElementById('metricBuyers').innerHTML = `${activeCount} <span class="lang-en">Active</span><span class="lang-es hidden">Activas</span>`;
-
-                // Apply language
-                const lang = localStorage.getItem('nexusLang') || 'en';
-                container.querySelectorAll('.lang-en').forEach(el => lang === 'en' ? el.classList.remove('hidden') : el.classList.add('hidden'));
-                container.querySelectorAll('.lang-es').forEach(el => lang === 'es' ? el.classList.remove('hidden') : el.classList.add('hidden'));
-
-            } catch (e) {
-                console.warn('Could not load user searches:', e.message);
-            }
-        }
+        // loadMySearches removed in favor of loadSupabaseSearches
 
         function renderMySearchCard(s) {
             const propType = (s.property_type || 'any').split(',')[0].trim();
@@ -1468,9 +1400,6 @@
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            if (typeof loadSupabaseSearches === 'function') {
-                loadSupabaseSearches().catch(e => console.warn('Supabase load error:', e));
-            }
             
             const isPremium = localStorage.getItem('isPremium') === 'true';
             const isAdmin = localStorage.getItem('isAdmin') === 'true';
@@ -1605,7 +1534,7 @@
                         document.getElementById('inviteLinkUrl').value = link;
                         document.getElementById('inviteLinkResult').classList.remove('hidden');
                         document.getElementById('btnGenerateInvite').style.display = 'none';
-                        loadMySearches(); 
+                        if (typeof loadSupabaseSearches === 'function') loadSupabaseSearches(); 
                     }
                 }
             } catch(e) {
