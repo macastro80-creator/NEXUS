@@ -168,14 +168,27 @@
                     </div>
 
                     <!-- Phone Input -->
-                    <div id="phoneField" class="relative hidden">
-                        <input type="tel" id="signUpPhone" placeholder=" " 
-                            class="float-input input-glow w-full bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all placeholder-transparent"
-                        >
-                        <label for="signUpPhone" class="float-label absolute left-5 top-4 text-xs font-black uppercase tracking-widest text-slate-400 transition-all pointer-events-none bg-white dark:bg-slate-900 px-1 rounded-md" data-i18n="phone">
-                            Phone Number
-                        </label>
-                        <i class="fa-solid fa-phone absolute right-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <div id="phoneField" class="flex gap-2 hidden">
+                        <div class="relative w-[35%]">
+                            <select id="signUpPhoneCode" class="w-full h-full bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 rounded-2xl px-2 py-4 text-[13px] font-bold text-slate-900 dark:text-white outline-none transition-all focus:ring-2 focus:ring-[#003DA5]/30 appearance-none hover:cursor-pointer text-center">
+                                <option value="+506" selected>🇨🇷 +506</option>
+                                <option value="+1">🇺🇸 +1</option>
+                                <option value="+507">🇵🇦 +507</option>
+                                <option value="+57">🇨🇴 +57</option>
+                                <option value="+52">🇲🇽 +52</option>
+                                <option value="+34">🇪🇸 +34</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none"></i>
+                        </div>
+                        <div class="relative w-[65%]">
+                            <input type="tel" id="signUpPhone" placeholder=" " 
+                                class="float-input input-glow w-full bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm font-bold text-slate-900 dark:text-white outline-none transition-all placeholder-transparent"
+                            >
+                            <label for="signUpPhone" class="float-label absolute left-5 top-4 text-xs font-black uppercase tracking-widest text-slate-400 transition-all pointer-events-none bg-white dark:bg-slate-900 px-1 rounded-md" data-i18n="phone">
+                                Phone Number
+                            </label>
+                            <i class="fa-solid fa-phone absolute right-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        </div>
                     </div>
 
                     <!-- Agency Input -->
@@ -458,7 +471,9 @@
                 if (isSignupMode) {
                     // SIGN UP
                     const fullName = document.getElementById('fullName').value.trim();
-                    const phone = document.getElementById('signUpPhone').value.trim();
+                    const phoneCode = document.getElementById('signUpPhoneCode').value;
+                    const phoneRaw = document.getElementById('signUpPhone').value.trim();
+                    const phone = phoneRaw ? `${phoneCode} ${phoneRaw}` : '';
                     const agency = document.getElementById('signUpAgency').value;
                     
                     if (!window.supabase) {
