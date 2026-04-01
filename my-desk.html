@@ -1832,12 +1832,25 @@
         }
         
         async function loadSupabaseSearches() {
-            if (!window.supabase) return;
-            const { data: { user } } = await window.supabase.auth.getUser();
-            if (!user) return;
+            let client;
+            if (typeof supabase !== 'undefined' && supabase) {
+                client = supabase;
+            } else if (window.supabase) {
+                client = window.supabase.createClient('https://oprrfbsrihkjtiafyuxn.supabase.co', 'sb_publishable_vcgGRA09bHX1suZrkqYcAg_hpumhYHl');
+            } else {
+                console.warn('Supabase not loaded yet.');
+                return;
+            }
+            
+            const { data } = await client.auth.getUser();
+            const user = data?.user;
+            if (!user) {
+                console.warn('User not logged in, unable to load searches.');
+                return;
+            }
 
             // 1. Fetch Searches
-            const { data: searches } = await window.supabase
+            const { data: searches } = await client
                 .from('searches')
                 .select('*')
                 .eq('agent_id', user.id)
@@ -1862,7 +1875,7 @@
             }
 
             // 2. Fetch Matches Sent
-            const { data: matches } = await window.supabase
+            const { data: matches } = await client
                 .from('matches')
                 .select('*')
                 .eq('sender_id', user.id)
@@ -1877,7 +1890,7 @@
             }
 
             // 3. Fetch Deals for Kanban Metrics
-            const { data: deals } = await window.supabase
+            const { data: deals } = await client
                 .from('deals')
                 .select('*')
                 .or(`buyer_agent_id.eq.${user.id},seller_agent_id.eq.${user.id}`);
@@ -1893,10 +1906,10 @@
             }
 
             const mPipe = document.getElementById('metricPipelinePotential');
-            if (mPipe) mPipe.innerText = window.formatBudget ? window.formatBudget(pipelineSum) : '$' + pipelineSum;
+            if (mPipe) mPipe.innerText = typeof formatBudget === 'function' ? formatBudget(pipelineSum) : '$' + pipelineSum;
 
             const mCont = document.getElementById('metricUnderContract');
-            if (mCont) mCont.innerText = window.formatBudget ? window.formatBudget(contractSum) : '$' + contractSum;
+            if (mCont) mCont.innerText = typeof formatBudget === 'function' ? formatBudget(contractSum) : '$' + contractSum;
         }
     </script>
 </body>
