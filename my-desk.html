@@ -1468,6 +1468,10 @@
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            if (typeof loadSupabaseSearches === 'function') {
+                loadSupabaseSearches().catch(e => console.warn('Supabase load error:', e));
+            }
+            
             const isPremium = localStorage.getItem('isPremium') === 'true';
             const isAdmin = localStorage.getItem('isAdmin') === 'true';
 
