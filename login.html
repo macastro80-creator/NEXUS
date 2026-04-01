@@ -461,7 +461,21 @@
                     const phone = document.getElementById('signUpPhone').value.trim();
                     const agency = document.getElementById('signUpAgency').value;
                     
-                    await signUp(email, password, fullName, phone, agency);
+                    if (!window.supabase) {
+                        throw new Error("No se pudo cargar la librería de conexión. Revisa tu conexión a internet o desactiva tu bloqueador de anuncios.");
+                    }
+                    
+                    const client = window.supabase.createClient('https://oprrfbsrihkjtiafyuxn.supabase.co', 'sb_publishable_vcgGRA09bHX1suZrkqYcAg_hpumhYHl');
+                    
+                    const { data, error } = await client.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            data: { full_name: fullName, phone: phone, brand: agency }
+                        }
+                    });
+                    
+                    if (error) throw error;
                     
                     setLoading(false);
                     showSuccess(dict[currentLang].signupSuccess);
@@ -471,10 +485,30 @@
                     }, 3000);
                 } else {
                     // SIGN IN
-                    const { user, session } = await signIn(email, password);
+                    if (!window.supabase) {
+                        throw new Error("No se pudo cargar la librería de conexión. Revisa tu conexión a internet o desactiva tu bloqueador de anuncios.");
+                    }
+                    
+                    const client = window.supabase.createClient('https://oprrfbsrihkjtiafyuxn.supabase.co', 'sb_publishable_vcgGRA09bHX1suZrkqYcAg_hpumhYHl');
+                    
+                    const { data, error } = await client.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+                    
+                    if (error) throw error;
 
                     // Fetch profile to get role
-                    const profile = await getCurrentProfile();
+                    const { data: userData } = await client.auth.getUser();
+                    let profile = null;
+                    if (userData && userData.user) {
+                        const { data: profileRes } = await client
+                            .from('profiles')
+                            .select('*, offices(name, brand, area)')
+                            .eq('id', userData.user.id)
+                            .single();
+                        profile = profileRes;
+                    }
 
                     // Store essentials in localStorage for quick access across pages
                     localStorage.setItem('userEmail', email);
