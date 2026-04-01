@@ -831,12 +831,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             if (!isComplete && !path.includes('profile.html')) {
                 const hash = window.location.hash || '';
+                console.log("DB-SERVICE: Redirecting to profile.html. hash=", hash);
                 window.location.href = 'profile.html?onboarding=true' + hash;
                 return;
-            } else if (isComplete && !path.includes('profile.html') && path.includes('index.html')) {
-                // If they are on index.html and they are complete, let's see why
-                if (profile) {
-                    console.log("DEBUG DB-SERVICE: isComplete=true. ez=", JSON.stringify(profile.expert_zones));
+            } else {
+                console.log("DB-SERVICE: Passed guard. isComplete=", isComplete, " path=", path, " profile=", profile ? JSON.stringify(profile.expert_zones) : 'null');
+                if (path === '/' || path.includes('index.html')) {
+                    alert("DEBUG INFO: Guard evaluado. isComplete=" + isComplete + ". Zonas: " + (profile ? JSON.stringify(profile.expert_zones) : 'null'));
                 }
             }
 
