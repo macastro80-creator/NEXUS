@@ -662,7 +662,7 @@ async function getAdminKPIs() {
 async function getAllAgents() {
     const { data, error } = await supabase
         .from('profiles')
-        .select('*, offices(name)')
+        .select('*')
         .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -810,6 +810,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 await signOut();
                 alert('Your account has been deactivated by the administrator.');
                 window.location.href = 'login.html';
+                return;
+            }
+
+            // Enforce Profile Completion
+            if (profile) {
+                // We consider the profile complete if they have set up expert_zones or specializations
+                const hasExpertZones = profile.expert_zones && profile.expert_zones.length > 0;
+                const hasSpecializations = profile.specializations && profile.specializations.length > 0;
+                const isComplete = hasExpertZones || hasSpecializations;
+
+                if (!isComplete && !path.includes('profile.html')) {
+                    window.location.href = 'profile.html?onboarding=true';
+                    return;
+                }
             }
         } catch (e) {
             window.location.href = 'login.html';

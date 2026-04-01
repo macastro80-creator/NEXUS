@@ -485,7 +485,7 @@ async function loadAgents() {
             });
             localStorage.setItem('nexusBrands', JSON.stringify(brands));
             
-        } catch(e) { console.warn('Fallback to demo agents'); }
+        } catch(e) { console.warn('Fallback to demo agents. Real error was:', e); }
     }
     renderBrandCards();
     renderTxChart();
