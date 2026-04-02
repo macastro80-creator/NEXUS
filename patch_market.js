@@ -53,6 +53,6 @@ html = html.replace(/<!-- PREMIUM TOP NAV -->[\s\S]*?<!-- PREMIUM OVERLAY -->/,
 
 // Fix profile alert bug in premium lockout logic
 html = html.replace(/alert\(currentLang === 'es' \? '💎 ¡Esta es una función Premium! Actualiza tu cuenta para acceder a increíbles herramientas de Productores Top\.' : '💎 This is a Premium feature! Upgrade tu cuenta para acceder a increíbles herramientas de Productores Top\.'\);/,
-`alert(currentLang === 'es' ? '💎 ¡Esta es una función Premium! Actualiza tu cuenta para acceder a increíbles herramientas de Productores Top.' : '💎 This is a Premium feature! Upgrade your account to access incredible Top Producer tools.');`);
+`
 
 fs.writeFileSync('market.html', html, 'utf8');

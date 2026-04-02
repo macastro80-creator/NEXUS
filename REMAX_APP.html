@@ -777,7 +777,7 @@
         </a>
         
         <!-- Premium Links -->
-        <a href="market.html" data-nav="market.html" id="nav-market" class="flex flex-col items-center justify-center min-w-[3.5rem] text-amber-500 hover:text-amber-400 transition-all relative group premium-only">
+        <a href="market.html" data-nav="market.html" id="nav-market" class="flex flex-col items-center justify-center min-w-[3.5rem] text-amber-500 hover:text-amber-400 transition-all relative group ">
             <div class="absolute inset-0 bg-amber-500/10 blur-xl rounded-full group-hover:bg-amber-500/20 transition"></div>
             <i class="fa-solid fa-chart-line mb-1 text-xl drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] group-hover:scale-110 transition-transform"></i>
             <span class="text-[10px] font-black uppercase tracking-widest lang-en">Market</span>
@@ -1334,7 +1334,6 @@
             // Premium Access Control - Visible to all, but restricted access
             if (!isPremium) {
                 const premiumElements = [
-                    document.getElementById('nav-market'),
                     document.getElementById('nav-office'),
                     document.getElementById('nav-business'),
                     document.getElementById('nav-resources'),
@@ -1349,7 +1348,7 @@
 
                         el.addEventListener('click', (e) => {
                             e.preventDefault();
-                            alert(currentLang === 'es' ? '💎 ¡Esta es una función Premium! Actualiza tu cuenta para acceder a increíbles herramientas de Productores Top.' : '💎 This is a Premium feature! Upgrade tu cuenta para acceder a increíbles herramientas de Productores Top.');
+                            
                         });
                     }
                 });

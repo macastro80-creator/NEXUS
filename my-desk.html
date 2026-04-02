@@ -571,7 +571,7 @@
         </a>
         
         <!-- Premium Links -->
-        <a href="market.html" data-nav="market.html" id="nav-market" class="flex flex-col items-center justify-center min-w-[3.5rem] text-amber-500 hover:text-amber-400 transition-all relative group premium-only">
+        <a href="market.html" data-nav="market.html" id="nav-market" class="flex flex-col items-center justify-center min-w-[3.5rem] text-amber-500 hover:text-amber-400 transition-all relative group ">
             <div class="absolute inset-0 bg-amber-500/10 blur-xl rounded-full group-hover:bg-amber-500/20 transition"></div>
             <i class="fa-solid fa-chart-line mb-1 text-xl drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] group-hover:scale-110 transition-transform"></i>
             <span class="text-[10px] font-black uppercase tracking-widest lang-en">Market</span>
@@ -749,6 +749,12 @@
                     <h3 class="text-md font-black italic text-[#003DA5] dark:text-blue-400 leading-tight mb-0.5">${m.property_name}</h3>
                     <p class="text-[10px] font-bold text-slate-500">${m.property_location || 'N/A'}</p>
                     <p class="text-lg font-black text-slate-900 dark:text-white mb-2">$${m.property_price ? m.property_price.toLocaleString() : '0'}</p>
+                    
+                    ${m.capture_percentage || m.share_percentage ? `
+                    <div class="flex items-center gap-2 mt-2 mb-2">
+                        ${m.capture_percentage ? `<span class="bg-blue-50 text-blue-600 text-[9px] font-black px-2 py-1 rounded-full uppercase tracking-widest border border-blue-100"><span class="lang-en">Capture:</span><span class="lang-es hidden">Captación:</span> ${m.capture_percentage}%</span>` : ''}
+                        ${m.share_percentage ? `<span class="bg-amber-50 text-amber-600 text-[9px] font-black px-2 py-1 rounded-full uppercase tracking-widest border border-amber-100"><span class="lang-en">Share:</span><span class="lang-es hidden">Comparte:</span> ${m.share_percentage}%</span>` : ''}
+                    </div>` : ''}
                     
                     ${isRejected ? `<p class="text-[9px] font-black text-red-500 uppercase flex items-center gap-1 mb-1 mt-2 border-t pt-2"><i class="fa-solid fa-xmark"></i> Reason: ${m.reject_reason || 'No Reason'}</p>` : ''}
                     ${isWaiting ? `<p class="text-[9px] font-black text-amber-500 uppercase flex items-center gap-1 mb-1 mt-2 border-t pt-2"><i class="fa-solid fa-clock-rotate-left"></i> Waiting on Partner</p>` : ''}
@@ -1742,7 +1748,7 @@
                 .from('searches')
                 .select('*')
                 .eq('agent_id', user.id)
-                .eq('status', 'active');
+                .in('status', ['active', 'pending_onboarding']);
                 
             const activeSearchCount = searches ? searches.length : 0;
             const metricBuyersEl = document.getElementById('metricBuyers');
@@ -1780,7 +1786,7 @@
             // 3. Fetch Deals for Kanban Metrics
             const { data: deals } = await client
                 .from('deals')
-                .select('*')
+                .select('*, matches(capture_percentage, share_percentage)')
                 .or(`buyer_agent_id.eq.${user.id},seller_agent_id.eq.${user.id}`);
 
             let pipelineSum = 0;
@@ -1788,8 +1794,24 @@
 
             if (deals) {
                 deals.forEach(d => {
-                    if (d.stage === 'negotiation') pipelineSum += d.price || 0;
-                    if (d.stage === 'contract') contractSum += d.price || 0;
+                    let myCommission = 0;
+                    
+                    // Default percentages in case match data is missing
+                    let capturePct = d.matches?.capture_percentage || 2.5; 
+                    let sharePct = d.matches?.share_percentage || 2.5;
+
+                    // If user is the listing (seller) agent, they get the capture side
+                    if (d.seller_agent_id === user.id) {
+                        myCommission += (d.price * (capturePct / 100));
+                    }
+                    
+                    // If user is the buyer agent, they get the share side
+                    if (d.buyer_agent_id === user.id) {
+                        myCommission += (d.price * (sharePct / 100));
+                    }
+
+                    if (d.stage === 'negotiation') pipelineSum += myCommission;
+                    if (d.stage === 'contract') contractSum += myCommission;
                 });
             }
 

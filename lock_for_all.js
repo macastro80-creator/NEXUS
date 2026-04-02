@@ -7,7 +7,6 @@ files.forEach(file => {
 
     const newLockScript = `// PHASE 1 LAUNCH LOCK (Hardcoded for ALL users)
             const launchLockedElements = [
-                document.getElementById('nav-market'),
                 document.getElementById('nav-office'),
                 document.getElementById('nav-business'),
                 document.getElementById('nav-resources'),

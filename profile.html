@@ -11,9 +11,9 @@
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="global-theme.js"></script>
-    <script src="db-service.js?v=6"></script>
-    <script src="locations.js?v=3"></script>
+    <script src="/global-theme.js"></script>
+    <script src="/db-service.js?v=6"></script>
+    <script src="/locations.js?v=3"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -48,7 +48,7 @@
                 <i class="fa-solid fa-bell"></i>
                 <span id="notif-badge" style="display:none;" class="absolute -top-1 -right-1 min-w-[15px] h-[15px] bg-[#ED1C24] text-white text-[9px] font-black rounded-full border-2 border-white flex items-center justify-center px-[4px] shadow-sm leading-none">0</span>
             </button>
-            <a href="login.html" onclick="localStorage.removeItem('userEmail')" class="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-95 transition-all shadow-sm" title="Log Out">
+            <a href="#" onclick="signOut().then(() => window.location.href='login.html'); return false;" class="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-95 transition-all shadow-sm" title="Log Out">
                 <i class="fa-solid fa-arrow-right-from-bracket text-sm"></i>
             </a>
         </div>
@@ -262,25 +262,25 @@
             <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 lang-en">Specializations</h3>
             <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 lang-es hidden">Especializaciones</h3>
             <div class="grid grid-cols-2 gap-3">
-                <div onclick="this.classList.toggle('active')" class="spec-card p-4 rounded-2xl">
-                    <i class="fa-solid fa-house text-lg mb-2 block"></i>
-                    <span class="text-[9px] font-black uppercase lang-en">Residential</span>
-                    <span class="text-[9px] font-black uppercase lang-es hidden">Residencial</span>
+                <div onclick="this.classList.toggle('active')" class="spec-card p-4 rounded-2xl dark:bg-slate-900/50 dark:border dark:border-slate-700 dark:hover:bg-slate-800 transition-colors">
+                    <i class="fa-solid fa-house text-lg mb-2 block dark:text-slate-300"></i>
+                    <span class="text-[9px] font-black uppercase lang-en dark:text-slate-300">Residential</span>
+                    <span class="text-[9px] font-black uppercase lang-es hidden dark:text-slate-300">Residencial</span>
                 </div>
-                <div onclick="this.classList.toggle('active')" class="spec-card p-4 rounded-2xl">
-                    <i class="fa-solid fa-building text-lg mb-2 block"></i>
-                    <span class="text-[9px] font-black uppercase lang-en">Commercial</span>
-                    <span class="text-[9px] font-black uppercase lang-es hidden">Comercial</span>
+                <div onclick="this.classList.toggle('active')" class="spec-card p-4 rounded-2xl dark:bg-slate-900/50 dark:border dark:border-slate-700 dark:hover:bg-slate-800 transition-colors">
+                    <i class="fa-solid fa-building text-lg mb-2 block dark:text-slate-300"></i>
+                    <span class="text-[9px] font-black uppercase lang-en dark:text-slate-300">Commercial</span>
+                    <span class="text-[9px] font-black uppercase lang-es hidden dark:text-slate-300">Comercial</span>
                 </div>
-                <div onclick="this.classList.toggle('active')" class="spec-card p-4 rounded-2xl">
-                    <i class="fa-solid fa-trowel-bricks text-lg mb-2 block"></i>
-                    <span class="text-[9px] font-black uppercase lang-en">Developers</span>
-                    <span class="text-[9px] font-black uppercase lang-es hidden">Desarrolladores</span>
+                <div onclick="this.classList.toggle('active')" class="spec-card p-4 rounded-2xl dark:bg-slate-900/50 dark:border dark:border-slate-700 dark:hover:bg-slate-800 transition-colors">
+                    <i class="fa-solid fa-trowel-bricks text-lg mb-2 block dark:text-slate-300"></i>
+                    <span class="text-[9px] font-black uppercase lang-en dark:text-slate-300">Developers</span>
+                    <span class="text-[9px] font-black uppercase lang-es hidden dark:text-slate-300">Desarrolladores</span>
                 </div>
-                <div onclick="this.classList.toggle('active')" class="spec-card p-4 rounded-2xl">
-                    <i class="fa-solid fa-key text-lg mb-2 block"></i>
-                    <span class="text-[9px] font-black uppercase lang-en">Rentals</span>
-                    <span class="text-[9px] font-black uppercase lang-es hidden">Alquileres</span>
+                <div onclick="this.classList.toggle('active')" class="spec-card p-4 rounded-2xl dark:bg-slate-900/50 dark:border dark:border-slate-700 dark:hover:bg-slate-800 transition-colors">
+                    <i class="fa-solid fa-key text-lg mb-2 block dark:text-slate-300"></i>
+                    <span class="text-[9px] font-black uppercase lang-en dark:text-slate-300">Rentals</span>
+                    <span class="text-[9px] font-black uppercase lang-es hidden dark:text-slate-300">Alquileres</span>
                 </div>
             </div>
         </section>
@@ -305,13 +305,13 @@
                 </h2>
                 <div class="flex items-center gap-2 mt-1.5">
                     <div class="flex text-amber-500 text-[10px]">
-                        <i class="fa-solid fa-star"></i>
-                        <i class="fa-solid fa-star"></i>
-                        <i class="fa-solid fa-star"></i>
-                        <i class="fa-solid fa-star"></i>
-                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
                     </div>
-                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-0.5">5.0 (3)</span>
+                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-0.5">0.0 (0)</span>
                 </div>
             </div>
             <div class="flex gap-2">
@@ -366,8 +366,6 @@
                 <div>
                     <h2 class="text-xl font-black text-indigo-600 italic uppercase tracking-widest lang-en">Leave a Review</h2>
                     <h2 class="text-xl font-black text-indigo-600 italic uppercase tracking-widest lang-es hidden">Dejar una Reseña</h2>
-                    <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-0.5 lang-en">FOR: MARCELO R.</p>
-                    <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-0.5 lang-es hidden">PARA: MARCELO R.</p>
                 </div>
                 <button onclick="document.getElementById('submitReviewModal').classList.add('hidden'); document.getElementById('submitReviewModal').classList.remove('flex');" class="w-8 h-8 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-full flex items-center justify-center hover:bg-slate-600 transition">
                     <i class="fa-solid fa-xmark"></i>
@@ -527,7 +525,7 @@
         </a>
         
         <!-- Premium Links -->
-        <a href="market.html" data-nav="market.html" id="nav-market" class="flex flex-col items-center justify-center min-w-[3.5rem] text-amber-500 hover:text-amber-400 transition-all relative group premium-only">
+        <a href="market.html" data-nav="market.html" id="nav-market" class="flex flex-col items-center justify-center min-w-[3.5rem] text-amber-500 hover:text-amber-400 transition-all relative group ">
             <div class="absolute inset-0 bg-amber-500/10 blur-xl rounded-full group-hover:bg-amber-500/20 transition"></div>
             <i class="fa-solid fa-chart-line mb-1 text-xl drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] group-hover:scale-110 transition-transform"></i>
             <span class="text-[10px] font-black uppercase tracking-widest lang-en">Market</span>
@@ -618,9 +616,7 @@
                         <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                         <input type="text" id="reviewAgentSearch" placeholder="Name or Office..." class="w-full p-4 pl-10 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-2xl text-[13px] font-bold outline-none focus:border-[#003DA5]">
                         <div id="agentSuggestionsBlock" class="absolute z-10 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 mt-2 rounded-xl shadow-lg hidden">
-                            <!-- Dummy suggestions -->
-                            <div onclick="selectAgentForReview('Maria L. (REMAX Altitud)')" class="p-3 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer border-b border-slate-100 dark:border-slate-700 text-[11px] font-bold">Maria L. (REMAX Altitud)</div>
-                            <div onclick="selectAgentForReview('Juan P. (Century 21)')" class="p-3 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer text-[11px] font-bold">Juan P. (Century 21)</div>
+                            <!-- Suggestions will be loaded dynamically -->
                         </div>
                     </div>
                 </div>
@@ -776,21 +772,25 @@
             if(!select.value) return;
 
             // Check if already exists
-            const existing = document.getElementById('selectedLanguagesContainer').innerText;
-            if(existing.includes(val)) return;
+            let exists = false;
+            document.querySelectorAll('#selectedLanguagesContainer .lang-name').forEach(el => {
+                let text = el.innerText.replace(/^\d+\.\s*/, '').toLowerCase().trim();
+                if (text === val.toLowerCase().trim()) exists = true;
+            });
+            if(exists) return;
 
             const container = document.getElementById('selectedLanguagesContainer');
             const div = document.createElement('div');
             // Add lang-item class and draggable attribute for drag & drop
-            div.className = "flex items-center justify-between p-3.5 bg-blue-50/50 border border-blue-100 rounded-xl shadow-sm group animate-fade lang-item";
+            div.className = "flex items-center justify-between p-3.5 bg-blue-50/50 dark:bg-slate-700/50 border border-blue-100 dark:border-slate-600 rounded-xl shadow-sm group animate-fade lang-item";
             div.setAttribute('draggable', 'true');
             
             div.innerHTML = `
                 <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-grip-vertical text-slate-300 cursor-grab active:cursor-grabbing hover:text-blue-500"></i>
-                    <span class="text-xs font-black text-blue-900 uppercase tracking-tight lang-name"></span>
+                    <i class="fa-solid fa-grip-vertical text-slate-300 dark:text-slate-500 cursor-grab active:cursor-grabbing hover:text-blue-500 dark:hover:text-blue-400"></i>
+                    <span class="text-xs font-black text-blue-900 dark:text-blue-100 uppercase tracking-tight lang-name"></span>
                 </div>
-                <button type="button" onclick="this.parentElement.remove(); updateLanguageNumbers();" class="text-slate-400 hover:text-red-500 transition-colors w-8 h-8 flex items-center justify-center">
+                <button type="button" onclick="this.parentElement.remove(); updateLanguageNumbers();" class="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors w-8 h-8 flex items-center justify-center">
                     <i class="fa-solid fa-trash-can"></i>
                 </button>
             `;
@@ -864,8 +864,18 @@
 
         // --- LOCATION LOGIC ---
         // Filters the LOCATION_DB array based on text input and renders clickable suggestion divs.
-        function showSuggestions(val) {
+        async function showSuggestions(val) {
             const sugBox = document.getElementById('suggestionsBox');
+            
+            // Dynamically load LOCATION_DB if it failed to auto-load script-side.
+            if (!LOCATION_DB || LOCATION_DB.length === 0) {
+                try {
+                    LOCATION_DB = await LocationService.getAllAsStrings();
+                } catch(e) {
+                    console.error("Failed to fetch locations dynamically", e);
+                }
+            }
+
             sugBox.innerHTML = '';
             if (!val) {
                 sugBox.classList.add('hidden');
@@ -928,9 +938,9 @@
             container.innerHTML = ''; 
             selectedAreas.forEach((area, index) => {
                 container.innerHTML += `
-                    <div class="flex items-start justify-between p-3.5 bg-blue-50 border border-blue-100 rounded-xl animate-fade shadow-sm">
-                        <span class="text-xs font-black text-blue-900 uppercase tracking-tight leading-tight pr-2">📍 ${area}</span>
-                        <button type="button" onclick="removeArea(${index})" class="text-slate-400 text-lg shrink-0 w-8 h-8 flex items-center justify-center">
+                    <div class="flex items-start justify-between p-3.5 bg-blue-50 dark:bg-slate-700 border border-blue-100 dark:border-slate-600 rounded-xl animate-fade shadow-sm">
+                        <span class="text-xs font-black text-blue-900 dark:text-blue-100 uppercase tracking-tight leading-tight pr-2">📍 ${area}</span>
+                        <button type="button" onclick="removeArea(${index})" class="text-slate-400 dark:text-slate-500 text-lg shrink-0 w-8 h-8 flex items-center justify-center hover:text-red-500 dark:hover:text-red-400">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
                     </div>
@@ -1016,9 +1026,9 @@
                 container.innerHTML = '';
                 data.languages.forEach(function(langText) {
                     const div = document.createElement('div');
-                    div.className = 'flex items-center justify-between p-3.5 bg-blue-50/50 border border-blue-100 rounded-xl shadow-sm group lang-item';
+                    div.className = 'flex items-center justify-between p-3.5 bg-blue-50/50 dark:bg-slate-700/50 border border-blue-100 dark:border-slate-600 rounded-xl shadow-sm group lang-item';
                     div.setAttribute('draggable', 'true');
-                    div.innerHTML = '<div class="flex items-center gap-3"><i class="fa-solid fa-grip-vertical text-slate-300 cursor-grab active:cursor-grabbing hover:text-blue-500"></i><span class="text-xs font-black text-blue-900 uppercase tracking-tight lang-name"></span></div><button type="button" onclick="this.parentElement.remove(); updateLanguageNumbers();" class="text-slate-400 hover:text-red-500 transition-colors w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-trash-can"></i></button>';
+                    div.innerHTML = '<div class="flex items-center gap-3"><i class="fa-solid fa-grip-vertical text-slate-300 dark:text-slate-500 cursor-grab active:cursor-grabbing hover:text-blue-500 dark:hover:text-blue-400"></i><span class="text-xs font-black text-blue-900 dark:text-blue-100 uppercase tracking-tight lang-name"></span></div><button type="button" onclick="this.parentElement.remove(); updateLanguageNumbers();" class="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-trash-can"></i></button>';
                     div.querySelector('.lang-name').innerText = langText;
                     container.appendChild(div);
                     addDragListeners(div);
@@ -1272,20 +1282,6 @@
                     </div>
                 </div>
 
-                <!-- Request Review Item -->
-                <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border-l-4 border-indigo-500 shadow-sm relative group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
-                    <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
-                            <i class="fa-solid fa-star text-xs"></i>
-                        </div>
-                        <div class="flex-1">
-                            <p class="text-xs font-black text-slate-900 dark:text-white mb-0.5 lang-en">Qualification Request</p>
-                            <p class="text-xs font-black text-slate-900 dark:text-white mb-0.5 lang-es hidden">Solicitud de Calificación</p>
-                            <p class="text-[10px] text-slate-500 font-bold leading-tight"><span class="font-black text-slate-700 dark:text-slate-300">Marcelo R.</span> <span class="lang-en">requested a review for the Escazú collaboration.</span><span class="lang-es hidden">solicitó una reseña por la colaboración en Escazú.</span></p>
-                            <p class="text-[8px] text-slate-400 font-black uppercase mt-2">2 hours ago</p>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Footer -->

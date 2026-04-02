@@ -325,7 +325,7 @@ const newScript = `
                         el.insertAdjacentHTML('beforeend', '<div class="absolute top-1 right-1 lg:top-2 lg:right-2 bg-slate-900 border border-slate-700 rounded-full w-4 h-4 flex items-center justify-center shadow-lg z-20"><i class="fa-solid fa-lock text-[8px] text-slate-400"></i></div>');
                         el.addEventListener('click', (e) => {
                             e.preventDefault();
-                            alert(currentLang === 'es' ? '💎 ¡Esta es una función Premium!' : '💎 This is a Premium feature!');
+                            
                         });
                     }
                 });

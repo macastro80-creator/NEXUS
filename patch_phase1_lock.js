@@ -15,7 +15,6 @@ files.forEach(file => {
     html = html.replace(/if \(!isPremium\) \{[\s\S]*?premiumElements\.forEach\(el => \{[\s\S]*?\}\);\s*\}/, 
 `// PHASE 1 LAUNCH LOCK
             const launchLockedElements = [
-                document.getElementById('nav-market'),
                 document.getElementById('nav-office'),
                 document.getElementById('nav-business'),
                 document.getElementById('nav-resources'),

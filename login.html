@@ -228,8 +228,19 @@
                         </button>
                     </div>
 
+                    <!-- Terms and Conditions Row -->
+                    <div id="termsField" class="hidden flex items-start gap-3 mt-2">
+                        <label class="relative flex items-center justify-center w-5 h-5 mt-0.5 rounded-[6px] border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 hover:border-remax-blue transition-colors cursor-pointer group">
+                            <input type="checkbox" id="termsCheckbox" class="peer hidden">
+                            <i class="fa-solid fa-check text-[10px] text-white opacity-0 peer-checked:opacity-100 transition-opacity absolute inset-0 peer-checked:bg-remax-blue rounded-[4px] flex items-center justify-center"></i>
+                        </label>
+                        <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 leading-tight">
+                            <span data-i18n="agreeTerms">I agree to the</span> <a href="#" class="text-remax-blue dark:text-amber-400 hover:underline" data-i18n="termsLink">Terms and Conditions</a> <span data-i18n="and">and</span> <a href="#" class="text-remax-blue dark:text-amber-400 hover:underline" data-i18n="privacyLink">Privacy Policy</a>
+                        </span>
+                    </div>
+
                     <!-- Options Row -->
-                    <div class="flex items-center justify-between">
+                    <div id="loginOptions" class="flex items-center justify-between">
                         <label class="flex items-center gap-2 cursor-pointer group">
                             <div class="relative flex items-center justify-center w-5 h-5 rounded-[6px] border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 group-hover:border-remax-blue transition-colors">
                                 <input type="checkbox" id="remember" class="peer hidden" checked>
@@ -303,7 +314,12 @@
                 invalidCredentials: "Invalid email or password.",
                 emailRequired: "Please enter your email address.",
                 orLoginWith: "OR",
-                loginGoogle: "LOGIN WITH GMAIL"
+                loginGoogle: "LOGIN WITH GMAIL",
+                agreeTerms: "I agree to the",
+                termsLink: "Terms and Conditions",
+                and: "and",
+                privacyLink: "Privacy Policy",
+                termsRequired: "You must accept the terms and conditions to create an account."
             },
             es: {
                 poweredBy: "Impulsado por",
@@ -331,7 +347,12 @@
                 invalidCredentials: "Email o contraseña inválidos.",
                 emailRequired: "Por favor ingresa tu correo electrónico.",
                 orLoginWith: "O",
-                loginGoogle: "INICIAR SESIÓN CON GMAIL"
+                loginGoogle: "INICIAR SESIÓN CON GMAIL",
+                agreeTerms: "Acepto los",
+                termsLink: "Términos y Condiciones",
+                and: "y la",
+                privacyLink: "Política de Privacidad",
+                termsRequired: "Debe aceptar los términos y condiciones para crear una cuenta."
             }
         };
 
@@ -377,6 +398,10 @@
             document.getElementById('nameField').classList.toggle('hidden', !isSignupMode);
             document.getElementById('phoneField').classList.toggle('hidden', !isSignupMode);
             document.getElementById('agencyField').classList.toggle('hidden', !isSignupMode);
+            document.getElementById('termsField').classList.toggle('hidden', !isSignupMode);
+            
+            const loginOptions = document.getElementById('loginOptions');
+            if (loginOptions) loginOptions.classList.toggle('hidden', isSignupMode);
             
             if (isSignupMode) {
                 document.getElementById('fullName').required = true;
@@ -470,6 +495,13 @@
             try {
                 if (isSignupMode) {
                     // SIGN UP
+                    const termsCheckbox = document.getElementById('termsCheckbox');
+                    if (termsCheckbox && !termsCheckbox.checked) {
+                        setLoading(false);
+                        showError(dict[currentLang].termsRequired || 'You must accept the terms to continue.');
+                        return;
+                    }
+
                     const fullName = document.getElementById('fullName').value.trim();
                     const phoneCode = document.getElementById('signUpPhoneCode').value;
                     const phoneRaw = document.getElementById('signUpPhone').value.trim();
@@ -480,9 +512,7 @@
                         throw new Error("No se pudo cargar la librería de conexión. Revisa tu conexión a internet o desactiva tu bloqueador de anuncios.");
                     }
                     
-                    const client = window.supabase.createClient('https://oprrfbsrihkjtiafyuxn.supabase.co', 'sb_publishable_vcgGRA09bHX1suZrkqYcAg_hpumhYHl');
-                    
-                    const { data, error } = await client.auth.signUp({
+                    const { data, error } = await supabase.auth.signUp({
                         email: email,
                         password: password,
                         options: {
@@ -516,20 +546,17 @@
                         throw new Error("No se pudo cargar la librería de conexión. Revisa tu conexión a internet o desactiva tu bloqueador de anuncios.");
                     }
                     
-                    const client = window.supabase.createClient('https://oprrfbsrihkjtiafyuxn.supabase.co', 'sb_publishable_vcgGRA09bHX1suZrkqYcAg_hpumhYHl');
-                    
-                    const { data, error } = await client.auth.signInWithPassword({
+                    const { data, error } = await supabase.auth.signInWithPassword({
                         email: email,
                         password: password
                     });
                     
                     if (error) throw error;
 
-                    // Fetch profile to get role
-                    const { data: userData } = await client.auth.getUser();
+                    const { data: userData } = await supabase.auth.getUser();
                     let profile = null;
                     if (userData && userData.user) {
-                        const { data: profileRes } = await client
+                        const { data: profileRes } = await supabase
                             .from('profiles')
                             .select('*, offices(name, brand, area)')
                             .eq('id', userData.user.id)

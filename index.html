@@ -46,7 +46,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="/global-theme.js?v=4"></script>
+    <script src="./global-theme.js?v=4"></script>
 
     <style>
         body {
@@ -120,7 +120,7 @@
                     <button onclick="setLanguage('en')" id="btn-en" class="px-3 py-1.5 rounded-full text-slate-600 dark:text-slate-400 transition">EN</button>
                     <button onclick="setLanguage('es')" id="btn-es" class="px-3 py-1.5 rounded-full bg-remax-blue text-white shadow-md transition">ES</button>
                 </div>
-                <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-remax-blue dark:hover:text-amber-400 transition-colors shadow-inner hidden sm:flex">
+                <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-remax-blue dark:hover:text-amber-400 transition-colors shadow-inner">
                     <i class="fa-solid fa-moon dark:hidden"></i>
                     <i class="fa-solid fa-sun hidden dark:inline"></i>
                 </button>
@@ -130,18 +130,18 @@
     </nav>
 
     <!-- Hero Section -->
-    <section class="relative z-10 pt-32 pb-20 md:pt-48 md:pb-32 px-4 max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12">
-        <div class="flex-1 opacity-0 animate-fade-in-up" style="animation-delay: 0.1s;">
+    <section class="relative z-10 pt-32 pb-20 md:pt-48 md:pb-32 px-4 max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-10 md:gap-16">
+        <div class="flex-1 md:w-5/12 opacity-0 animate-fade-in-up" style="animation-delay: 0.1s;">
             <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-remax-blue/10 dark:bg-remax-blue/20 border border-remax-blue/20 dark:border-remax-blue/30 text-remax-blue dark:text-blue-400 text-[10px] font-black uppercase tracking-widest mb-6 shadow-sm">
                 <span class="w-2 h-2 rounded-full bg-remax-blue dark:bg-blue-400 animate-pulse"></span>
                 <span data-i18n="heroBadge">Introducing NEXUS 2.0</span>
             </div>
-            <h1 class="text-5xl md:text-7xl font-black text-slate-900 dark:text-white leading-[1.1] mb-6 tracking-tight">
+            <h1 class="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-slate-900 dark:text-white leading-[1.1] mb-6 tracking-tight">
                 <span data-i18n="heroTitle1">The Modern</span><br>
-                <span class="gradient-text" data-i18n="heroTitle2">Real Estate</span><br>
-                <span data-i18n="heroTitle3">Ecosystem.</span>
+                <span class="gradient-text" data-i18n="heroTitle2">Real Estate</span>
+                <span class="block mt-4 text-xl md:text-2xl lg:text-3xl text-slate-500 dark:text-slate-400 font-extrabold tracking-normal" data-i18n="heroTitle3">Ecosystem.</span>
             </h1>
-            <p class="text-lg md:text-xl text-slate-600 dark:text-slate-400 mb-8 max-w-xl font-medium leading-relaxed" data-i18n="heroSubtitle">
+            <p class="text-base md:text-lg text-slate-600 dark:text-slate-400 mb-8 max-w-lg font-medium leading-relaxed" data-i18n="heroSubtitle">
                 Elevate your brokerage with an advanced B2B SaaS designed specifically for high-performing real estate agents. From smart property matching to intelligent KPIs.
             </p>
             <div class="flex flex-wrap items-center gap-4">
@@ -149,48 +149,48 @@
                     <span data-i18n="heroCta">Access Workspace</span>
                     <i class="fa-solid fa-arrow-right"></i>
                 </a>
-                <a href="#benefits" class="px-8 py-4 rounded-2xl text-sm font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
-                    <span data-i18n="heroLearnMore">Learn More</span>
-                </a>
             </div>
         </div>
-        <div class="flex-1 relative opacity-0 animate-fade-in-up" style="animation-delay: 0.3s;">
-            <div class="relative w-full aspect-square max-w-lg mx-auto animate-float">
-                <div class="absolute inset-0 bg-gradient-to-tr from-remax-blue/20 to-remax-red/20 rounded-full blur-3xl"></div>
-                <div class="glass-card absolute inset-4 rounded-3xl border border-white/20 shadow-2xl overflow-hidden flex flex-col">
-                    <div class="h-10 border-b border-white/10 dark:border-slate-700/50 flex items-center px-4 gap-2 bg-slate-100/50 dark:bg-slate-800/50">
-                        <div class="w-3 h-3 rounded-full bg-red-400"></div>
-                        <div class="w-3 h-3 rounded-full bg-amber-400"></div>
-                        <div class="w-3 h-3 rounded-full bg-green-400"></div>
-                    </div>
-                    <div class="flex-1 p-6 relative">
-                        <!-- Abstract Dashboard UI Mockup -->
-                        <div class="flex justify-between items-center mb-6">
-                            <div class="h-4 w-32 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
-                            <div class="h-8 w-8 bg-remax-blue/20 rounded-full flex items-center justify-center text-remax-blue"><i class="fa-solid fa-bell text-xs"></i></div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4 mb-6">
-                            <div class="h-24 bg-gradient-to-br from-remax-blue/10 to-transparent rounded-2xl border border-remax-blue/20 flex flex-col justify-center p-4">
-                                <div class="h-3 w-16 bg-remax-blue/40 rounded-full mb-2"></div>
-                                <div class="h-6 w-12 bg-remax-blue rounded-full"></div>
-                            </div>
-                            <div class="h-24 bg-gradient-to-br from-amber-400/10 to-transparent rounded-2xl border border-amber-400/20 flex flex-col justify-center p-4">
-                                <div class="h-3 w-16 bg-amber-400/40 rounded-full mb-2"></div>
-                                <div class="h-6 w-12 bg-amber-400 rounded-full"></div>
-                            </div>
-                        </div>
-                        <div class="space-y-3">
-                            <div class="h-12 w-full bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center px-4 gap-3">
-                                <div class="h-8 w-8 rounded-lg bg-slate-200 dark:bg-slate-700"></div>
-                                <div class="h-2 w-3/4 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
-                            </div>
-                            <div class="h-12 w-full bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center px-4 gap-3">
-                                <div class="h-8 w-8 rounded-lg bg-slate-200 dark:bg-slate-700"></div>
-                                <div class="h-2 w-1/2 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
-                            </div>
-                        </div>
+        <div class="flex-1 md:w-7/12 relative mt-16 md:mt-0 opacity-0 animate-fade-in-up" style="animation-delay: 0.3s;">
+            <!-- Dynamic Floating Layout -->
+            <div class="relative w-full max-w-sm lg:max-w-md mx-auto md:ml-auto md:mr-4 lg:mr-8 h-[380px] sm:h-[480px] lg:h-[550px]">
+                
+                <!-- Agent 1 (Beach) Card - Top Left -->
+                <div class="absolute top-0 left-2 md:left-0 w-[65%] h-[60%] z-10 group">
+                    <div class="w-full h-full rounded-[2.5rem] overflow-hidden shadow-2xl shadow-blue-900/10 border-4 border-white dark:border-slate-800 -rotate-2 hover:rotate-0 transition-all duration-500 ease-out">
+                        <img src="assets/hero_agent_beach_2.png" alt="Agent on the beach" class="w-full h-full object-cover object-[center_30%] group-hover:scale-110 transition-transform duration-700">
                     </div>
                 </div>
+
+                <!-- Agent 2 (City) Card - Bottom Right -->
+                <div class="absolute bottom-0 right-2 md:right-0 w-[65%] h-[60%] z-20 group">
+                    <div class="w-full h-full rounded-[2.5rem] overflow-hidden shadow-2xl shadow-blue-900/10 border-4 border-white dark:border-slate-800 rotate-2 hover:rotate-0 transition-all duration-500 ease-out">
+                        <img src="assets/hero_agent_city_2.png" alt="Agent in the city" class="w-full h-full object-cover object-[75%_center] group-hover:scale-110 transition-transform duration-700">
+                    </div>
+                </div>
+
+                <!-- Top Right Badge (Attached to Beach Card) -->
+                <div class="absolute top-[8%] -right-[5%] md:-right-8 z-30 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-2xl px-4 py-3 shadow-[0_15px_30px_-5px_rgba(0,0,0,0.15)] animate-float flex items-center gap-3" style="animation-delay: 0s;">
+                    <div class="w-10 h-10 flex-shrink-0 rounded-full bg-remax-blue/10 dark:bg-remax-blue/20 text-remax-blue flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em] mb-0.5">Alert</p>
+                        <p class="text-xs lg:text-sm font-black text-slate-900 dark:text-white leading-tight whitespace-nowrap">NEW MATCH<br><span class="text-slate-500 dark:text-slate-400 font-bold">for your client</span></p>
+                    </div>
+                </div>
+
+                <!-- Bottom Left Badge (Attached to City Card) -->
+                <div class="absolute bottom-[8%] -left-[5%] md:-left-12 z-30 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-2xl px-4 py-3 shadow-[0_15px_30px_-5px_rgba(0,0,0,0.15)] animate-float flex items-center gap-3" style="animation-delay: 1.5s;">
+                    <div class="w-10 h-10 flex-shrink-0 rounded-full bg-green-500/10 dark:bg-green-500/20 text-green-500 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-handshake"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em] mb-0.5">Update</p>
+                        <p class="text-xs lg:text-sm font-black text-slate-900 dark:text-white leading-tight whitespace-nowrap">NEW MATCH<br><span class="text-slate-500 dark:text-slate-400 font-bold">for your client</span></p>
+                    </div>
+                </div>
+
             </div>
         </div>
     </section>
@@ -315,7 +315,7 @@
                             <span class="text-sm font-medium text-slate-600 dark:text-slate-300" data-i18n="p1f3">Libertad total de red</span>
                         </li>
                     </ul>
-                    <a href="login.html?plan=core" class="w-full block text-center bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm" data-i18n="getStartedFree">Unirse Gratis</a>
+                    <a href="request-plan.html?plan=core" class="w-full block text-center bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm" data-i18n="getStartedFree">Unirse Gratis</a>
                 </div>
 
                 <!-- Plan 2: Pulse (REMAX) -->
@@ -326,9 +326,12 @@
                         <h4 class="text-xl font-black text-white mb-2">Pulse</h4>
                         <p class="text-[11px] font-black text-amber-400 uppercase tracking-wider mb-4" data-i18n="plan2Subtitle">Para Oficinas Inmobiliarias</p>
                         <p class="text-sm font-medium text-blue-100 dark:text-blue-200 mb-6 leading-relaxed" data-i18n="p2Desc">Matchboard automático y métricas de mercado para toda la oficina.</p>
-                        <div class="flex items-end gap-1">
-                            <span class="text-4xl font-black text-white">$100</span>
-                            <span class="text-sm font-bold text-blue-200 mb-1" data-i18n="perMonth">/mo</span>
+                        <div class="flex flex-col mb-1">
+                            <div class="flex items-end gap-1">
+                                <span class="text-4xl font-black text-white">$100</span>
+                                <span class="text-sm font-bold text-blue-200 mb-1" data-i18n="perMonth">/mo</span>
+                            </div>
+                            <span class="text-[10px] font-bold text-blue-200 mt-1 uppercase tracking-widest opacity-90" data-i18n="pulsePriceSub">Up to 10 agents per office</span>
                         </div>
                     </div>
                     <ul class="space-y-4 mb-8 flex-1 relative z-10">
@@ -345,7 +348,7 @@
                             <span class="text-sm font-medium text-slate-200" data-i18n="p2f3">Gestión de prospectos CRM</span>
                         </li>
                     </ul>
-                    <a href="login.html?plan=pulse" class="w-full block text-center bg-amber-400 text-amber-900 py-4 rounded-2xl font-black uppercase tracking-widest shadow-[0_10px_20px_-10px_rgba(251,191,36,0.5)] hover:bg-amber-300 hover:-translate-y-1 transition-all relative z-10 text-sm" data-i18n="getStartedPulse">Obtener Pulse</a>
+                    <a href="request-plan.html?plan=pulse" class="w-full block text-center bg-amber-400 text-amber-900 py-4 rounded-2xl font-black uppercase tracking-widest shadow-[0_10px_20px_-10px_rgba(251,191,36,0.5)] hover:bg-amber-300 hover:-translate-y-1 transition-all relative z-10 text-sm" data-i18n="getStartedPulse">Obtener Pulse</a>
                 </div>
 
                 <!-- Plan 3: Omni (Brokers) -->
@@ -354,9 +357,9 @@
                         <h4 class="text-xl font-black text-slate-900 dark:text-white mb-2">Omni</h4>
                         <p class="text-[11px] font-black text-remax-blue dark:text-amber-400 uppercase tracking-wider mb-4" data-i18n="plan3Subtitle">Oficinas y Brokers (Full)</p>
                         <p class="text-sm font-medium text-slate-600 dark:text-slate-400 mb-6 leading-relaxed" data-i18n="p3Desc">Métricas clave para dar el mejor servicio, acceso total sin límite de agentes.</p>
-                        <div class="flex items-end gap-1">
-                            <span class="text-4xl font-black text-slate-900 dark:text-white">$150</span>
-                            <span class="text-sm font-bold text-slate-500 dark:text-slate-400 mb-1" data-i18n="perMonth">/mo</span>
+                        <div class="flex flex-col mb-1">
+                            <span class="text-3xl font-black text-slate-900 dark:text-white" data-i18n="omniPrice">Custom</span>
+                            <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-widest" data-i18n="omniPriceSub">Scales with your team</span>
                         </div>
                     </div>
                     <ul class="space-y-4 mb-8 flex-1">
@@ -373,9 +376,41 @@
                             <span class="text-sm font-medium text-slate-600 dark:text-slate-300" data-i18n="p3f3">Evaluación de KPIs</span>
                         </li>
                     </ul>
-                    <a href="login.html?plan=omni" class="w-full block text-center bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm" data-i18n="getStarted">Pedir Demo</a>
+                    <a href="request-plan.html?plan=omni" class="w-full block text-center bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm" data-i18n="getStarted">Pedir Demo</a>
                 </div>
 
+            </div>
+        </div>
+    </section>
+
+    <!-- Active Zones Section -->
+    <section class="relative z-10 py-12 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6 bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
+                <div class="flex items-center gap-6">
+                    <div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-500/20 text-green-500 flex items-center justify-center text-xl shadow-inner">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1" data-i18n="zonesSubtitle">¿Dónde está activo NEXUS?</h3>
+                        <h2 class="text-2xl font-black text-slate-900 dark:text-white" data-i18n="zonesTitle">Zonas Disponibles</h2>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-700 px-4 py-2 rounded-full">
+                        <span class="relative flex h-3 w-3">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                        </span>
+                        <span class="text-sm font-bold text-slate-700 dark:text-slate-300"><span data-i18n="zonePZ">Pérez Zeledón</span> <span class="text-xs text-green-600 dark:text-green-400 uppercase ml-1" data-i18n="zoneActive">(Activa)</span></span>
+                    </div>
+                    
+                    <button onclick="document.getElementById('ticketModal').classList.remove('hidden')" class="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-remax-blue hover:text-remax-blue dark:hover:border-blue-400 dark:hover:text-blue-400 px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-colors shadow-sm flex items-center gap-2 outline-none">
+                        <i class="fa-solid fa-location-crosshairs"></i>
+                        <span data-i18n="btnRequestZone">Pedir mi zona</span>
+                    </button>
+                </div>
             </div>
         </div>
     </section>
@@ -458,57 +493,65 @@
                 navSecurity: "Security",
                 navLogin: "Log In",
                 heroBadge: "Introducing NEXUS 2.0",
-                heroTitle1: "The Modern",
-                heroTitle2: "Real Estate",
-                heroTitle3: "Ecosystem.",
-                heroSubtitle: "Elevate your brokerage with an advanced B2B SaaS designed specifically for high-performing real estate agents. From smart property matching to intelligent KPIs.",
+                heroTitle1: "The #1 Free Real Estate",
+                heroTitle2: "Network By Area,",
+                heroTitle3: "Plus Premium Plans.",
+                heroSubtitle: "Simplify searches for real estate agents from all companies by location for FREE, without entering client data! If you're a REMAX office, give your agents market trends so they sell more.",
                 heroCta: "Access Workspace",
                 heroLearnMore: "Learn More",
-                benefitsSubtitle: "Why Choose NEXUS?",
-                benefitsTitle: "Transform your operations today.",
-                b1Title: "Goodbye WhatsApp Chaos",
-                b1Desc: "Stop losing deals in infinite chat groups. Match directly within the platform with precision algorithms and structured client tracking.",
-                b2Title: "Total Control & CRM",
-                b2Desc: "Centralize your leads, listings, and workflows. Focus on what matters: closing deals and maintaining strong client relationships.",
-                b3Title: "KPIs & Real Metrics",
-                b3Desc: "Understand your business. Measure your performance with OKRs, agent billing, and real-time business intelligence tailored for Brokers.",
-                gallerySubtitle: "Platform in Action",
-                galleryTitle: "Inside NEXUS",
-                feat1Title: "Tinder for Real Estate",
-                feat1Desc: "Discover properties and clients through our Matchboard. Swipe left or right to connect instantly without the noise of endless group chats.",
-                feat1A: "High Match Accuracy",
-                feat1B: "Direct Contact Unlocked",
-                feat2Title: "Business Intelligence",
-                feat2Desc: "Visualize your performance with real-time analytics. Track revenue, monitor OKRs, and understand your closure rates at a glance.",
-                feat2A: "Real-time KPIs",
-                feat2B: "Team Performance Tracking",
-                plansSubtitle: "Subscription Plans",
-                plansTitle: "Designed for every real estate professional.",
-                plan1Subtitle: "For Independent Agents",
-                p1Desc: "Free version to cross-match business with all local agents, regardless of brand backing.",
-                p1f1: "Manual cross-agency matching",
-                p1f2: "Open directory & networking",
-                p1f3: "Zero hidden network fees",
+                zonesTitle: "Available Zones",
+                zonesSubtitle: "Where is NEXUS active?",
+                zonePZ: "Pérez Zeledón, Costa Rica",
+                zoneActive: "(Active)",
+                btnRequestZone: "Request my zone",
+                benefitsSubtitle: "Who is this app for?",
+                benefitsTitle: "NEXUS is for you if you want...",
+                b1Title: "Simplified Free Search",
+                b1Desc: "Find agents from all companies by area. It's free and you don't need to enter client data!",
+                b2Title: "REMAX Offices",
+                b2Desc: "Provide advanced services to your agents: market trends and analytics so they can sell more.",
+                b3Title: "Privacy First",
+                b3Desc: "Your leads are private. You never have to expose your clients' information.",
+                gallerySubtitle: "Search Panel",
+                galleryTitle: "Search Agents by Area",
+                feat1Title: "Simplify Your Searches",
+                feat1Desc: "Find real estate agents from all brands and independents by zone quickly. No need to input client data, and it's completely free!",
+                feat1A: "Geographic search by zone",
+                feat1B: "100% Free, no client data needed",
+                feat2Title: "Market Trends (For REMAX Offices)",
+                feat2Desc: "If you are a REMAX office, give your agents the market trends in real time so they can sell more effectively.",
+                feat2A: "Current market metrics",
+                feat2B: "Tools to close sales faster",
+                plansSubtitle: "If you are a REMAX office...",
+                plansTitle: "You can offer these two services to your agents:",
+                plan1Subtitle: "For All Agents",
+                p1Desc: "1 - Free simplified search of real estate agents from all companies by zone.",
+                p1f1: "Free zone-based search",
+                p1f2: "Independent agent directory",
+                p1f3: "No client data entry required",
                 getStartedFree: "Join For Free",
                 perMonth: "/mo",
                 mostPopular: "Most Popular",
-                plan2Subtitle: "For Real Estate Offices",
-                p2Desc: "Automated matchboard and advanced market analytics for your entire office.",
-                p2f1: "Automatic property-client matching",
-                p2f2: "Market metrics and insights tracker",
-                p2f3: "Advanced CRM & sales funnel for teams",
+                plan2Subtitle: "Service 1 for Agents",
+                p2Desc: "Automated matchboard and market trends so your agents sell more.",
+                p2f1: "Automatic smart matching",
+                p2f2: "Real-time market trends",
+                p2f3: "CRM prospects management",
+                pulsePriceSub: "Up to 10 agents per office",
                 getStartedPulse: "Get Pulse",
-                plan3Subtitle: "Offices & Brokers (Full Access)",
-                p3Desc: "Managerial metrics to give the best service to your agents. No agent limits.",
-                p3f1: "Client matching tracker",
-                p3f2: "Total office reporting dashboard",
-                p3f3: "KPI evaluation & performance",
+                plan3Subtitle: "Service 2 for Offices (Full)",
+                p3Desc: "Managerial metrics and KPI tracking to give the best service to your agents.",
+                p3f1: "Complete matching module",
+                p3f2: "Statistical reporting",
+                p3f3: "KPIs and rankings evaluation",
+                omniPrice: "Custom",
+                omniPriceSub: "Scales with your team",
                 getStarted: "Request Demo",
-                securityTitle: "Absolute Security & Data Privacy",
-                securityPhrase: "\"Your leads and clients are 100% private and encrypted, they are NEVER shared when Matching across agencies.\"",
-                sec1: "Enterprise-grade database encryption",
-                sec2: "No cross-agency data or contact sharing",
-                sec3: "Isolated and compliant cloud environments",
+                securityTitle: "Absolute Security",
+                securityPhrase: "\"Your leads and clients are 100% private. You don't have to enter your clients' data.\"",
+                sec1: "No confidential info shared",
+                sec2: "Secure zone-based search",
+                sec3: "Isolated cloud environment",
                 poweredBy: "Powered by"
             },
             es: {
@@ -517,58 +560,66 @@
                 navPlans: "Planes",
                 navSecurity: "Seguridad",
                 navLogin: "Iniciar Sesión",
-                heroBadge: "Presentando NEXUS 2.0",
-                heroTitle1: "El Nuevo Ecosistema",
-                heroTitle2: "Inmobiliario",
-                heroTitle3: "Moderno.",
-                heroSubtitle: "Eleva tu agencia con el SaaS B2B avanzado y diseñado específicamente para agentes inmobiliarios de alto rendimiento. Desde Match inteligente hasta KPIs.",
-                heroCta: "Ingresar al Espacio",
+                heroBadge: "¡Vive el poder de NEXUS 2.0!",
+                heroTitle1: "La Red Inmobiliaria #1",
+                heroTitle2: "Gratuita por Zonas,",
+                heroTitle3: "Con opciones Premium.",
+                heroSubtitle: "¡Multiplica tus ventas hoy!<br><br>Simplifica búsquedas de propiedades y clientes por zonas ¡Gratis y sin exponer tus leads!<br><br>Además, si eres oficina REMAX, bríndale reportes y tendencias increíbles a tu equipo para cerrar más rápido.",
+                heroCta: "¡Ingresar Mismo!",
                 heroLearnMore: "Saber Más",
-                benefitsSubtitle: "¿Por Qué NEXUS?",
-                benefitsTitle: "Transforma tu negocio hoy.",
-                b1Title: "Adiós al Caos de WhatsApp",
-                b1Desc: "Deja de perder negocios en grupos infinitos de chat. Haz match directo en la plataforma con algoritmos de precisión y control total de clientes.",
-                b2Title: "Control Total y CRM",
-                b2Desc: "Centraliza tus prospectos, listados y flujos de trabajo. Enfócate en lo que importa: cerrar negocios y mejorar las relaciones con clientes.",
-                b3Title: "KPIs y Métricas Reales",
-                b3Desc: "Entiende tu negocio. Mide tu rendimiento con OKRs, cuentas corrientes, y métricas financieras diseñadas para Brokers y Agentes.",
-                gallerySubtitle: "Plataforma en Acción",
-                galleryTitle: "Conoce el interior de NEXUS",
-                feat1Title: "El Tinder Inmobiliario",
-                feat1Desc: "Descubre propiedades y clientes mediante nuestro Matchboard. Desliza a la derecha para conectar al instante sin el ruido de los chats grupales.",
-                feat1A: "Alta precisión de Match",
-                feat1B: "Contacto directo desbloqueado",
-                feat2Title: "Business Intelligence",
-                feat2Desc: "Visualiza tu rendimiento con métricas en tiempo real. Monitorea ingresos, OKRs y entiende tu tasa de cierre en un vistazo.",
-                feat2A: "KPIs en tiempo real",
-                feat2B: "Tráqueo de rendimiento del equipo",
-                plansSubtitle: "Planes de Suscripción",
-                plansTitle: "Modelos diseñados para cada profesional.",
-                plan1Subtitle: "Para Agentes Independientes",
-                p1Desc: "Versión gratuita para cruzar negocios con todos los agentes de la zona, sin importar tu marca.",
-                p1f1: "Match cruzado con agentes externos",
-                p1f2: "Directorio y perfil profesional",
-                p1f3: "Libertad total de red comercial",
-                getStartedFree: "Unirse Gratis",
+                zonesTitle: "Zonas Disponibles",
+                zonesSubtitle: "¿Dónde está activo NEXUS?",
+                zonePZ: "Pérez Zeledón, Costa Rica",
+                zoneActive: "(Activa)",
+                btnRequestZone: "Pedir mi zona",
+                benefitsSubtitle: "¿Para quién es la app?",
+                benefitsTitle: "¡NEXUS es para ti si quieres triunfar!",
+                b1Title: "¡Match Inmediato Gratis!",
+                b1Desc: "Encuentra agentes de todas las marcas por zonas.<br><br>¡Gratis y no tienes que arriesgar los datos de tus valiosos clientes!",
+                b2Title: "¡Poder Para Oficinas REMAX!",
+                b2Desc: "Dale a tus agentes servicios Top:<br><br>Cruces inteligentes y las verdaderas tendencias del mercado en tiempo real para reventar récords de venta.",
+                b3Title: "Privacidad Blindada",
+                b3Desc: "¡Tus leads y clientes son 100% de tu dominio!<br><br>Totalmente privados, encriptados, nunca se comparten al hacer magia con otras agencias.",
+                gallerySubtitle: "Panel Inmobiliario",
+                galleryTitle: "¡Cruza listados al instante!",
+                feat1Title: "¡Tus Búsquedas En Segundos!",
+                feat1Desc: "¡Publica demandas y propiedades increíbles al instante, califícalas y pide visitas gestionándolo en tu pipeline de estado visual!<br><br>Sabrás siempre cómo avanzas SIN dar los datos de tu cliente.",
+                feat1A: "Calificación y Pipeline Visual",
+                feat1B: "¡Coordinación Súper Rápida!",
+                feat2Title: "¡Tendencias Explosivas (REMAX)!",
+                feat2Desc: "Si tú eres oficina REMAX: ¡Potencia a tu equipo a las estrellas!<br><br>Entrégales métricas brutales y tendencias en tiempo real para que tengan un cierre insuperable.",
+                feat2A: "Datos Reales Para Superventas",
+                feat2B: "Tráqueo Avanzado de Rendimiento",
+                plansSubtitle: "Si eres oficina REMAX...",
+                plansTitle: "¡Ofrece el poder máximo a tus agentes!:",
+                plan1Subtitle: "Versión CORE",
+                p1Desc: "CORE te permite publicar tus búsquedas sin poner los datos de tus clientes.<br><br>Recibe propiedades, califícalas, pide visitas con nuestro increíble Pipeline de control. Envíale tus propiedades a colegas y sabrás INMEDIATAMENTE si hacen Match perfecto.<br><br>¡Gratis!",
+                p1f1: "Publicar, recibir y calificar gratis",
+                p1f2: "Pipeline visual en tiempo real",
+                p1f3: "Cruces y matching sin exponer clientes",
+                getStartedFree: "¡Unirte Ahora!",
                 perMonth: "/mes",
-                mostPopular: "Más Popular",
-                plan2Subtitle: "Para Oficinas Inmobiliarias",
-                p2Desc: "Matchboard automático y visualización de métricas de mercado para toda tu agencia.",
-                p2f1: "Matcheo automático e inteligente",
-                p2f2: "Métricas de mercado y desempeño",
-                p2f3: "Gestión avanzada de todos tus agentes",
-                getStartedPulse: "Obtener Pulse",
-                plan3Subtitle: "Oficinas y Brokers (Full)",
-                p3Desc: "Métricas gerenciales para dar el mejor servicio a tus agentes sin límites de usuarios.",
-                p3f1: "Módulo de matcheo para clientes",
-                p3f2: "Métricas y reporting de oficina",
-                p3f3: "Evaluación de KPIs y rankings",
-                getStarted: "Solicitar Demo",
-                securityTitle: "Seguridad Absoluta y Privacidad",
-                securityPhrase: "\"Tus leads y clientes son 100% privados y encriptados, nunca se comparten al hacer Match con otras agencias o propiedades.\"",
-                sec1: "Encriptación de grado empresarial",
-                sec2: "Cero compartición de leads entre agentes",
-                sec3: "Entorno en la nube completamente aislado",
+                mostPopular: "¡El Más Escogido!",
+                plan2Subtitle: "Servicio 1 para Agentes",
+                p2Desc: "Matchboard automático e increíble análisis de foco de tendencias para que rompan ventas.",
+                p2f1: "Matchbox Súper Inteligente",
+                p2f2: "Tendencias Reales del Mercado",
+                p2f3: "CRM Inmobiliario Magnífico",
+                pulsePriceSub: "Hasta 10 agentes por oficina",
+                getStartedPulse: "Activar Pulse",
+                plan3Subtitle: "Versión OMNI",
+                p3Desc: "Los clientes compradores y vendedores pueden calificar las propiedades en vivo, solicitar una visita o descartarla instantáneamente.<br><br>¡Haz que tus ventas se vayan a las nubes!",
+                p3f1: "Automatismo Total del Matchboard",
+                p3f2: "Reportería Brillante para la Oficina",
+                p3f3: "Evaluación de Campeones y Rankings",
+                omniPrice: "A la Medida",
+                omniPriceSub: "Basado en tu equipo",
+                getStarted: "Obtener Demo",
+                securityTitle: "Privacidad Infranqueable",
+                securityPhrase: "\"¡Absoluta Seguridad! Protege a tus leads... NO solicitamos que subas los datos de tu cliente al publicarlo. ¡Siempre contigo!\"",
+                sec1: "Cero Compartición de Clientes Potenciales",
+                sec2: "Matching Total con Seguridad Real",
+                sec3: "Dominio Exclusivo de tu Cartería",
                 poweredBy: "Impulsado por"
             }
         };
@@ -626,5 +677,36 @@
             }
         });
     </script>
+    <!-- Ticket Modal -->
+    <div id="ticketModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-fade-in-up">
+            <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                <h3 class="font-black text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-ticket text-remax-blue"></i> Nuevo Ticket
+                </h3>
+                <button onclick="document.getElementById('ticketModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 outline-none">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-slate-600 dark:text-slate-400 font-medium">Completa este formulario para que podamos contactarte cuando aperturamos NEXUS en tu región.</p>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest mb-1.5">Tu Nombre</label>
+                    <input type="text" class="w-full bg-slate-50 dark:bg-slate-800 border-[1.5px] border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 dark:text-white focus:border-remax-blue outline-none transition-colors" placeholder="Ej. Juan Pérez">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest mb-1.5">Tu Correo</label>
+                    <input type="email" class="w-full bg-slate-50 dark:bg-slate-800 border-[1.5px] border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 dark:text-white focus:border-remax-blue outline-none transition-colors" placeholder="juan@ejemplo.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest mb-1.5">Zona Solicitada</label>
+                    <input type="text" class="w-full bg-slate-50 dark:bg-slate-800 border-[1.5px] border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 dark:text-white focus:border-remax-blue outline-none transition-colors" placeholder="Ej. Guanacaste, Costa Rica">
+                </div>
+                <button onclick="alert('¡Ticket enviado con éxito! Nos comunicaremos contigo pronto.'); document.getElementById('ticketModal').classList.add('hidden')" class="w-full mt-4 bg-gradient-to-r from-remax-blue to-blue-800 text-white font-black uppercase tracking-widest text-xs py-4 rounded-xl shadow-[0_10px_20px_-10px_rgba(0,61,165,0.6)] hover:-translate-y-0.5 transition-all outline-none">
+                    Enviar Ticket
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

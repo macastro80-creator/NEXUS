@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     full_name TEXT NOT NULL DEFAULT '',
     phone TEXT DEFAULT '',
     brand TEXT DEFAULT 'Independent',
-    role TEXT NOT NULL DEFAULT 'agent' CHECK (role IN ('agent', 'remax', 'team_leader', 'regional_director', 'mainadmin', 'buyer')),
+    role TEXT NOT NULL DEFAULT 'agent' CHECK (role IN ('agent', 'remax', 'team_leader', 'broker', 'officeadmin', 'regional_director', 'mainadmin', 'buyer', 'seller')),
     region_id UUID, -- Which Master Franchise
     office_id UUID, -- Which Brokerage
     team_id UUID, -- Which sub-team inside the office
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     avatar_url TEXT DEFAULT '',
     tx_volume TEXT DEFAULT '1-5',
     expert_zones TEXT[] DEFAULT '{}',
-    plan_tier TEXT DEFAULT 'core' CHECK (plan_tier IN ('core', 'pulse', 'omni')),
+    is_premium BOOLEAN DEFAULT false,
     -- Enterprise Metrics
     start_date DATE DEFAULT CURRENT_DATE,
     employment_type TEXT DEFAULT 'full_time' CHECK (employment_type IN ('full_time', 'part_time')),
@@ -114,6 +114,8 @@ CREATE TABLE IF NOT EXISTS matches (
     property_bathrooms INTEGER,
     property_size NUMERIC,
     commission NUMERIC(4,2) DEFAULT 5.0,
+    capture_percentage NUMERIC(5,2) DEFAULT 0.0,
+    share_percentage NUMERIC(5,2) DEFAULT 0.0,
     image_url TEXT DEFAULT '',
     status TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'liked', 'visited', 'contract', 'sold', 'rejected', 'waiting_partner')),
     liked_by UUID[] DEFAULT '{}',
@@ -516,5 +518,30 @@ ALTER TABLE agent_meetings_log ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Agents view own meetings if not private" ON agent_meetings_log FOR SELECT USING (agent_id = auth.uid() AND is_private = false);
 CREATE POLICY "Brokers manage meetings" ON agent_meetings_log FOR ALL USING (
     broker_id = auth.uid() OR 
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'mainadmin')
+);
+
+-- ==========================================
+-- 14. PLAN REQUESTS (Lead Capture)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS plan_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    contact_name TEXT NOT NULL,
+    contact_email TEXT NOT NULL,
+    country TEXT DEFAULT '',
+    zone TEXT DEFAULT '',
+    agent_count INTEGER DEFAULT 1,
+    desired_service TEXT NOT NULL DEFAULT 'pulse' CHECK (desired_service IN ('core', 'pulse', 'omni')),
+    status TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'contacted', 'closed_won', 'closed_lost')),
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- RLS FOR PLAN REQUESTS
+ALTER TABLE plan_requests ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can create plan requests" ON plan_requests FOR INSERT WITH CHECK (true);
+CREATE POLICY "Admins can view plan requests" ON plan_requests FOR SELECT USING (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'mainadmin')
+);
+CREATE POLICY "Admins can update plan requests" ON plan_requests FOR UPDATE USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'mainadmin')
 );

@@ -834,9 +834,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                             isComplete = checkComplete(profile.expert_zones) || checkComplete(profile.specializations);
                         }
             
-            if (!isComplete && !path.includes('profile.html')) {
+            if (!isComplete && !path.includes('profile')) {
                 const hash = window.location.hash || '';
-                console.log("DB-SERVICE: Redirecting to profile.html. hash=", hash);
+                console.log("DB-SERVICE: Redirecting to profile. html. hash=", hash);
                 window.location.href = 'profile.html?onboarding=true' + hash;
                 return;
             } else {
@@ -852,9 +852,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Only lock if NOT premium and NOT already on the upgrade page
             if (!isPremiumUser && !path.includes('premium-upgrade.html')) {
                 const premiumElements = [
-                    document.getElementById('nav-market'),
                     document.getElementById('nav-office'),
                     document.getElementById('nav-resources'),
+                    document.getElementById('nav-business'),
                     ...Array.from(document.querySelectorAll('.premium-only')),
                     ...Array.from(document.querySelectorAll('a[href="Mi_Oficina.html"]')),
                     ...Array.from(document.querySelectorAll('a[href="market.html"]')),

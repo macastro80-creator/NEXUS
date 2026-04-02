@@ -15,7 +15,6 @@ files.forEach(file => {
             // Only lock if NOT Altitud Staff
             if (!isAltitudStaff) {
                 const launchLockedElements = [
-                    document.getElementById('nav-market'),
                     document.getElementById('nav-office'),
                     document.getElementById('nav-business'),
                     document.getElementById('nav-resources'),

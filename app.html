@@ -421,7 +421,7 @@
         </a>
         
         <!-- Premium Links -->
-        <a href="market.html" data-nav="market.html" id="nav-market" class="flex flex-col items-center justify-center min-w-[3.5rem] text-amber-500 hover:text-amber-400 transition-all relative group premium-only">
+        <a href="market.html" data-nav="market.html" id="nav-market" class="flex flex-col items-center justify-center min-w-[3.5rem] text-amber-500 hover:text-amber-400 transition-all relative group ">
             <div class="absolute inset-0 bg-amber-500/10 blur-xl rounded-full group-hover:bg-amber-500/20 transition"></div>
             <i class="fa-solid fa-chart-line mb-1 text-xl drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] group-hover:scale-110 transition-transform"></i>
             <span class="text-[10px] font-black uppercase tracking-widest lang-en">Market</span>
@@ -518,6 +518,25 @@
                             / ID de MLS</label>
                         <input type="text" id="propLink" placeholder="https://..."
                             class="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-2xl text-[13px] font-bold outline-none focus:border-[#003DA5]">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-1 lang-en">Capture %</label>
+                            <label class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-1 lang-es hidden">% de Captación</label>
+                            <div class="relative">
+                                <input type="number" id="capPercentage" placeholder="5" min="0" max="100" class="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-2xl text-[13px] font-bold outline-none focus:border-[#003DA5]">
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">%</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-1 lang-en">Share %</label>
+                            <label class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-1 lang-es hidden">% que Comparte</label>
+                            <div class="relative">
+                                <input type="number" id="sharePercentage" placeholder="50" min="0" max="100" class="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-2xl text-[13px] font-bold outline-none focus:border-[#003DA5]">
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">%</span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- MUST HAVES CHECKLIST -->
@@ -719,6 +738,9 @@
         }
             async function submitSendProperty() {
                 const link = document.getElementById('propLink');
+                const capPercentage = document.getElementById('capPercentage')?.value;
+                const sharePercentage = document.getElementById('sharePercentage')?.value;
+                
                 if (!link.value) {
                     link.classList.add('border-red-500');
                     return;
@@ -737,6 +759,8 @@
                             search_id: currentSearchId,
                             property_name: propertyName,
                             property_link: link.value,
+                            capture_percentage: capPercentage ? parseFloat(capPercentage) : null,
+                            share_percentage: sharePercentage ? parseFloat(sharePercentage) : null,
                             status: 'new'
                         });
                         
@@ -1118,7 +1142,8 @@
             }
 
             // Premium Access Control - Visible to all, but restricted access
-            </script>
+        });
+    </script>
 </body>
 
 </html>

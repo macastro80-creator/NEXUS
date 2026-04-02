@@ -59,12 +59,62 @@ const LocationService = {
     // 4. Fetch the entire flattened list (Only use if necessary for legacy UI compatibility)
     // This will format data the old way: "San José > Pérez Zeledón > San Isidro de El General"
     async getAllAsStrings() {
-        return this.fetchFromSupabase('all_locations_formatted', async () => {
+        return this.fetchFromSupabase('all_locations_formatted_r3', async () => {
             const { data, error } = await getLocationsClient().from('locations').select('province, canton, district').eq('is_active', true);
-            if (error) throw error;
+            if (error) return { error };
             
             // Format to match your old array style
-            return data.map(row => `${row.province} > ${row.canton} > ${row.district}`);
+            const baseLocations = data.map(row => `${row.province} > ${row.canton} > ${row.district}`);
+            
+            // Inject Pérez Zeledón detailed neighborhoods as requested
+            const pzData = {
+                "San Isidro de El General": [
+                    "Aeropuerto", "Alto Alonso", "Boruca", "Boston", "Cementerio", "Cooperativa", "Cristo Rey", "Doce de Marzo", "Dorotea", "Durán Picado", "España", "Estadio", "Evans Gordon Wilson", "González", "Hospital", "Hoyón", "I Griega", "La Lucha", "Las Américas", "Lomas de Cocorí", "Luis Monge", "Morazán", "Pavones", "Pedregoso", "Pocito", "Prado", "Romero", "Sagrada Familia", "San Andrés", "San Luis", "San Rafael Sur", "San Vicente", "Santa Cecilia", "Sinaí", "Tierra Prometida", "Tormenta", "Unesco", "Valverde",
+                    "Alto Ceibo", "Alto Huacas", "Alto Sajaral", "Alto San Juan", "Alto Tumbas", "Angostura", "Bajo Ceibo", "Bajo Esperanzas", "Bajo Mora", "Bijaguales", "Bocana", "Bonita", "Ceibo", "Ceniza", "Dorado", "Esperanzas", "Guadalupe", "Guaria", "Higuerones", "Jilguero", "Jilguero Sur", "Los Guayabos", "María Auxiliadora", "Miravalles", "Morete", "Ojo de Agua", "Ocho de Diciembre", "Pacuarito", "Palma", "Paso Beita", "Paso Lagarto", "Quebrada Honda", "Quebrada Vueltas", "Quebradas", "Roble", "Rosario", "San Agustín", "San Jorge", "San Juan de Miramar", "San Lorenzo", "San Rafael Norte", "Santa Fe", "Santa Marta", "Suiza", "Tajo", "Toledo", "Tronconales", "Tuis", "Villanueva"
+                ],
+                "El General": [
+                    "General Viejo", "Venecia", "Nuevo General", "Peñas Blancas", "El Ingenio", "Calle Hidalgo", "San Martín", "Pinar del Río", "Santa Elena", "Trinidad", "Las Nubes", "La Paz", "Barrio Nuevo", "Bajo Los Arias", "El Chumpulún", "Calle Guzmán", "Playa Verde", "La Linda", "El Carril", "Paraíso", "San Luis", "Miraflores", "Santa Cruz", "San Blas", "La Hermosa", "La Arepa", "Quizarrá", "Montecarlo", "Arepa", "Carmen", "Chanchos", "Hermosa", "Linda Arriba"
+                ],
+                "Daniel Flores": [
+                    "Palmares", "Alto Brisas", "Los Ángeles", "Aurora", "Los Chiles", "Crematorio", "Daniel Flores Zavaleta", "Barrio Laboratorio", "Los Pinos", "Loma Verde", "Lourdes", "Rosas", "Rosa Iris", "San Francisco", "Santa Margarita", "La Trocha", "Villa Ligia", "Aguas Buenas", "Bajos de Pacuar", "Concepción", "Corazón de Jesús", "Juntas de Pacuar", "Paso Bote", "Patio de Agua", "Peje", "Percal", "Repunta", "Los Reyes", "La Ribera", "La Suiza"
+                ],
+                "Rivas": [
+                    "San Gerardo", "Canaán", "Chimirol", "Herradura", "Los Ángeles", "Guadalupe", "San Francisco", "Talari", "San José", "Monterrey", "Calle Los Mora", "Zapotal", "Chispa", "Chuma", "Río Blanco", "Buena Vista", "La Piedra", "Palmital", "San Juan Norte", "Alaska", "Piedra Alta", "Alto Jaular", "San Cayetano", "Las Playas", "Rivas", "Pueblo Nuevo", "Miravalles", "La Bonita", "Linda Vista", "Tirrá", "La Bambú", "San Antonio", "Lourdes", "Santa Marta", "División", "El Jardín", "Villa Mills", "Macho Mora", "El Nivel-Siberia"
+                ],
+                "San Pedro": [
+                    "Cruz Roja", "San Pedro", "Arenilla", "Alto Calderón", "Cedral", "Colonia", "Cristo Rey", "Esperanza", "Fátima", "Fortuna", "Guaria", "Los Ángeles", "Laguna", "Nueva Hortensia", "Nueva Santa Ana", "Rinconada Vega", "San Jerónimo", "San Juan", "San Juancito", "San Rafael", "Santa Ana", "Santa Cecilia", "Santo Domingo", "Santiago", "Tambor", "Unión", "Zapotal"
+                ],
+                "Platanares": [
+                    "San Rafael", "Bajo Bonitas", "Bajo Espinoza", "Bolivia", "Bonitas", "Buenos Aires", "Cristo Rey", "La Sierra", "Lourdes", "Mastatal", "Mollejoncito", "Mollejones", "Naranjos", "San Pablito", "San Pablo", "Socorro", "Surtubal", "Villa Argentina", "Villa Flor", "Vista de Mar", "San Gerardo"
+                ],
+                "Pejibaye": [
+                    "Achiotal", "Águila", "Alto Trinidad", "Bajo Caliente", "Bajo Minas", "Barrionuevo", "Bellavista", "Calientillo", "Delicias", "Desamparados", "El Progreso", "Gibre", "Guadalupe", "Las Cruces", "Mesas", "Minas", "Paraíso", "San Marcos", "San Martín", "San Miguel", "Santa Fe", "Trinidad", "Veracruz", "Zapote"
+                ],
+                "Cajon": [
+                    "Cedral", "El Quemado", "Gloria", "Las Brisas", "Los Vega", "Mercedes", "Montecarlo", "Navajuelar", "Nubes", "Paraíso", "Pilar", "Pueblo Nuevo", "Quizarrá", "Salitrales", "San Francisco", "San Ignacio", "San Pedrito", "Santa María", "Santa Teresa"
+                ],
+                "BaRU": [
+                    "Alfombra", "Alto Perla", "Bajos", "Bajos de Zapotal", "Barú", "Barucito", "Cacao", "Camarones", "Cañablanca", "Ceiba", "Chontales", "Farallas", "Florida", "San Juan de Dios", "Líbano", "Magnolia", "Pozos", "Reina", "San Marcos", "San Salvador", "Santa Juana", "Santo Cristo", "Tinamaste", "Torito", "Tres Piedras", "Tumbas", "Villabonita Vista Mar"
+                ],
+                "RIO NUEVO": [
+                    "Santa Rosa", "San Antonio", "Calle Mora", "San Juan de la Cruz", "Santa Marta", "La Purruja", "San Cayetano", "Chirricano", "Savegre", "El Llano", "El Brujo", "Piedras Blancas", "Zaragoza", "Santa Lucía", "California"
+                ],
+                "PARAMO": [
+                    "San Ramón Sur", "Alto Macho Mora", "Siberia", "División", "Miramar", "Jardín", "La Hortensia", "La Ese", "Matazanos", "Valencia", "San Ramón Norte", "Berlín", "Ángeles", "Santo Tomás", "Santa Eduviges", "San Miguel", "Pedregosito"
+                ],
+                "LA AMISTAD": [
+                    "San Antonio", "Corralillo", "China Kicha", "Montezuma", "Oratorio", "San Carlos", "San Gabriel", "San Roque", "Santa Cecilia", "Santa Luisa"
+                ]
+            };
+
+            const extraLocations = [];
+            for (const [district, hoods] of Object.entries(pzData)) {
+                for (const hood of hoods) {
+                    extraLocations.push(`San José > Pérez Zeledón > ${district} > ${hood}`);
+                }
+            }
+
+            return { data: [...baseLocations, ...extraLocations] };
         });
     },
 
@@ -73,8 +123,11 @@ const LocationService = {
         // Check cache first
         const cached = localStorage.getItem(`nexus_cache_${cacheKey}`);
         if (cached) {
-            console.log(`Loaded ${cacheKey} from incredibly fast browser cache! ⚡`);
-            return JSON.parse(cached);
+            const parsedCache = JSON.parse(cached);
+            if (parsedCache && parsedCache.length > 0) {
+                console.log(`Loaded ${cacheKey} from incredibly fast browser cache! ⚡`);
+                return parsedCache;
+            }
         }
 
         // If not in cache, fetch from Supabase
@@ -93,8 +146,10 @@ const LocationService = {
             results = [...new Set(data.map(item => item[key]))];
         }
 
-        // Save to cache for next time
-        localStorage.setItem(`nexus_cache_${cacheKey}`, JSON.stringify(results));
+        // Save to cache for next time ONLY if we have data
+        if (results && results.length > 0) {
+            localStorage.setItem(`nexus_cache_${cacheKey}`, JSON.stringify(results));
+        }
         return results;
     }
 };
