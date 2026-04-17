@@ -21,9 +21,11 @@ Agents spend hours losing data in WhatsApp group chats. NEXUS replaces this with
 - **Match Board**: Agents log exact buyer demands (Searches) and other agents supply exact inventory (Matches).
 - **My Desk & My Business Kanban**: A free, visual pipeline where agents manage their leads and property flow dynamically.
 
-### 2. The Premium Experience (B2B Pro Tier - The Monetization)
-Acquired by the Office/Broker, granting "Pro" roles to their agents.
-- **Tinder-Style Co-Buyer Client Portal**: Agents can invite clients (and their spouses) via magic "NexLinks". Clients interact with property matches playfully via a swipe interface, generating qualified hot-leads automatically.
+### 2. The Premium Experience (B2B SaaS Subscriptions)
+Acquired by the Office/Broker via tiered plans (Core, Pulse, Omni), granting "Pro" features:
+- **Broker ERP & Cuentas Corrientes**: Advanced billing, expense management, and commission tracking.
+- **QyR (Performance Tracking)**: 1to1 meeting bitácoras for agent development.
+- **Tinder-Style Co-Buyer Client Portal**: Agents invite clients to swipe interactively on matches.
 - **Auto-Match Engine API**: Automated suggestions crossing office inventory with active searches.
 
 ---
