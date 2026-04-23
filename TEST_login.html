@@ -372,33 +372,10 @@
         let inviteOfficeId = null;
         let inviteBrand = null;
 
-        let currentLang = localStorage.getItem('nexus_lang') || 'es';
-
-        window.setLanguage = function(lang) {
-            currentLang = lang;
-            localStorage.setItem('nexus_lang', lang);
-
-            const btnEn = document.getElementById('btn-en');
-            const btnEs = document.getElementById('btn-es');
-            
-            if (btnEn) btnEn.className = lang === 'en' ? 'px-3 py-1.5 rounded-full bg-remax-blue text-white shadow-md transition' : 'px-3 py-1.5 rounded-full text-slate-600 dark:text-slate-400 transition';
-            if (btnEs) btnEs.className = lang === 'es' ? 'px-3 py-1.5 rounded-full bg-remax-blue text-white shadow-md transition' : 'px-3 py-1.5 rounded-full text-slate-600 dark:text-slate-400 transition';
-
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if(dict[lang] && dict[lang][key]) {
-                    el.childNodes.forEach(child => {
-                        if(child.nodeType === Node.TEXT_NODE && child.textContent.trim().length > 0) {
-                            child.textContent = dict[lang][key];
-                        }
-                    });
-                    if(el.childNodes.length === 0) el.innerText = dict[lang][key];
-                }
-            });
-
+        
             // Re-apply mode-specific labels
             updateModeLabels();
-        };
+        }
 
         function updateModeLabels() {
             const d = dict[currentLang];
@@ -533,7 +510,7 @@
                         throw new Error("No se pudo cargar la librería de conexión. Revisa tu conexión a internet o desactiva tu bloqueador de anuncios.");
                     }
                     
-                    const { data, error } = await window.supabase.auth.signUp({
+                    const { data, error } = await supabase.auth.signUp({
                         email: email,
                         password: password,
                         options: {
@@ -573,14 +550,14 @@
                         throw new Error("No se pudo cargar la librería de conexión. Revisa tu conexión a internet o desactiva tu bloqueador de anuncios.");
                     }
                     
-                    const { data, error } = await window.supabase.auth.signInWithPassword({
+                    const { data, error } = await supabase.auth.signInWithPassword({
                         email: email,
                         password: password
                     });
                     
                     if (error) throw error;
 
-                    const { data: userData } = await window.supabase.auth.getUser();
+                    const { data: userData } = await supabase.auth.getUser();
                     let profile = null;
                     if (userData && userData.user) {
                         const { data: profileRes } = await supabase
@@ -716,7 +693,7 @@
                 return;
             }
             try {
-                const { data, error } = await window.supabase.auth.signInWithOAuth({
+                const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
                         redirectTo: window.location.origin + window.location.pathname.replace('login.html', 'app.html')

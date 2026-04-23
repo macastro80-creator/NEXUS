@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEXUS - Property Match</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    animation: {
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'bounce-in': 'bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                    },
+                    keyframes: {
+                        slideUp: {
+                            '0%': { transform: 'translateY(100%)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        bounceIn: {
+                            '0%': { transform: 'scale(0.3)', opacity: '0' },
+                            '50%': { transform: 'scale(1.05)' },
+                            '70%': { transform: 'scale(0.9)' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .gradient-bg { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+        .swipe-card { 
+            position: absolute; 
+            width: 100%; 
+            height: 100%; 
+            transition: transform 0.3s ease, opacity 0.3s ease; 
+            will-change: transform;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+        .swipe-card.hidden-card { opacity: 0; pointer-events: none; z-index: -1; transform: scale(0.95); }
+        .swipe-card.active-card { z-index: 10; transform: scale(1); opacity: 1; }
+        
+        .badge-love { 
+            position: absolute; top: 40px; right: 20px; border: 4px solid #ef4444; color: #ef4444; 
+            padding: 5px 15px; font-weight: 900; font-size: 24px; border-radius: 10px; text-transform: uppercase;
+            transform: rotate(15deg); opacity: 0; z-index: 20; letter-spacing: 2px;
+        }
+        .badge-pass { 
+            position: absolute; top: 40px; left: 20px; border: 4px solid #94a3b8; color: #94a3b8; 
+            padding: 5px 15px; font-weight: 900; font-size: 24px; border-radius: 10px; text-transform: uppercase;
+            transform: rotate(-15deg); opacity: 0; z-index: 20; letter-spacing: 2px;
+        }
+    </style>
+
+  <!-- PWA Setup -->
+  <link rel="manifest" href="/manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js').then(function(registration) {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, function(err) {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+  </script>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 h-screen overflow-hidden flex flex-col">
+
+    <!-- Header -->
+    <header class="p-4 flex justify-between items-center bg-white shadow-sm z-50">
+        <div class="flex items-center gap-2">
+            <h1 class="text-2xl font-black text-[#003DA5] italic tracking-tighter uppercase leading-none">NEXUS</h1>
+        </div>
+        <div class="flex items-center gap-3">
+            <span id="coBuyerStatus" class="text-[10px] font-bold bg-amber-100 text-amber-700 px-3 py-1 rounded-full flex items-center gap-1">
+                <i class="fa-solid fa-user-group"></i> Waiting for Partner
+            </span>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 relative w-full max-w-md mx-auto p-4 flex flex-col">
+        <!-- Empty State (When all swiped) -->
+        <div id="emptyState" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center hidden z-0">
+            <div class="w-20 h-20 bg-slate-200 rounded-full flex items-center justify-center text-slate-400 text-4xl mb-6">
+                <i class="fa-solid fa-check-double"></i>
+            </div>
+            <h2 class="text-2xl font-black text-slate-800 mb-2">You're all caught up!</h2>
+            <p class="text-sm text-slate-500 font-bold mb-8">We've notified your agent about your preferences. New properties will appear here soon.</p>
+            
+            <button id="btnInviteCo" class="w-full bg-[#003DA5] text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 mb-4 active:scale-95 transition-transform">
+                <i class="fa-solid fa-share-nodes"></i> Invite Co-Buyer
+            </button>
+            <button id="btnRequestVisit" class="w-full bg-white text-[#003DA5] border-2 border-[#003DA5] py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-sm flex items-center justify-center gap-2 active:scale-95 transition-transform" onclick="requestVisits()">
+                <i class="fa-regular fa-calendar-check text-lg"></i> Request Tour
+            </button>
+        </div>
+
+        <!-- Cards Container -->
+        <div id="cardsContainer" class="flex-1 relative w-full z-10 mb-6">
+            <!-- Cards will be injected here via JS -->
+            <!-- Loading State -->
+            <div id="loadingState" class="absolute inset-0 flex flex-col items-center justify-center bg-transparent z-50">
+                <i class="fa-solid fa-circle-notch fa-spin text-4xl text-[#003DA5] mb-4"></i>
+                <p class="text-sm font-bold text-slate-500 animate-pulse">Loading matches...</p>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="h-24 flex justify-center items-center gap-6 z-20" id="swipeControls" style="display:none;">
+            <button onclick="handleSwipe('pass')" class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-slate-400 text-2xl shadow-lg border border-slate-100 hover:bg-slate-50 active:scale-90 transition-all hover:text-slate-600">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <button onclick="handleSwipe('maybe')" class="w-14 h-14 bg-white rounded-full flex items-center justify-center text-amber-400 text-xl shadow-lg border border-slate-100 hover:bg-amber-50 active:scale-90 transition-all">
+                <i class="fa-solid fa-star"></i>
+            </button>
+            <button onclick="handleSwipe('love')" class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-red-500 text-2xl shadow-lg border border-slate-100 hover:bg-red-50 active:scale-90 transition-all">
+                <i class="fa-solid fa-heart"></i>
+            </button>
+        </div>
+    </main>
+
+    <!-- It's a Match! Modal -->
+    <div id="matchModal" class="fixed inset-0 z-[100] bg-slate-900/90 hidden flex-col items-center justify-center p-6 backdrop-blur-md">
+        <div class="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center animate-bounce-in relative overflow-hidden">
+            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
+            
+            <i class="fa-solid fa-heart text-6xl text-red-500 mb-6 animate-pulse"></i>
+            <h2 class="text-3xl font-black text-slate-800 mb-2 leading-tight tracking-tighter italic uppercase text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-500">Mutual Match!</h2>
+            <p class="text-sm font-bold text-slate-500 mb-6 leading-relaxed relative z-10" id="matchModalText">You and your partner both loved this property.</p>
+            
+            <div class="w-full flex gap-3 relative z-10">
+                <button onclick="closeMatchModal()" class="flex-1 bg-slate-100 text-slate-600 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-transform">Keep Swiping</button>
+                <button onclick="requestVisits()" class="flex-1 bg-red-500 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-transform">Request Tour</button>
+            </div>
+        </div>
+        
+        <!-- Confetti effect base -->
+        <div class="absolute inset-0 pointer-events-none" id="confettiContainer"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="db-service.js"></script>
+    <script>
+        let currentProperties = [];
+        let currentIndex = 0;
+        let userToken = new URLSearchParams(window.location.search).get('token');
+        let isCoBuyer = false;
+        let lastMatchId = null;
+
+        // Fallback for demo if no config
+        if (!window.supabaseClient) {
+            console.error("Supabase client not initialized. Ensure db-service.js is loaded.");
+            document.getElementById('loadingState').innerHTML = '<p class="text-red-500 font-bold p-4 text-center">System error: Unable to connect to database.</p>';
+        }
+
+        async function initPortal() {
+            if (!userToken) {
+                document.getElementById('loadingState').innerHTML = '<p class="text-red-500 font-bold p-4 text-center">Invalid Link. No token provided.</p>';
+                return;
+            }
+
+            try {
+                // Fetch matches via RPC
+                const { data, error } = await supabaseClient.rpc('get_client_matches', { p_token: userToken });
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    isCoBuyer = data[0].is_co_buyer;
+                    // Filter out already voted ones for this user
+                    currentProperties = data.filter(p => {
+                        const myVote = isCoBuyer ? p.co_client_vote : p.client_vote;
+                        return !myVote; // Only show properties not yet voted on
+                    });
+
+                    updateCoBuyerStatus(data[0]);
+
+                    if (currentProperties.length > 0) {
+                        renderCards();
+                        document.getElementById('swipeControls').style.display = 'flex';
+                    } else {
+                        showEmptyState();
+                    }
+                } else {
+                    showEmptyState();
+                }
+                
+                document.getElementById('loadingState').style.display = 'none';
+
+            } catch (err) {
+                console.error("Error loading portal:", err);
+                document.getElementById('loadingState').innerHTML = '<p class="text-red-500 font-bold p-4 text-center">Error loading properties.</p>';
+            }
+        }
+
+        function updateCoBuyerStatus(matchData) {
+            const statusEl = document.getElementById('coBuyerStatus');
+            const coName = matchData.search_co_client_name;
+            const clientName = matchData.search_client_name;
+            
+            const partnerName = isCoBuyer ? clientName : coName;
+            
+            if (partnerName) {
+                statusEl.innerHTML = `<i class="fa-solid fa-link"></i> Linked with ${partnerName}`;
+                statusEl.className = 'text-[10px] font-bold bg-green-100 text-green-700 px-3 py-1 rounded-full flex items-center gap-1';
+                
+                // Show invite button only to primary buyer if partner isn't set
+                document.getElementById('btnInviteCo').style.display = 'none';
+            } else if (!isCoBuyer) {
+                document.getElementById('btnInviteCo').onclick = () => {
+                    const baseUrl = window.location.origin + window.location.pathname;
+                    // Because we generate tokens, we'd need to fetch the co_client_token to share it.
+                    // For demo, we just alert since we don't return co_client_token explicitly to frontend for security? Actually we need it to invite.
+                    alert("Contact your agent to generate a Co-Buyer link!");
+                };
+            }
+        }
+
+        function renderCards() {
+            const container = document.getElementById('cardsContainer');
+            container.innerHTML = '';
+            
+            // Render from last to first so first is on top (z-index naturally)
+            for (let i = currentProperties.length - 1; i >= 0; i--) {
+                const p = currentProperties[i];
+                const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+                const img = p.image_url || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+                
+                const card = document.createElement('div');
+                card.className = `swipe-card ${i === 0 ? 'active-card' : 'hidden-card'}`;
+                card.id = `card-${i}`;
+                card.dataset.id = p.id;
+                
+                // Badges
+                const loveBadge = document.createElement('div');
+                loveBadge.className = 'badge-love';
+                loveBadge.id = `badge-love-${i}`;
+                loveBadge.innerText = 'LOVE';
+                
+                const passBadge = document.createElement('div');
+                passBadge.className = 'badge-pass';
+                passBadge.id = `badge-pass-${i}`;
+                passBadge.innerText = 'PASS';
+                
+                card.innerHTML = `
+                    <div class="flex-1 relative w-full h-full bg-slate-200">
+                        <img src="${img}" class="w-full h-full object-cover" alt="Property">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                        
+                        <div class="absolute bottom-0 left-0 w-full p-6 text-white">
+                            <h2 class="text-3xl font-black mb-1 leading-tight drop-shadow-lg">${formatter.format(p.property_price)}</h2>
+                            <p class="text-lg font-bold mb-2 drop-shadow-md">${p.property_name}</p>
+                            
+                            <div class="flex items-center gap-4 text-xs font-bold opacity-90 mb-3">
+                                <span class="flex items-center gap-1 bg-black/30 px-2 py-1 rounded backdrop-blur-sm"><i class="fa-solid fa-bed"></i> ${p.property_bedrooms || '-'}</span>
+                                <span class="flex items-center gap-1 bg-black/30 px-2 py-1 rounded backdrop-blur-sm"><i class="fa-solid fa-bath"></i> ${p.property_bathrooms || '-'}</span>
+                                <span class="flex items-center gap-1 bg-black/30 px-2 py-1 rounded backdrop-blur-sm"><i class="fa-solid fa-ruler-combined"></i> ${p.property_size || '-'}m²</span>
+                            </div>
+                            
+                            <p class="text-sm opacity-80 line-clamp-2">${p.property_location}</p>
+                            ${p.notes ? `<p class="text-[10px] mt-2 bg-blue-600/30 px-3 py-2 rounded-lg border border-blue-400/20"><i class="fa-solid fa-comment-dots mr-1"></i> <b>Agent Note:</b> "${p.notes}"</p>` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                card.appendChild(loveBadge);
+                card.appendChild(passBadge);
+                container.appendChild(card);
+            }
+        }
+
+        async function handleSwipe(vote) {
+            if (currentIndex >= currentProperties.length) return;
+            
+            const card = document.getElementById(`card-${currentIndex}`);
+            const p = currentProperties[currentIndex];
+            lastMatchId = p.id;
+
+            // Visual effect
+            if (vote === 'love') {
+                card.style.transform = 'translateX(150%) rotate(15deg)';
+                document.getElementById(`badge-love-${currentIndex}`).style.opacity = '1';
+            } else if (vote === 'pass') {
+                card.style.transform = 'translateX(-150%) rotate(-15deg)';
+                document.getElementById(`badge-pass-${currentIndex}`).style.opacity = '1';
+            } else { // maybe
+                card.style.transform = 'translateY(-100%) scale(0.8)';
+            }
+            
+            card.style.opacity = '0';
+
+            // Advance index
+            currentIndex++;
+            if (currentIndex < currentProperties.length) {
+                document.getElementById(`card-${currentIndex}`).className = 'swipe-card active-card';
+            } else {
+                setTimeout(showEmptyState, 300);
+            }
+
+            // Database request
+            try {
+                // Save vote
+                await supabaseClient.rpc('submit_client_vote', { p_match_id: p.id, p_token: userToken, p_vote: vote });
+                
+                // Check if mutual match (only if vote is love and they have partner)
+                if (vote === 'love') {
+                    const partnerVote = isCoBuyer ? p.client_vote : p.co_client_vote;
+                    if (partnerVote === 'love') {
+                        triggerMatchModal();
+                    }
+                }
+            } catch (err) {
+                console.error("Error saving vote:", err);
+            }
+        }
+
+        function showEmptyState() {
+            document.getElementById('swipeControls').style.display = 'none';
+            document.getElementById('emptyState').classList.remove('hidden');
+        }
+
+        function triggerMatchModal() {
+            document.getElementById('matchModal').classList.remove('hidden');
+            document.getElementById('matchModal').classList.add('flex');
+            createConfetti();
+        }
+
+        function closeMatchModal() {
+            document.getElementById('matchModal').classList.add('hidden');
+            document.getElementById('matchModal').classList.remove('flex');
+        }
+
+        async function requestVisits() {
+            // Can be called to request visit for the current or all 'loved' properties
+            try {
+                if(lastMatchId) {
+                    await supabaseClient.rpc('request_client_visit', { p_match_id: lastMatchId, p_token: userToken });
+                    alert("Tour requested! Your agent will contact you shortly.");
+                    closeMatchModal();
+                } else {
+                    alert("Tour request sent to your agent!");
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function createConfetti() {
+            const container = document.getElementById('confettiContainer');
+            container.innerHTML = '';
+            const colors = ['#ef4444', '#f43f5e', '#ec4899', '#db2777'];
+            
+            for (let i = 0; i < 50; i++) {
+                const conf = document.createElement('div');
+                conf.style.position = 'absolute';
+                conf.style.width = '10px';
+                conf.style.height = '10px';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.left = Math.random() * 100 + '%';
+                conf.style.top = '-10%';
+                conf.style.opacity = Math.random();
+                conf.style.transform = `rotate(${Math.random() * 360}deg)`;
+                
+                // Animate fallback using transition since no keyframes complex set up
+                conf.style.transition = 'all 2s ease-in';
+                setTimeout(() => {
+                    conf.style.top = '110%';
+                    conf.style.transform = `rotate(${Math.random() * 720}deg)`;
+                }, 50);
+                
+                container.appendChild(conf);
+            }
+        }
+
+        // Initialize when ready
+        document.addEventListener('DOMContentLoaded', initPortal);
+    </script>
+</body>
+</html>

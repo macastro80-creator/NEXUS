@@ -19,33 +19,25 @@
         .location-row:hover { background: #f8fafc; }
         .dark .location-row:hover { background: #1e293b; }
     </style>
+
+  <!-- PWA Setup -->
+  <link rel="manifest" href="/manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js').then(function(registration) {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, function(err) {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+  </script>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-200 min-h-screen">
 
-<!-- ============ ADMIN LOGIN GATE ============ -->
-<div id="adminLoginGate" class="fixed inset-0 z-[200] bg-gradient-to-br from-slate-900 via-[#003DA5] to-slate-900 flex items-center justify-center p-6">
-    <div class="bg-white dark:bg-slate-800 rounded-[32px] p-8 max-w-sm w-full shadow-2xl text-center animate-fade">
-        <div class="w-20 h-20 bg-blue-100 dark:bg-blue-900/50 text-[#003DA5] dark:text-blue-400 rounded-full flex items-center justify-center mx-auto mb-6">
-            <i class="fa-solid fa-shield-halved text-3xl"></i>
-        </div>
-        <h1 class="text-2xl font-black text-slate-900 dark:text-white italic tracking-tighter uppercase mb-1">Admin Panel</h1>
-        <p class="text-[10px] uppercase tracking-widest text-[#ED1C24] font-bold mb-6">NEXUS Platform Control</p>
-        <form onsubmit="event.preventDefault(); adminLogin();" class="space-y-4">
-            <input type="password" id="adminPassInput" placeholder="Admin Password"
-                class="w-full p-4 border border-slate-100 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-xs text-center tracking-[0.3em] uppercase focus:ring-2 focus:ring-[#003DA5]">
-            <p id="adminLoginError" class="text-[10px] text-red-500 font-bold hidden">Incorrect password</p>
-            <button type="submit" class="w-full bg-[#003DA5] hover:bg-blue-700 text-white py-4 rounded-2xl font-black text-sm uppercase shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2">
-                <i class="fa-solid fa-lock-open"></i> Access Panel
-            </button>
-        </form>
-        <a href="app.html" class="block mt-4 text-[10px] font-bold text-slate-400 hover:text-[#003DA5] uppercase tracking-widest transition-colors">
-            <i class="fa-solid fa-arrow-left mr-1"></i> Back to Match Board
-        </a>
-    </div>
-</div>
-
 <!-- ============ ADMIN PANEL ============ -->
-<div id="adminPanel" class="hidden">
+<div id="adminPanel">
 
     <!-- TOP NAV -->
     <nav class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 py-4 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-[60] flex justify-between items-center shadow-sm">
@@ -70,22 +62,23 @@
 
     <!-- DASHBOARD KPIs -->
     <div class="max-w-2xl mx-auto px-4 mt-4">
-        <div class="grid grid-cols-4 gap-2 mb-4">
-            <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl border text-center shadow-sm">
-                <p id="kpiOffices" class="text-xl font-black text-[#003DA5]">0</p>
-                <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest"><span data-i18n="kpiOffices">Offices</span></p>
+        <div class="grid grid-cols-5 gap-2 mb-4">
+            <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl border border-[#003DA5]/20 shadow-sm col-span-2 overflow-hidden relative">
+                <div class="absolute -right-4 -bottom-4 w-16 h-16 bg-[#003DA5] opacity-5 rounded-full"></div>
+                <p id="kpiVolume" class="text-[17px] font-black text-[#003DA5]">$0</p>
+                <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest">Global YTD Vol</p>
             </div>
             <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl border text-center shadow-sm">
-                <p id="kpiTeams" class="text-xl font-black text-purple-600">0</p>
-                <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest"><span data-i18n="kpiTeams">Teams</span></p>
+                <p id="kpiOffices" class="text-xl font-black text-[#003DA5]">0</p>
+                <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest overflow-hidden text-ellipsis"><span data-i18n="kpiOffices">Offices</span></p>
             </div>
             <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl border text-center shadow-sm">
                 <p id="kpiRemax" class="text-xl font-black text-[#ED1C24]">0</p>
-                <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest"><span data-i18n="kpiRemax">REMAX</span></p>
+                <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest overflow-hidden text-ellipsis"><span data-i18n="kpiRemax">REMAX</span></p>
             </div>
             <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl border text-center shadow-sm">
-                <p id="kpiExternal" class="text-xl font-black text-green-600">0</p>
-                <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest"><span data-i18n="kpiExternal">External</span></p>
+                <p id="kpiExternal" class="text-xl font-black text-slate-600">0</p>
+                <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest overflow-hidden text-ellipsis"><span data-i18n="kpiExternal">External</span></p>
             </div>
         </div>
     </div>
@@ -107,6 +100,9 @@
             </button>
             <button onclick="switchTab('locations')" id="tabLocations" class="tab-btn flex-1 py-3 rounded-lg transition-all text-slate-500">
                 <i class="fa-solid fa-map mr-1"></i> <span data-i18n="tabLocations">Locations</span>
+            </button>
+            <button onclick="switchTab('requests')" id="tabRequests" class="tab-btn flex-1 py-3 rounded-lg transition-all text-slate-500">
+                <i class="fa-solid fa-briefcase mr-1"></i> <span data-i18n="tabRequests">Requests</span>
             </button>
         </div>
     </div>
@@ -195,6 +191,17 @@
         <div id="searchesListAdmin" class="space-y-3 max-h-[70vh] overflow-y-auto no-scrollbar"></div>
     </div>
 
+    
+    <!-- ====== REQUESTS SECTION ====== -->
+    <div id="sectionRequests" class="max-w-2xl mx-auto p-4 space-y-4 animate-fade hidden">
+        <div class="flex justify-between items-center">
+            <h2 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest italic">
+                <i class="fa-solid fa-briefcase text-[#003DA5] mr-1"></i> <span data-i18n="planRequests">Plan Requests</span>
+            </h2>
+        </div>
+        <div id="requestsListAdmin" class="space-y-3 max-h-[70vh] overflow-y-auto no-scrollbar"></div>
+    </div>
+
     <!-- ====== AGENTS SECTION ====== -->
     <div id="sectionAgents" class="max-w-2xl mx-auto p-4 space-y-4 animate-fade hidden">
         
@@ -210,6 +217,49 @@
                 <i class="fa-solid fa-chart-bar text-amber-500 mr-1"></i> Agents by TX Volume (Last Year)
             </h3>
             <div id="txChart" class="space-y-2"></div>
+        </div>
+
+        
+        <!-- Add New Agent/User -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-[28px] border shadow-sm">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                <i class="fa-solid fa-user-plus text-green-500 mr-1"></i> <span data-i18n="addAgent">Add New User / Agent</span>
+            </h3>
+            <p class="text-[10px] text-slate-400 font-bold mb-3 italic">Creates a user account immediately. They should log in with "NexusUser2026!" and change their password.</p>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                    <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2">Full Name</label>
+                    <input type="text" id="newAgentName" placeholder="e.g. Juan Perez" class="w-full p-3 border border-slate-100 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-[11px]">
+                </div>
+                <div>
+                    <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2">Email</label>
+                    <input type="email" id="newAgentEmail" placeholder="juan@remax.com" class="w-full p-3 border border-slate-100 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-[11px]">
+                </div>
+                <div>
+                    <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2">Role</label>
+                    <select id="newAgentRole" class="w-full p-3 border border-slate-100 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-[11px]">
+                        <option value="agent">Agent (Standard)</option>
+                        <option value="remax">REMAX Agent</option>
+                        <option value="broker">Broker (Office Owner)</option>
+                        <option value="team_leader">Team Leader</option>
+                        <option value="officeadmin">Office Admin</option>
+                        <option value="mainadmin">Main Admin</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2">Assigned Office (Optional)</label>
+                    <select id="newAgentOffice" class="w-full p-3 border border-slate-100 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-[11px]">
+                        <option value="">-- No Office --</option>
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2">Brand</label>
+                    <input type="text" id="newAgentBrand" placeholder="e.g. REMAX" class="w-full p-3 border border-slate-100 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-[11px]">
+                </div>
+            </div>
+            <button onclick="adminCreateNewAgent()" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-black text-[10px] uppercase shadow-md transition-all active:scale-95 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-plus"></i> Create User
+            </button>
         </div>
 
         <!-- Agent List -->
@@ -317,33 +367,22 @@
 
 <script>
 // ===== AUTH =====
-const ADMIN_PASSWORD = 'nexus2025';
-
-function adminLogin() {
-    if (document.getElementById('adminPassInput').value === ADMIN_PASSWORD) {
-        document.getElementById('adminLoginGate').classList.add('hidden');
-        document.getElementById('adminPanel').classList.remove('hidden');
-        sessionStorage.setItem('adminAuth', 'true');
-        initAll();
+function adminLogout() {
+    if (isSupabaseConfigured()) {
+        supabase.auth.signOut().then(() => {
+            window.location.href = 'login.html';
+        });
     } else {
-        const err = document.getElementById('adminLoginError');
-        err.classList.remove('hidden');
-        document.getElementById('adminPassInput').classList.add('ring-2', 'ring-red-400');
-        setTimeout(() => { err.classList.add('hidden'); document.getElementById('adminPassInput').classList.remove('ring-2','ring-red-400'); }, 2000);
+        localStorage.removeItem('nexusSession');
+        window.location.href = 'login.html';
     }
 }
-function adminLogout() { sessionStorage.removeItem('adminAuth'); location.reload(); }
 
-if (sessionStorage.getItem('adminAuth') === 'true') {
-    document.getElementById('adminLoginGate').classList.add('hidden');
-    document.getElementById('adminPanel').classList.remove('hidden');
-}
-
-async function initAll() { await loadTickets(); await loadOffices(); await loadAgents(); loadLocationTree(); await updateDashboardKPIs(); await loadAdminSearches(); }
+async function initAll() { await loadTickets(); await loadOffices(); await loadAgents(); loadLocationTree(); await updateDashboardKPIs(); await loadAdminSearches(); await loadPlanRequests(); }
 
 // ===== TABS =====
 function switchTab(tab) {
-    ['tickets','offices','agents','locations', 'searches'].forEach(t => {
+    ['tickets','offices','agents','locations','searches','requests'].forEach(t => {
         const btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
         const sec = document.getElementById('section' + t.charAt(0).toUpperCase() + t.slice(1));
         if (t === tab) { btn.classList.add('active'); sec.classList.remove('hidden'); }
@@ -475,7 +514,7 @@ async function loadAgents() {
             const data = await getAllAgents();
             agents = data.map(a => ({
                 id: a.id, name: a.full_name, brand: a.brand || 'Independent', 
-                role: a.role, tx: a.tx_volume || '1-5', joined: a.created_at?.substring(0,7) || '2024-01'
+                role: a.role, tx: a.tx_volume || '1-5', joined: a.created_at?.substring(0,7) || '2024-01', office_id: a.office_id
             }));
             
             // Auto-merge distinct brands from current agents
@@ -552,6 +591,7 @@ function renderAgentList(list) {
                 </div>
                 ${a.id ? `
                 <div class="flex gap-1 border-l border-slate-200 dark:border-slate-700 pl-3">
+                    <button onclick="openEditAgentModal('${a.id}', '${a.role}', '${a.office_id || ''}')" class="w-7 h-7 bg-[#003DA5]/10 text-[#003DA5] dark:text-blue-400 rounded-lg hover:bg-[#003DA5]/20 transition-colors" title="Edit Role/Office"><i class="fa-solid fa-pen text-[10px]"></i></button>
                     <button onclick="adminDeleteAgent('${a.id}')" class="w-7 h-7 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-lg hover:bg-red-100 transition-colors" title="Delete Permanent"><i class="fa-solid fa-trash text-[10px]"></i></button>
                     ${a.role !== 'blocked' ? 
                       `<button onclick="adminToggleBlockAgent('${a.id}', true)" class="w-7 h-7 bg-orange-50 dark:bg-orange-900/20 text-orange-500 rounded-lg hover:bg-orange-100 transition-colors" title="Block User"><i class="fa-solid fa-ban text-[10px]"></i></button>` :
@@ -647,6 +687,62 @@ function removeBrand(name) {
     brands = brands.filter(b => b !== name);
     localStorage.setItem('nexusBrands', JSON.stringify(brands));
     renderBrandManager();
+}
+
+
+function openEditAgentModal(id, currentRole, currentOfficeId) {
+    document.getElementById('editAgentId').value = id;
+    document.getElementById('editAgentRole').value = currentRole || 'agent';
+    
+    // Populate offices dropdown
+    const officeSelect = document.getElementById('editAgentOffice');
+    officeSelect.innerHTML = '<option value="">-- No Office --</option>' + 
+        offices.map(o => `<option value="${o.id}">${o.name} (${o.brand})</option>`).join('');
+    
+    if (currentOfficeId) {
+        officeSelect.value = currentOfficeId;
+    }
+    document.getElementById('editAgentModal').classList.remove('hidden');
+}
+
+async function saveAgentEdit() {
+    const id = document.getElementById('editAgentId').value;
+    const role = document.getElementById('editAgentRole').value;
+    const officeId = document.getElementById('editAgentOffice').value;
+    
+    try {
+        await updateUserAdmin(id, role, officeId || null);
+        document.getElementById('editAgentModal').classList.add('hidden');
+        alert('User updated successfully');
+        await loadAgents();
+    } catch(e) {
+        alert('Failed to update: ' + e.message);
+    }
+}
+
+
+async function adminCreateNewAgent() {
+    const name = document.getElementById('newAgentName').value.trim();
+    const email = document.getElementById('newAgentEmail').value.trim();
+    const role = document.getElementById('newAgentRole').value;
+    const officeId = document.getElementById('newAgentOffice').value;
+    const brand = document.getElementById('newAgentBrand').value.trim();
+    
+    if (!name || !email) {
+        alert('Please fill the name and email.');
+        return;
+    }
+    
+    try {
+        await adminCreateUserAdmin(email, name, role, officeId || null, brand || 'Independent');
+        alert('User created successfully! They must log in with password: NexusUser2026!');
+        await loadAgents();
+        document.getElementById('newAgentName').value = '';
+        document.getElementById('newAgentEmail').value = '';
+        document.getElementById('newAgentBrand').value = '';
+    } catch(err) {
+        alert('Error creating user: ' + err.message);
+    }
 }
 
 // ===== LOCATIONS =====
@@ -783,6 +879,13 @@ async function loadOffices() {
 function renderOffices() {
     const list = document.getElementById('officesList');
     if (offices.length === 0) { list.innerHTML = '<p class="text-center text-slate-400 text-xs font-bold py-4">No offices yet</p>'; return; }
+    
+    // Also populate new agent office dropdown
+    const naOffice = document.getElementById('newAgentOffice');
+    if (naOffice) {
+        naOffice.innerHTML = '<option value="">-- No Office --</option>' + offices.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
+    }
+
     list.innerHTML = offices.map(o => `
         <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border shadow-sm">
             <div class="flex justify-between items-start">
@@ -860,7 +963,7 @@ async function updateDashboardKPIs() {
     if (isSupabaseConfigured() && supabase) {
         try {
             const kpis = await getAdminKPIs();
-            document.getElementById('kpiOffices').textContent = kpis.totalOffices;
+            document.getElementById('kpiOffices').textContent = kpis.totalOffices; if(document.getElementById('kpiVolume')) document.getElementById('kpiVolume').textContent = '$'+(kpis.totalVolume || 0).toLocaleString();
             document.getElementById('kpiTeams').textContent = kpis.totalTeams;
             document.getElementById('kpiRemax').textContent = kpis.remaxAgents;
             document.getElementById('kpiExternal').textContent = kpis.externalAgents;
@@ -875,6 +978,62 @@ async function updateDashboardKPIs() {
     const externalAgents = agents.filter(a => a.brand !== 'REMAX');
     document.getElementById('kpiExternal').textContent = externalAgents.length;
 }
+
+
+let adminPlanRequests = [];
+async function loadPlanRequests() {
+    if (isSupabaseConfigured() && supabase) {
+        try {
+            adminPlanRequests = await getAllPlanRequests();
+            renderPlanRequests();
+        } catch(e) { console.warn('Could not load plan requests:', e); }
+    }
+}
+function renderPlanRequests() {
+    const list = document.getElementById('requestsListAdmin');
+    if (!adminPlanRequests || adminPlanRequests.length === 0) {
+        list.innerHTML = '<p class="text-xs text-center font-bold text-slate-400 py-4">No plan requests found.</p>';
+        return;
+    }
+    const statusColors = {
+        'new': 'bg-blue-100 text-blue-700',
+        'contacted': 'bg-amber-100 text-amber-700',
+        'closed_won': 'bg-green-100 text-green-700',
+        'closed_lost': 'bg-red-100 text-red-700'
+    };
+    list.innerHTML = adminPlanRequests.map(r => `
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border shadow-sm transition-all hover:border-[#003DA5]">
+            <div class="flex justify-between items-start mb-2">
+                <div>
+                    <h3 class="text-[12px] font-black text-slate-900 dark:text-white">${r.contact_name}</h3>
+                    <p class="text-[9px] font-bold text-slate-400"><i class="fa-solid fa-envelope mr-1"></i>${r.contact_email}</p>
+                </div>
+                <div class="text-right">
+                    <span class="text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${statusColors[r.status] || 'bg-slate-100 text-slate-500'}">${r.status.replace('_', ' ')}</span>
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 my-3 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-700">
+                <div><p class="text-[7px] text-slate-400 uppercase font-black">Plan</p><p class="text-[10px] font-bold text-[#003DA5]">${r.desired_service.toUpperCase()}</p></div>
+                <div><p class="text-[7px] text-slate-400 uppercase font-black">Agents</p><p class="text-[10px] font-bold">${r.agent_count}</p></div>
+                <div><p class="text-[7px] text-slate-400 uppercase font-black">Location</p><p class="text-[10px] font-bold truncate">${r.zone || r.country}</p></div>
+            </div>
+            <div class="flex justify-end gap-2 mt-2">
+                <button onclick="adminUpdatePlanReq('${r.id}', 'contacted')" class="px-3 py-1.5 bg-amber-50 text-amber-600 rounded-lg text-[9px] font-black uppercase hover:bg-amber-100 active:scale-95 transition">Mark Contacted</button>
+                <button onclick="adminUpdatePlanReq('${r.id}', 'closed_won')" class="px-3 py-1.5 bg-green-50 text-green-600 rounded-lg text-[9px] font-black uppercase hover:bg-green-100 active:scale-95 transition">Closed Won</button>
+                <button onclick="adminUpdatePlanReq('${r.id}', 'closed_lost')" class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-[9px] font-black uppercase hover:bg-red-100 active:scale-95 transition">Lost</button>
+            </div>
+        </div>
+    `).join('');
+}
+async function adminUpdatePlanReq(id, status) {
+    if(!confirm(`Mark this as ${status}?`)) return;
+    try {
+        await updatePlanRequestStatus(id, status);
+        adminPlanRequests = adminPlanRequests.map(r => String(r.id)===String(id) ? {...r, status} : r);
+        renderPlanRequests();
+    } catch(err) { alert('Error: ' + err.message); }
+}
+
 
 // ===== SEARCHES ADMIN =====
 let adminSearches = [];
@@ -985,8 +1144,47 @@ function setAdminLang(lang) {
 const savedAdminLang = localStorage.getItem('nexusLang') || 'en';
 setAdminLang(savedAdminLang);
 
-if (sessionStorage.getItem('adminAuth')==='true') initAll();
+// db-service.js will automatically check the session when it loads on this page.
+// We just need to wait a tiny bit to make sure it's valid, then init.
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => { initAll(); }, 500); 
+});
 </script>
+
+
+<!-- Edit Agent Modal -->
+<div id="editAgentModal" class="fixed inset-0 z-[200] bg-slate-900/50 backdrop-blur-sm flex justify-center items-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-[32px] p-6 shadow-2xl relative border border-slate-200 dark:border-slate-700 animate-fade">
+        <button onclick="document.getElementById('editAgentModal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+        <h3 class="font-black text-sm uppercase tracking-widest italic mb-4 text-[#003DA5]"><i class="fa-solid fa-user-pen mr-1"></i> Edit User Role</h3>
+        
+        <input type="hidden" id="editAgentId">
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2">Role</label>
+                <select id="editAgentRole" class="w-full p-3 border border-slate-100 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-[11px]">
+                    <option value="agent">Agent (Standard)</option>
+                    <option value="remax">REMAX Agent</option>
+                    <option value="broker">Broker (Office Owner)</option>
+                    <option value="team_leader">Team Leader</option>
+                    <option value="officeadmin">Office Admin</option>
+                    <option value="regional_director">Regional Director</option>
+                    <option value="mainadmin">Main Admin (Super)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-[8px] font-black text-slate-400 uppercase mb-1 ml-2">Assigned Office</label>
+                <select id="editAgentOffice" class="w-full p-3 border border-slate-100 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 font-bold outline-none text-[11px]">
+                    <option value="">-- No Office --</option>
+                </select>
+            </div>
+            <button onclick="saveAgentEdit()" class="w-full bg-[#003DA5] text-white py-3 rounded-xl font-black text-[10px] uppercase shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 mt-4">
+                <i class="fa-solid fa-save"></i> Save Changes
+            </button>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

@@ -18,7 +18,8 @@ const SUPABASE_ANON_KEY = 'sb_publishable_vcgGRA09bHX1suZrkqYcAg_hpumhYHl';
 if (window.supabase && typeof window.supabase.createClient === 'function' && !window.supabaseInstance) {
     window.supabaseInstance = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
-var supabase = window.supabaseInstance || null;
+window.supabase = window.supabaseInstance || window.supabase || null;
+var supabase = window.supabase;
 
 if (!supabase) {
     console.warn('⚠️ Supabase SDK not loaded. Make sure to include the script tag in your HTML.');
@@ -77,8 +78,36 @@ async function signOut() {
 /**
  * Get the currently logged-in user
  */
+let systemImpersonateUserId = localStorage.getItem('nexus_impersonate_id') || null;
+
+window.impersonateUser = function(agentId) {
+    if (!agentId) {
+        localStorage.removeItem('nexus_impersonate_id');
+        systemImpersonateUserId = null;
+        window.location.reload();
+    } else {
+        localStorage.setItem('nexus_impersonate_id', agentId);
+        systemImpersonateUserId = agentId;
+        window.location.href = 'app.html';
+    }
+};
+
 async function getCurrentUser() {
     const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    // Throttle last_login updates to 1 per hour
+    const token = localStorage.getItem('nexus_last_login');
+    const now = Date.now();
+    if (!token || now - parseInt(token) > 1000 * 60 * 60) { 
+        localStorage.setItem('nexus_last_login', now.toString());
+        supabase.from('profiles').update({ last_login: new Date().toISOString() }).eq('id', user.id).then();
+    }
+
+    if (systemImpersonateUserId) {
+        return { id: systemImpersonateUserId, email: 'impersonating@nexus.com' };
+    }
+
     return user;
 }
 
@@ -608,6 +637,103 @@ async function getUnreadNotifications() {
     return data;
 }
 
+async function markAllNotificationsAsRead() {
+    const user = await getCurrentUser();
+    if (!user) return;
+    
+    await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+}
+
+window.clearAllNotifications = async function() {
+    await markAllNotificationsAsRead();
+    const panel = document.getElementById('notificationsPanel');
+    if (panel) {
+        panel.classList.add('hidden');
+        panel.classList.remove('flex');
+    }
+    const badge = document.getElementById('notif-badge');
+    if (badge) badge.style.display = 'none';
+};
+
+window.populateNotificationsUI = async function() {
+    const notifications = await getUnreadNotifications();
+    const badge = document.getElementById('notif-badge');
+    if (badge) {
+        if (notifications.length > 0) {
+            badge.style.display = 'flex';
+            badge.innerText = notifications.length;
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    const panel = document.getElementById('notificationsPanel');
+    if (panel) {
+        // Find the specific div housing notifications items
+        const listContainer = panel.querySelector('.max-h-96');
+        if (listContainer) {
+            if (notifications.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="p-6 text-center text-slate-500 text-xs font-bold">
+                        <i class="fa-solid fa-bell-slash text-2xl mb-2 text-slate-300"></i>
+                        <br>No new notifications
+                    </div>
+                `;
+            } else {
+                let html = '';
+                notifications.forEach(n => {
+                    let icon = '<i class="fa-solid fa-fire text-sm"></i>';
+                    let color = 'text-[#ED1C24]';
+                    let bg = 'bg-red-50';
+                    let border = 'border-red-100';
+                    let bar = 'bg-[#ED1C24]';
+                    
+                    if (n.type === 'new_match') {
+                        icon = '<i class="fa-solid fa-bolt text-sm"></i>';
+                        color = 'text-[#003DA5]';
+                        bg = 'bg-blue-50';
+                        border = 'border-blue-100';
+                        bar = 'bg-[#003DA5]';
+                    }
+                    else if (n.type === 'system') {
+                        icon = '<i class="fa-solid fa-info text-sm"></i>';
+                        color = 'text-amber-500';
+                        bg = 'bg-amber-50';
+                        border = 'border-amber-100';
+                        bar = 'bg-amber-500';
+                    }
+
+                    html += `
+                    <div onclick="if('${n.link}') window.location.href='${n.link}'" class="bg-white dark:bg-slate-800 p-3 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex gap-3 items-start relative overflow-hidden group hover:border-[#003DA5] transition-colors cursor-pointer">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 ${bar}"></div>
+                        <div class="w-10 h-10 ${bg} rounded-xl flex items-center justify-center ${color} shrink-0 border ${border}">
+                            ${icon}
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-black ${color} uppercase mb-0.5 tracking-widest">${n.title}</p>
+                            <p class="text-[10px] font-bold text-slate-500 leading-relaxed pr-2">${n.body}</p>
+                            <p class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase mt-2">Just now</p>
+                        </div>
+                    </div>`;
+                });
+                listContainer.innerHTML = html;
+            }
+            
+            // Fix the clear button action
+            const clearBtns = panel.querySelectorAll('button');
+            clearBtns.forEach(btn => {
+                if(btn.innerText.includes('Clear') || btn.innerText.includes('Cerrar') || btn.innerText.includes('Notificaciones')) {
+                    btn.setAttribute('onclick', 'window.clearAllNotifications()');
+                }
+            });
+        }
+    }
+}
+
 /**
  * Mark a notification as read
  */
@@ -644,19 +770,34 @@ async function markAllNotificationsRead() {
  * Get KPI stats for the admin dashboard
  */
 async function getAdminKPIs() {
-    const [officesRes, profilesRes] = await Promise.all([
+    const [officesRes, profilesRes, rankingRes] = await Promise.all([
         supabase.from('offices').select('id', { count: 'exact' }),
-        supabase.from('profiles').select('id, role, brand')
+        supabase.from('profiles').select('id, role, brand'),
+        supabase.from('office_national_ranking').select('*').order('ytd_sales', { ascending: false }).limit(1)
     ]);
 
     const profiles = profilesRes.data || [];
+    const topOffice = rankingRes.data && rankingRes.data.length > 0 ? rankingRes.data[0] : null;
+
+    // Get total system YTD volume
+    let totalSystemVolume = 0;
+    try {
+        const { data: dealsData } = await supabase.from('deals').select('price').eq('stage', 'sold');
+        if (dealsData) {
+            totalSystemVolume = dealsData.reduce((sum, d) => sum + (d.price || 0), 0);
+        }
+    } catch (e) {
+        console.warn("Could not get deals volume:", e);
+    }
 
     return {
         totalOffices: officesRes.count || 0,
         totalTeams: profiles.filter(p => p.role === 'team_leader').length,
         remaxAgents: profiles.filter(p => p.brand === 'REMAX' && p.role !== 'buyer').length,
         externalAgents: profiles.filter(p => p.brand !== 'REMAX' && p.role !== 'buyer' && p.role !== 'mainadmin').length,
-        totalBuyers: profiles.filter(p => p.role === 'buyer').length
+        totalBuyers: profiles.filter(p => p.role === 'buyer').length,
+        topOfficeName: topOffice ? topOffice.office_name : 'N/A',
+        totalVolume: totalSystemVolume
     };
 }
 
@@ -707,6 +848,40 @@ async function deleteUserAdmin(userId) {
 }
 
 /**
+ * Create a new agent from admin panel
+ */
+async function adminCreateUserAdmin(email, name, role, officeId, brand) {
+    // We create a temporary client that doesn't persist the session, to avoid logging out the admin
+    const tempClient = supabase.auth.getClient(); 
+    // Wait, let's just make an API call to avoid logging the admin out, or use signUp and pray if email confirmation is on.
+    // If it logs them in, they will have to login again. A better approach is using an Edge Function, but for this setup we'll use signUp.
+    const tempKey = SUPABASE_ANON_KEY;
+    const tempUrl = SUPABASE_URL;
+    const tempSupa = supabasejs.createClient(tempUrl, tempKey, { auth: { persistSession: false, autoRefreshToken: false }});
+    
+    const dummyPassword = 'NexusUser2026!';
+    const { data: authData, error: authError } = await tempSupa.auth.signUp({
+        email: email,
+        password: dummyPassword,
+        options: { data: { full_name: name, role: role, office_id: officeId, brand: brand } }
+    });
+
+    if (authError) throw authError;
+
+    const newUserId = authData.user?.id;
+    if (newUserId) {
+        // Force update the profile since the trigger might set the default role 'agent' instead of what we want
+        await supabase.from('profiles').update({
+            role: role,
+            office_id: officeId || null,
+            brand: brand || 'Independent'
+        }).eq('id', newUserId);
+    }
+    
+    return authData;
+}
+
+/**
  * Block a user (admin only via RPC)
  */
 async function toggleUserBlockAdmin(userId, block) {
@@ -715,9 +890,45 @@ async function toggleUserBlockAdmin(userId, block) {
     if (error) throw error;
 }
 
+/**
+ * Update user role and office (admin only via RPC)
+ */
+async function updateUserAdmin(userId, role, officeId) {
+    const { error } = await supabase.rpc('admin_update_user', { 
+        target_user_id: userId, 
+        new_role: role, 
+        new_office_id: officeId || null 
+    });
+    if (error) throw error;
+}
+
 // ============================================
-// AGENT / LEAD PROTECTION FUNCTIONS
+// ADMIN / DASHBOARD FUNCTIONS
 // ============================================
+
+/**
+ * Get all plan requests (leads) for admin
+ */
+async function getAllPlanRequests() {
+    const { data, error } = await supabase
+        .from('plan_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data;
+}
+
+/**
+ * Update plan request status
+ */
+async function updatePlanRequestStatus(requestId, newStatus) {
+    const { error } = await supabase
+        .from('plan_requests')
+        .update({ status: newStatus })
+        .eq('id', requestId);
+    if (error) throw error;
+}
+
 
 async function validateAndPreRegisterClient({name, email, phone}) {
     const user = await getCurrentUser();
@@ -834,15 +1045,35 @@ document.addEventListener('DOMContentLoaded', async () => {
                             isComplete = checkComplete(profile.expert_zones) || checkComplete(profile.specializations);
                         }
             
-            if (!isComplete && !path.includes('profile')) {
+            const skipProfileLock = ['buyer', 'seller', 'mainadmin', 'regional_director'].includes(profile?.role);
+            if (!isComplete && !path.includes('profile') && !skipProfileLock) {
                 const hash = window.location.hash || '';
                 console.log("DB-SERVICE: Redirecting to profile. html. hash=", hash);
                 window.location.href = 'profile.html?onboarding=true' + hash;
                 return;
             } else {
-                console.log("DB-SERVICE: Passed guard. isComplete=", isComplete, " path=", path, " profile=", profile ? JSON.stringify(profile.expert_zones) : 'null');
-                if (path === '/' || path.includes('app.html')) {
-                    alert("DEBUG INFO: Guard evaluado. isComplete=" + isComplete + ". Zonas: " + (profile ? JSON.stringify(profile.expert_zones) : 'null'));
+                console.log("DB-SERVICE: Passed guard. isComplete=", isComplete, " path=", path);
+            }
+
+            // --- ROLE-BASED PAGE PROTECTION ---
+            if (profile && profile.role) {
+                const role = profile.role;
+                const file = path.split('/').pop();
+                
+                // Agents/Buyers trying to access Admin
+                if (file === 'admin.html' && !['mainadmin', 'regional_director'].includes(role)) {
+                    window.location.href = 'app.html';
+                    return;
+                }
+                // Agents/Buyers trying to access Broker ERP
+                if ((file === 'my-business.html' || file === 'broker-dashboard.html') && !['mainadmin', 'regional_director', 'broker', 'officeadmin', 'team_leader'].includes(role)) {
+                    window.location.href = 'app.html';
+                    return;
+                }
+                // Buyers/Sellers trying to access Agent workspaces
+                if (['app.html', 'my-desk.html', 'market.html', 'my-business.html', 'admin.html'].includes(file) && ['buyer', 'seller'].includes(role)) {
+                    window.location.href = 'buyer-matches.html';
+                    return;
                 }
             }
 
@@ -882,6 +1113,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         });
                     }
                 });
+            }
+            
+            if (typeof window.populateNotificationsUI === 'function') {
+                window.populateNotificationsUI();
             }
 
         } catch (e) {

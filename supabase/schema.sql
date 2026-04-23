@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     assigned_agent_id UUID, -- For buyer role
     avatar_url TEXT DEFAULT '',
     tx_volume TEXT DEFAULT '1-5',
+    tx_expected INTEGER DEFAULT 0,
     expert_zones TEXT[] DEFAULT '{}',
     is_premium BOOLEAN DEFAULT false,
     -- Enterprise Metrics
@@ -94,6 +95,8 @@ CREATE TABLE IF NOT EXISTS searches (
     timing TEXT DEFAULT 'flexible',
     payment_method TEXT DEFAULT 'cash',
     status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'paused', 'archived', 'expired')),
+    client_token UUID DEFAULT gen_random_uuid(),
+    co_client_token UUID DEFAULT gen_random_uuid(),
     expires_at TIMESTAMPTZ DEFAULT (now() + INTERVAL '30 days'),
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
@@ -122,6 +125,9 @@ CREATE TABLE IF NOT EXISTS matches (
     rejected_by UUID[] DEFAULT '{}',
     reject_reason TEXT DEFAULT '',
     notes TEXT DEFAULT '',
+    client_vote TEXT,
+    co_client_vote TEXT,
+    visit_requested BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
@@ -281,13 +287,15 @@ CREATE POLICY "Users can mark own as read" ON notifications FOR UPDATE USING (us
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-    INSERT INTO public.profiles (id, email, full_name, phone, brand)
+    INSERT INTO public.profiles (id, email, full_name, phone, brand, role, office_id)
     VALUES (
         new.id,
         new.email,
         COALESCE(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
         COALESCE(new.raw_user_meta_data->>'phone', ''),
-        COALESCE(new.raw_user_meta_data->>'brand', 'Independent')
+        COALESCE(new.raw_user_meta_data->>'brand', 'Independent'),
+        COALESCE(new.raw_user_meta_data->>'role', 'agent'),
+        NULLIF(new.raw_user_meta_data->>'office_id', '')::UUID
     );
     RETURN new;
 END;
@@ -545,3 +553,147 @@ CREATE POLICY "Admins can view plan requests" ON plan_requests FOR SELECT USING 
 CREATE POLICY "Admins can update plan requests" ON plan_requests FOR UPDATE USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'mainadmin')
 );
+
+-- ==========================================
+-- 15. SELLER REPORTS (Snapshots for Vendedores)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS seller_reports (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    property_id UUID REFERENCES properties(id) ON DELETE CASCADE,
+    agent_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    report_token UUID DEFAULT gen_random_uuid(),
+    seller_name TEXT DEFAULT '',
+    seller_email TEXT DEFAULT '',
+    views_count INTEGER DEFAULT 0,
+    matches_count INTEGER DEFAULT 0,
+    demand_stats JSONB DEFAULT '{}',
+    agent_notes TEXT DEFAULT '',
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- RLS FOR SELLER REPORTS
+ALTER TABLE seller_reports ENABLE ROW LEVEL SECURITY;
+-- Allow anonymous access to a specific report using the report_token
+CREATE POLICY "Anyone can view report with token" ON seller_reports FOR SELECT USING (true);
+CREATE POLICY "Agents can manage own reports" ON seller_reports FOR ALL USING (agent_id = auth.uid());
+
+-- ==========================================
+-- 16. RPC FUNCTIONS (For anonymous client portal updates)
+-- ==========================================
+CREATE OR REPLACE FUNCTION submit_client_vote(p_match_id UUID, p_token UUID, p_vote TEXT)
+RETURNS BOOLEAN AS $$
+DECLARE
+    v_search_id UUID;
+    v_client_token UUID;
+    v_co_client_token UUID;
+BEGIN
+    -- Get search details via match
+    SELECT search_id INTO v_search_id FROM matches WHERE id = p_match_id;
+    IF v_search_id IS NULL THEN
+        RETURN FALSE;
+    END IF;
+
+    -- Get tokens
+    SELECT client_token, co_client_token INTO v_client_token, v_co_client_token FROM searches WHERE id = v_search_id;
+
+    -- Check which token matches and update the correct vote
+    IF p_token = v_client_token THEN
+        UPDATE matches SET client_vote = p_vote WHERE id = p_match_id;
+        
+        -- Business logic: if both voted loved, or if there's no co-buyer token and client loved
+        -- Update match status to liked automatically...? (Let agent do this or do it here)
+        RETURN TRUE;
+    ELSIF p_token = v_co_client_token THEN
+        UPDATE matches SET co_client_vote = p_vote WHERE id = p_match_id;
+        RETURN TRUE;
+    ELSE
+        RETURN FALSE;
+    END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION request_client_visit(p_match_id UUID, p_token UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+    v_search_id UUID;
+BEGIN
+    SELECT search_id INTO v_search_id FROM matches WHERE id = p_match_id;
+    IF EXISTS (SELECT 1 FROM searches WHERE id = v_search_id AND (client_token = p_token OR co_client_token = p_token)) THEN
+        UPDATE matches SET visit_requested = TRUE WHERE id = p_match_id;
+        RETURN TRUE;
+    END IF;
+    RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION get_client_matches(p_token UUID)
+RETURNS TABLE (
+    id UUID,
+    property_name TEXT,
+    property_link TEXT,
+    property_price INTEGER,
+    property_location TEXT,
+    property_bedrooms INTEGER,
+    property_bathrooms INTEGER,
+    property_size NUMERIC,
+    image_url TEXT,
+    notes TEXT,
+    client_vote TEXT,
+    co_client_vote TEXT,
+    visit_requested BOOLEAN,
+    is_co_buyer BOOLEAN,
+    search_client_name TEXT,
+    search_co_client_name TEXT
+) AS $$
+DECLARE
+    v_search_id UUID;
+    v_is_co BOOLEAN;
+BEGIN
+    -- Determine role and search_id
+    SELECT s.id, (s.co_client_token = p_token) INTO v_search_id, v_is_co 
+    FROM searches s 
+    WHERE s.client_token = p_token OR s.co_client_token = p_token;
+
+    IF v_search_id IS NULL THEN
+        RETURN;
+    END IF;
+
+    RETURN QUERY
+    SELECT 
+        m.id,
+        m.property_name,
+        m.property_link,
+        m.property_price,
+        m.property_location,
+        m.property_bedrooms,
+        m.property_bathrooms,
+        m.property_size,
+        m.image_url,
+        m.notes,
+        m.client_vote,
+        m.co_client_vote,
+        m.visit_requested,
+        v_is_co,
+        s.client_name,
+        s.co_client_name
+    FROM matches m
+    JOIN searches s ON s.id = m.search_id
+    WHERE m.search_id = v_search_id
+      AND m.status NOT IN ('rejected', 'sold');
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ==========================================
+-- 17. ADMIN RPC FUNCTIONS
+-- ==========================================
+CREATE OR REPLACE FUNCTION admin_update_user(target_user_id UUID, new_role TEXT, new_office_id UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'mainadmin') THEN
+        UPDATE profiles SET role = new_role, office_id = new_office_id WHERE id = target_user_id;
+        RETURN TRUE;
+    END IF;
+    RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+

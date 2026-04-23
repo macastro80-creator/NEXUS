@@ -595,11 +595,11 @@
                 b3Desc: "Elevan la retención de agentes y el volumen de cierres al automatizar el seguimiento de prospectos mediante Magic Links.",
                 gallerySubtitle: "Experiencia Añadida",
                 galleryTitle: "Agrega valor a cada interacción",
-                feat1Title: "Para el Vendedor (Solo en OMNI)",
+                feat1Title: "Para el Vendedor",
                 feat1Desc: "Le entregamos reportes de demanda real. Muéstrele con datos por qué usted es el agente indicado para vender su propiedad.",
                 feat1A: "Reportes de demanda",
                 feat1B: "Métricas para convencer",
-                feat2Title: "Para el Comprador (Solo en OMNI)",
+                feat2Title: "Para el Comprador",
                 feat2Desc: "Una experiencia de búsqueda moderna. Califica propiedades con tu pareja y recibe solo lo que realmente te enamora.",
                 feat2A: "Búsqueda adictiva",
                 feat2B: "Calificación en tiempo real",
@@ -623,7 +623,7 @@
                 plan3Subtitle: "El Dominio Total del Mercado",
                 p3Desc: "Para Brokers que lideran equipos de alto impacto.",
                 p3f1: "El 'Tinder' Inmobiliario (Magic Links)",
-                p3f2: "Informes a propietarios y KPIs en tiempo real",
+                p3f2: "Gestión de Campeones: KPIs en tiempo real",
                 p3f3: "Intranet de Élite integrada",
                 omniPrice: "A la Medida",
                 omniPriceSub: "Basado en tu equipo",
@@ -637,27 +637,7 @@
             }
         };
 
-        function setLanguage(lang) {
-            localStorage.setItem('nexus_lang', lang);
-            const btnEn = document.getElementById('btn-en');
-            const btnEs = document.getElementById('btn-es');
-            
-            if(lang === 'en') {
-                btnEn.className = "px-3 py-1.5 rounded-full bg-remax-blue text-white shadow-md transition";
-                btnEs.className = "px-3 py-1.5 rounded-full text-slate-600 dark:text-slate-400 transition bg-transparent shadow-none";
-            } else {
-                btnEs.className = "px-3 py-1.5 rounded-full bg-remax-blue text-white shadow-md transition";
-                btnEn.className = "px-3 py-1.5 rounded-full text-slate-600 dark:text-slate-400 transition bg-transparent shadow-none";
-            }
-            
-            const elements = document.querySelectorAll('[data-i18n]');
-            elements.forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if(translationDict[lang][key]) el.innerHTML = translationDict[lang][key];
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', async () => {
+        
             // Apply language
             let savedLang = localStorage.getItem('nexus_lang') || 'es';
             setLanguage(savedLang);

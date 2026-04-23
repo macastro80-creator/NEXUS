@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEXUS - Real Estate Performance Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        nexusBlue: '#003DA5',
+                        nexusRed: '#ED1C24'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .gradient-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); }
+    </style>
+
+  <!-- PWA Setup -->
+  <link rel="manifest" href="/manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js').then(function(registration) {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, function(err) {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+  </script>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 min-h-screen">
+
+    <!-- Header -->
+    <header class="p-6 bg-white border-b border-slate-200 flex flex-col items-center justify-center text-center">
+        <h1 class="text-3xl font-black text-nexusBlue italic tracking-tighter uppercase leading-none mb-1">NEXUS</h1>
+        <p class="text-[10px] uppercase font-bold text-nexusRed tracking-widest">Live Market Intelligence</p>
+    </header>
+
+    <main class="max-w-2xl mx-auto p-4 py-8 space-y-6" id="reportContent" style="display:none;">
+        
+        <div class="text-center mb-8">
+            <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Performance Report For</h2>
+            <h3 class="text-2xl font-black text-slate-800" id="propName">Loading...</h3>
+            <p class="text-sm font-bold text-slate-500 mt-1">Prepared for <span id="sellerName">Seller</span></p>
+        </div>
+
+        <!-- Big Metrics -->
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-white p-6 rounded-[24px] shadow-sm border border-slate-100 flex flex-col items-center">
+                <i class="fa-solid fa-eye text-nexusBlue text-2xl mb-2 opacity-50"></i>
+                <div class="text-4xl font-black text-slate-800" id="valViews">0</div>
+                <p class="text-[10px] font-black uppercase text-slate-400 mt-1">Agent Network Views</p>
+            </div>
+            
+            <div class="bg-white p-6 rounded-[24px] shadow-sm border border-slate-100 flex flex-col items-center relative overflow-hidden">
+                <i class="fa-solid fa-handshake-angle text-amber-500 text-2xl mb-2 opacity-50 relative z-10"></i>
+                <div class="text-4xl font-black text-slate-800 relative z-10" id="valMatches">0</div>
+                <p class="text-[10px] font-black uppercase text-slate-400 mt-1 relative z-10 text-center">Active Buyers<br>Matched</p>
+                <div class="absolute bottom-0 right-0 w-16 h-16 bg-amber-50 rounded-tl-full opacity-50"></div>
+            </div>
+        </div>
+
+        <!-- Agent Notes -->
+        <div class="bg-blue-50/50 p-6 rounded-[24px] border border-blue-100" id="agentNotesContainer">
+            <div class="flex items-center gap-2 mb-3 text-nexusBlue">
+                <i class="fa-solid fa-clipboard-user"></i>
+                <h4 class="text-xs font-black uppercase">From Your Agent</h4>
+            </div>
+            <p class="text-sm font-bold text-slate-600 italic leading-relaxed" id="agentNotes">No notes provided for this report period.</p>
+        </div>
+
+        <!-- Property Links -->
+        <div class="bg-indigo-50/50 p-6 rounded-[24px] border border-indigo-100 hidden" id="propertyLinksContainer">
+            <div class="flex items-center gap-2 mb-3 text-indigo-600">
+                <i class="fa-solid fa-link"></i>
+                <h4 class="text-xs font-black uppercase tracking-widest">Published Links</h4>
+            </div>
+            <ul id="propertyLinksList" class="space-y-2 text-sm font-bold text-slate-600">
+                <!-- Links rendered here -->
+            </ul>
+        </div>
+
+        <!-- Market Demand Chart -->
+        <div class="bg-white p-6 rounded-[24px] shadow-sm border border-slate-100">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h4 class="text-xs font-black uppercase text-slate-800">Demand Analytics</h4>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Searches in your area/price range</p>
+                </div>
+                <i class="fa-solid fa-chart-pie text-slate-300 text-2xl"></i>
+            </div>
+            <div class="h-48 relative">
+                <canvas id="demandChart"></canvas>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center text-slate-400">
+            <p class="text-[10px] font-bold">Contact your REMAX agent for strategy adjustments based on this data.</p>
+        </div>
+    </main>
+
+    <!-- Error/Loading -->
+    <div id="loadingState" class="fixed inset-0 bg-slate-50 flex flex-col items-center justify-center z-[100]">
+        <i class="fa-solid fa-circle-notch fa-spin text-4xl text-nexusBlue mb-4"></i>
+        <p class="text-sm font-bold text-slate-500 font-mono tracking-widest">DECRYPTING REPORT...</p>
+    </div>
+
+    <script src="db-service.js"></script>
+    <script>
+        const reportToken = new URLSearchParams(window.location.search).get('report_token');
+
+        async function initReport() {
+            if (!reportToken) {
+                showError("Invalid Link. Contact your agent.");
+                return;
+            }
+
+            try {
+                // Fetch report from public table where report_token matches
+                const { data, error } = await supabaseClient
+                    .from('seller_reports')
+                    .select('*, properties(title, location)')
+                    .eq('report_token', reportToken)
+                    .single();
+
+                if (error || !data) {
+                    showError("Report not found or has expired.");
+                    return;
+                }
+
+                renderReport(data);
+
+            } catch (err) {
+                console.error(err);
+                showError("Error connecting to NEXUS network.");
+            }
+        }
+
+        function renderReport(report) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('reportContent').style.display = 'block';
+
+            document.getElementById('propName').innerText = report.properties ? report.properties.title : 'Property Listing';
+            document.getElementById('sellerName').innerText = report.seller_name || 'Owner';
+            
+            // Animate Numbers
+            animateNumber('valViews', report.views_count);
+            animateNumber('valMatches', report.matches_count);
+
+            if (report.agent_notes) {
+                document.getElementById('agentNotes').innerText = '"' + report.agent_notes + '"';
+            } else {
+                document.getElementById('agentNotesContainer').style.display = 'none';
+            }
+
+            if (report.properties && report.properties.link) {
+                document.getElementById('propertyLinksContainer').classList.remove('hidden');
+                document.getElementById('propertyLinksList').innerHTML = `<li><a href="${report.properties.link}" target="_blank" class="text-indigo-600 hover:text-indigo-800 underline"><i class="fa-solid fa-arrow-up-right-from-square text-[10px] mr-1"></i> View Primary Listing</a></li>`;
+            }
+
+            // Render Chart
+            const stats = report.demand_stats || { low_budget: 15, on_budget: 40, high_budget: 8 };
+            const ctx = document.getElementById('demandChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Budget Below Yours', 'Budget Matching Yours', 'Budget Above Yours'],
+                    datasets: [{
+                        data: [stats.low_budget || 0, stats.on_budget || 0, stats.high_budget || 0],
+                        backgroundColor: ['#94a3b8', '#003DA5', '#10b981'],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: 'ui-sans-serif, system-ui, sans-serif', size: 10, weight: 'bold' } } }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        function showError(msg) {
+            document.getElementById('loadingState').innerHTML = `
+                <div class="text-center p-6 bg-white rounded-3xl shadow-xl max-w-sm">
+                    <i class="fa-solid fa-triangle-exclamation text-4xl text-red-500 mb-4"></i>
+                    <h3 class="text-xl font-black text-slate-800 mb-2">Access Denied</h3>
+                    <p class="text-sm font-bold text-slate-500">${msg}</p>
+                </div>
+            `;
+        }
+
+        function animateNumber(id, end) {
+            let start = 0;
+            const duration = 1500;
+            const el = document.getElementById(id);
+            const stepTime = Math.abs(Math.floor(duration / (end || 1)));
+            
+            if (!end || stepTime === Infinity) { el.innerText = '0'; return; }
+            
+            const timer = setInterval(() => {
+                start += 1;
+                el.innerText = start;
+                if (start >= end) clearInterval(timer);
+            }, stepTime > 0 ? stepTime : 10);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.supabaseClient) {
+                initReport();
+            } else {
+                showError("Database connection failed. Check db-service.js");
+            }
+        });
+    </script>
+</body>
+</html>

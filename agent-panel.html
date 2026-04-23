@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>My Business - NEXUS</title>
+    <title>Central de Operaciones - NEXUS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
 
@@ -460,6 +460,7 @@ function submitFullOkr() {
         }
     </script>
     <script src="global-theme.js"></script>
+    <script src="central_operaciones.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -532,6 +533,9 @@ function submitFullOkr() {
       });
     }
   </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db-service.js"></script>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 font-sans pb-32 text-slate-800 dark:text-slate-200">
 
@@ -541,7 +545,7 @@ function submitFullOkr() {
             <a href="app.html" class="text-slate-400 text-lg"><i class="fa-solid fa-arrow-left"></i></a>
             <div class="flex flex-col items-start gap-0">
                 <h1 class="text-3xl font-black text-[#003DA5] leading-none">NEXUS</h1>
-                <p class="text-[10px] uppercase tracking-widest text-[#ED1C24] font-bold mt-1">My Business</p>
+                <p class="text-[10px] uppercase tracking-widest text-[#ED1C24] font-bold mt-1">Operaciones</p>
             </div>
         </div>
         <div class="flex items-center gap-4">
@@ -746,66 +750,116 @@ function submitFullOkr() {
                 </div>
             </div>
 
-            <!-- ACTIVE DEALS / PIPELINE -->
-            <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-700">
+            
+            <!-- KANBAN PIPELINE -->
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-700 mt-6 overflow-hidden">
+                <style>
+                    .kanban-board { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem; scroll-snap-type: x mandatory; }
+                    .kanban-col { min-width: 260px; max-width: 260px; flex-shrink: 0; background: rgba(248, 250, 252, 0.5); border-radius: 1rem; padding: 0.75rem; border: 1px solid #e2e8f0; scroll-snap-align: start; }
+                    .dark .kanban-col { background: rgba(30, 41, 59, 0.5); border-color: #334155; }
+                    .kanban-card { background: white; border-radius: 0.75rem; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #f1f5f9; margin-bottom: 0.75rem; }
+                    .dark .kanban-card { background: #0f172a; border-color: #1e293b; color: white; }
+                </style>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xs font-black uppercase tracking-widest text-[#003DA5] dark:text-blue-400">
+                        <i class="fa-solid fa-timeline text-[#003DA5] mr-1.5"></i>
+                        <span class="lang-en">Transaction Pipeline</span>
+                        <span class="lang-es hidden">Ciclo de Vida</span>
+                    </h3>
+                    <button onclick="document.getElementById('preListingModal').classList.remove('hidden')" class="bg-gradient-to-r from-blue-600 to-[#003DA5] text-white px-3 py-1.5 rounded-xl text-[10px] font-black uppercase shadow-sm">
+                        <i class="fa-solid fa-plus mr-1"></i> Pre-Listing
+                    </button>
+                </div>
+
+                <div class="kanban-board custom-scrollbar" id="kanbanBoard">
+                    <!-- Column: Prospección -->
+                    <div class="kanban-col">
+                        <h4 class="text-[10px] font-black uppercase text-slate-500 mb-3 ml-1 flex justify-between"><span><i class="fa-solid fa-users text-blue-400 mr-1"></i> Prospección</span> <span class="bg-slate-200 dark:bg-slate-700 px-1.5 rounded text-[8px]">0</span></h4>
+                        <div id="col-prospect" class="min-h-[100px]"></div>
+                    </div>
+                    <!-- Column: Pre Listing -->
+                    <div class="kanban-col">
+                        <h4 class="text-[10px] font-black uppercase text-slate-500 mb-3 ml-1 flex justify-between"><span><i class="fa-solid fa-clipboard-list text-purple-400 mr-1"></i> Pre Listing</span> <span id="count-prelisting" class="bg-slate-200 dark:bg-slate-700 px-1.5 rounded text-[8px]">0</span></h4>
+                        <div id="col-prelisting" class="min-h-[100px]"></div>
+                    </div>
+                    <!-- Column: ACM -->
+                    <div class="kanban-col">
+                        <h4 class="text-[10px] font-black uppercase text-slate-500 mb-3 ml-1 flex justify-between"><span><i class="fa-solid fa-calculator text-amber-400 mr-1"></i> ACM</span> <span id="count-acm" class="bg-slate-200 dark:bg-slate-700 px-1.5 rounded text-[8px]">0</span></h4>
+                        <div id="col-acm" class="min-h-[100px]"></div>
+                    </div>
+                    <!-- Column: Exclusiva -->
+                    <div class="kanban-col">
+                        <h4 class="text-[10px] font-black uppercase text-slate-500 mb-3 ml-1 flex justify-between"><span><i class="fa-solid fa-house-lock text-green-400 mr-1"></i> Exclusiva</span> <span class="bg-slate-200 dark:bg-slate-700 px-1.5 rounded text-[8px]">0</span></h4>
+                        <div id="col-exclusiva" class="min-h-[100px]"></div>
+                    </div>
+                    <!-- Remaining cols... -->
+                    <div class="kanban-col"><h4 class="text-[10px] font-black uppercase text-slate-500 mb-3 ml-1 flex justify-between"><span><i class="fa-solid fa-comments text-indigo-400 mr-1"></i> Consulta</span><span class="bg-slate-200 dark:bg-slate-700 px-1.5 rounded text-[8px]">0</span></h4><div class="min-h-[100px]"></div></div>
+                    <div class="kanban-col"><h4 class="text-[10px] font-black uppercase text-slate-500 mb-3 ml-1 flex justify-between"><span><i class="fa-solid fa-eye text-cyan-400 mr-1"></i> Muestra</span><span class="bg-slate-200 dark:bg-slate-700 px-1.5 rounded text-[8px]">0</span></h4><div class="min-h-[100px]"></div></div>
+                    <div class="kanban-col"><h4 class="text-[10px] font-black uppercase text-slate-500 mb-3 ml-1 flex justify-between"><span><i class="fa-solid fa-handshake text-emerald-400 mr-1"></i> Reserva</span><span class="bg-slate-200 dark:bg-slate-700 px-1.5 rounded text-[8px]">0</span></h4><div class="min-h-[100px]"></div></div>
+                    <div class="kanban-col"><h4 class="text-[10px] font-black uppercase text-slate-500 mb-3 ml-1 flex justify-between"><span><i class="fa-solid fa-file-contract text-red-400 mr-1"></i> Venta</span><span class="bg-slate-200 dark:bg-slate-700 px-1.5 rounded text-[8px]">0</span></h4><div class="min-h-[100px]"></div></div>
+                    <div class="kanban-col"><h4 class="text-[10px] font-black uppercase text-slate-500 mb-3 ml-1 flex justify-between"><span><i class="fa-solid fa-reply-all text-pink-400 mr-1"></i> Follow up</span><span class="bg-slate-200 dark:bg-slate-700 px-1.5 rounded text-[8px]">0</span></h4><div class="min-h-[100px]"></div></div>
+                </div>
+            </div>
+
+            <!-- PROPERTY PORTFOLIO AUTO-EXPORT -->
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-700 mt-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-200">
-                        <i class="fa-solid fa-handshake text-emerald-500 mr-1.5"></i>
-                        <span class="lang-en">Active Deals (Reservada)</span>
-                        <span class="lang-es hidden">Negocios Activos (Reservada)</span>
+                        <i class="fa-solid fa-server text-emerald-500 mr-1.5"></i>
+                        <span class="lang-en">Auto-Export Portfolio</span>
+                        <span class="lang-es hidden">Exportación de Cartera</span>
                     </h3>
-                    <button class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 flex items-center justify-center text-xs"><i class="fa-solid fa-plus"></i></button>
                 </div>
-
-                <div id="dealsContainer" class="space-y-3">
-                    <!-- Dynamic Deal Card Example -->
-                    <div class="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 p-3 rounded-2xl">
-                        <div class="flex justify-between items-start mb-2">
-                            <div>
-                                <h4 class="text-sm font-black text-slate-800 dark:text-slate-200">Casa en Escazu</h4>
-                                <p class="text-[10px] font-bold text-amber-600 dark:text-amber-500">$350,000 • <span class="lang-en">Buyer</span><span class="lang-es hidden">Comprador</span>: Roberto M.</p>
-                            </div>
-                            <select onchange="handleDealStatusChange(this, 'deal1')" class="bg-amber-100 text-amber-700 text-[9px] font-black px-2 py-1 rounded outline-none cursor-pointer">
-                                <option value="reservada">Reservada</option>
-                                <option value="sold">SOLD (Cierre)</option>
-                                <option value="caida">CAÍDA</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center gap-2 mt-2 pt-2 border-t border-amber-200/50 dark:border-amber-800/50">
-                            <i class="fa-regular fa-calendar text-slate-400 text-[10px]"></i>
-                            <input type="date" class="bg-transparent text-[10px] font-bold text-slate-600 dark:text-slate-400 outline-none cursor-pointer" value="2023-11-15">
-                            <span class="text-[9px] text-slate-400 ml-auto"><span class="lang-en">Est. Close</span><span class="lang-es hidden">Cierre Est.</span></span>
-                        </div>
-                    </div>
+                
+                <div id="exportPortfolioContainer" class="space-y-4">
+                    <!-- Dynamic properties will load here -->
+                    <p class="text-xs text-slate-500 font-medium italic text-center py-4">Cargando inventario de API...</p>
                 </div>
             </div>
 
-            <!-- ROOKIE CHECKLIST BUTTON -->
-            <button onclick="openRookieModal()" class="w-full bg-[#ED1C24] text-white py-4 rounded-3xl font-black uppercase tracking-widest text-xs shadow-lg shadow-red-500/30 hover:-translate-y-1 active:translate-y-0 transition-transform flex items-center justify-center gap-3">
-                <i class="fa-solid fa-clipboard-check text-lg"></i>
-                <span class="lang-en">Open Rookie Checklist</span>
-                <span class="lang-es hidden">Abrir Checklist de Novato</span>
+
+
+    
+    <!-- PRE-LISTING MODAL -->
+    <div id="preListingModal" class="fixed inset-0 z-[110] bg-slate-900/80 hidden flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white dark:bg-slate-800 rounded-[32px] p-6 max-w-sm w-full shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
+            <button onclick="document.getElementById('preListingModal').classList.add('hidden')" class="absolute top-4 right-4 w-8 h-8 bg-slate-100 dark:bg-slate-700 text-slate-500 rounded-full flex items-center justify-center transition z-10">
+                <i class="fa-solid fa-times"></i>
             </button>
-
-            <!-- ACTION CHECKLIST (Smart tracking for required actions) -->
-            <div id="actionChecklist" class="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 hidden">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-sm font-black italic text-slate-900 dark:text-white uppercase tracking-widest">
-                        <i class="fa-solid fa-list-check text-remax-red mr-2"></i>
-                        <span class="lang-en">Pending System Actions</span>
-                        <span class="lang-es hidden">Acciones del Sistema</span>
-                    </h3>
-                    <span id="pendingCountBadge" class="bg-remax-red text-white text-[9px] font-black px-2 py-0.5 rounded-full hidden">0</span>
-                </div>
-                <div id="pendingActionsContainer" class="space-y-3">
-                    <div id="emptyActionsState" class="text-center py-6 opacity-50">
-                        <i class="fa-solid fa-mug-hot text-3xl text-slate-300 dark:text-slate-600 mb-3 block"></i>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">All caught up!</p>
-                    </div>
-                </div>
+            <div class="shrink-0 mb-4 pr-10">
+                <h3 class="text-lg font-black uppercase tracking-widest text-[#003DA5]">
+                    <i class="fa-solid fa-clipboard-list mr-1.5"></i> <span class="lang-en">New Pre-Listing</span><span class="lang-es hidden">Nuevo Pre-Listing</span>
+                </h3>
             </div>
-
+            <form onsubmit="savePreListing(event)" class="space-y-4 overflow-y-auto custom-scrollbar pr-2 grow text-left">
+                <div>
+                    <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Nombre de la Propiedad</label>
+                    <input type="text" id="plPropName" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs font-bold outline-none mt-1">
+                </div>
+                <div>
+                    <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Nombre del Propietario</label>
+                    <input type="text" id="plOwnerName" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs font-bold outline-none mt-1">
+                </div>
+                <div>
+                    <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Teléfono / WhatsApp</label>
+                    <input type="tel" id="plPhone" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs font-bold outline-none mt-1">
+                </div>
+                <div>
+                    <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Ubicación</label>
+                    <input type="text" id="plLocation" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs font-bold outline-none mt-1">
+                </div>
+                <!-- Action Buttons: Save and Generate ACM -->
+                <div class="flex gap-2">
+                    <button type="submit" class="w-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest mt-2 active:scale-95 transition-transform">
+                        <i class="fa-solid fa-save mr-1"></i> Guardar
+                    </button>
+                    <button type="button" onclick="generateACMFromPreListing()" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white py-3 rounded-xl font-black uppercase text-[10px] tracking-widest mt-2 shadow-lg shadow-amber-500/30 active:scale-95 transition-transform flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-calculator"></i> Crear ACM
+                    </button>
+                </div>
+            </form>
         </div>
+    </div>
 
     </main>
 
@@ -925,113 +979,6 @@ function submitFullOkr() {
         </div>
     </div>
 
-    <!-- ROOKIE CHECKLIST MODAL -->
-    <div id="rookieModal" class="fixed inset-0 z-[110] bg-slate-900/80 hidden flex items-center justify-center p-4 backdrop-blur-md">
-        <div class="bg-white dark:bg-slate-800 rounded-[32px] p-6 max-w-sm w-full shadow-2xl relative overflow-hidden flex flex-col max-h-[80vh]">
-            <button onclick="closeRookieModal()" class="absolute top-4 right-4 w-8 h-8 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-500 rounded-full flex items-center justify-center transition z-10">
-                <i class="fa-solid fa-times"></i>
-            </button>
-            <div class="shrink-0 mb-4 pr-10">
-                <h3 class="text-lg font-black uppercase tracking-widest text-[#ED1C24]">
-                    <i class="fa-solid fa-clipboard-check mr-1.5"></i> <span class="lang-en">Rookie Checklist</span><span class="lang-es hidden">Checklist de Novato</span>
-                </h3>
-            </div>
-            <div class="space-y-3 overflow-y-auto custom-scrollbar pr-2 grow" id="rookieTasks">
-
-                <label id="rookieTask1" class=" flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition border border-slate-100 dark:border-slate-700/50">
-                    <input type="checkbox" onchange="unlockNextRookieTask(1)" class="mt-1 w-5 h-5 rounded text-[#ED1C24] focus:ring-[#ED1C24] bg-white border-slate-300 transition-colors">
-                    <div>
-                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-through-if-checked">
-                            <span class="lang-en">1. Complete your Business Plan</span>
-                            <span class="lang-es hidden">1. Completar tu Plan de Negocios en Plataforma</span>
-                        </p>
-                    </div>
-                </label>
-                <label id="rookieTask2" class="hidden flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition border border-slate-100 dark:border-slate-700/50">
-                    <input type="checkbox" onchange="unlockNextRookieTask(2)" class="mt-1 w-5 h-5 rounded text-[#ED1C24] focus:ring-[#ED1C24] bg-white border-slate-300 transition-colors">
-                    <div>
-                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-through-if-checked">
-                            <span class="lang-en">2. Prepare your Database (100 Contacts)</span>
-                            <span class="lang-es hidden">2. Preparar tu Base de Datos (100 Contactos)</span>
-                        </p>
-                    </div>
-                </label>
-                <label id="rookieTask3" class="hidden flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition border border-slate-100 dark:border-slate-700/50">
-                    <input type="checkbox" onchange="unlockNextRookieTask(3)" class="mt-1 w-5 h-5 rounded text-[#ED1C24] focus:ring-[#ED1C24] bg-white border-slate-300 transition-colors">
-                    <div>
-                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-through-if-checked">
-                            <span class="lang-en">3. Announce your new career on Social Media</span>
-                            <span class="lang-es hidden">3. Anunciar tu nueva carrera en Redes Sociales</span>
-                        </p>
-                    </div>
-                </label>
-                <label id="rookieTask4" class="hidden flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition border border-slate-100 dark:border-slate-700/50">
-                    <input type="checkbox" onchange="unlockNextRookieTask(4)" class="mt-1 w-5 h-5 rounded text-[#ED1C24] focus:ring-[#ED1C24] bg-white border-slate-300 transition-colors">
-                    <div>
-                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-through-if-checked">
-                            <span class="lang-en">4. Complete the 'Quick Start' Training</span>
-                            <span class="lang-es hidden">4. Completar el Entrenamiento 'Quick Start'</span>
-                        </p>
-                    </div>
-                </label>
-                <label id="rookieTask5" class="hidden flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition border border-slate-100 dark:border-slate-700/50">
-                    <input type="checkbox" onchange="unlockNextRookieTask(5)" class="mt-1 w-5 h-5 rounded text-[#ED1C24] focus:ring-[#ED1C24] bg-white border-slate-300 transition-colors">
-                    <div>
-                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-through-if-checked">
-                            <span class="lang-en">5. Shadow a top producer on a listing appointment</span>
-                            <span class="lang-es hidden">5. Acompañar a un top producer a una captación</span>
-                        </p>
-                    </div>
-                </label>
-                <label id="rookieTask6" class="hidden flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition border border-slate-100 dark:border-slate-700/50">
-                    <input type="checkbox" onchange="unlockNextRookieTask(6)" class="mt-1 w-5 h-5 rounded text-[#ED1C24] focus:ring-[#ED1C24] bg-white border-slate-300 transition-colors">
-                    <div>
-                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-through-if-checked">
-                            <span class="lang-en">6. Roleplay your listing presentation 3 times</span>
-                            <span class="lang-es hidden">6. Hacer roleplay de tu presentación 3 veces</span>
-                        </p>
-                    </div>
-                </label>
-                <label id="rookieTask7" class="hidden flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition border border-slate-100 dark:border-slate-700/50">
-                    <input type="checkbox" onchange="unlockNextRookieTask(7)" class="mt-1 w-5 h-5 rounded text-[#ED1C24] focus:ring-[#ED1C24] bg-white border-slate-300 transition-colors">
-                    <div>
-                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-through-if-checked">
-                            <span class="lang-en">7. Send 25 personal letters to your sphere</span>
-                            <span class="lang-es hidden">7. Enviar 25 cartas personales a tu esfera</span>
-                        </p>
-                    </div>
-                </label>
-                <label id="rookieTask8" class="hidden flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition border border-slate-100 dark:border-slate-700/50">
-                    <input type="checkbox" onchange="unlockNextRookieTask(8)" class="mt-1 w-5 h-5 rounded text-[#ED1C24] focus:ring-[#ED1C24] bg-white border-slate-300 transition-colors">
-                    <div>
-                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-through-if-checked">
-                            <span class="lang-en">8. Do 2 Open Houses with an experienced agent</span>
-                            <span class="lang-es hidden">8. Hacer 2 Open Houses con un agente experimentado</span>
-                        </p>
-                    </div>
-                </label>
-                <label id="rookieTask9" class="hidden flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition border border-slate-100 dark:border-slate-700/50">
-                    <input type="checkbox" onchange="unlockNextRookieTask(9)" class="mt-1 w-5 h-5 rounded text-[#ED1C24] focus:ring-[#ED1C24] bg-white border-slate-300 transition-colors">
-                    <div>
-                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-through-if-checked">
-                            <span class="lang-en">9. Call 50 For-Sale-By-Owners (FSBO)</span>
-                            <span class="lang-es hidden">9. Llamar a 50 dueños venden (FSBO)</span>
-                        </p>
-                    </div>
-                </label>
-                <label id="rookieTask10" class="hidden flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition border border-slate-100 dark:border-slate-700/50">
-                    <input type="checkbox" onchange="unlockNextRookieTask(10)" class="mt-1 w-5 h-5 rounded text-[#ED1C24] focus:ring-[#ED1C24] bg-white border-slate-300 transition-colors">
-                    <div>
-                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-through-if-checked">
-                            <span class="lang-en">10. Secure your first Exclusive Listing!</span>
-                            <span class="lang-es hidden">10. ¡Conseguir tu primera Captación Exclusiva!</span>
-                        </p>
-                    </div>
-                </label>
-            </div>
-        </div>
-    </div>
-
     <!-- SUCCESS MODAL -->
     <div id="successModal" class="fixed inset-0 z-[120] bg-slate-900/80 hidden flex items-center justify-center p-6 backdrop-blur-md">
         <div class="bg-white dark:bg-slate-800 rounded-[32px] p-8 max-w-sm w-full text-center shadow-2xl relative overflow-hidden transform scale-95 transition-transform duration-300" id="successModalInner">
@@ -1045,25 +992,7 @@ function submitFullOkr() {
             </button>
         </div>
     </div>
-    <!-- CAIDA MODAL (Fell Through) -->
-    <div id="caidaModal" class="fixed inset-0 z-[110] bg-slate-900/80 hidden flex items-center justify-center p-6 backdrop-blur-md">
-        <div class="bg-white dark:bg-slate-800 rounded-[32px] p-8 max-w-sm w-full text-center shadow-2xl relative overflow-hidden">
-            <div class="w-20 h-20 bg-amber-100 dark:bg-amber-900/30 rounded-full flex flex-col items-center justify-center mx-auto mb-4 text-amber-500 shadow-inner">
-                <i class="fa-solid fa-heart-crack text-3xl"></i>
-            </div>
-            <h3 class="text-xl font-black text-slate-900 dark:text-white mb-2 italic uppercase">Resilience.</h3>
-            <p class="text-sm font-bold text-slate-500 dark:text-slate-400 mb-6 italic">
-                "Don't give up on: <br>
-                <span id="caidaVisionTarget" class="text-amber-600 dark:text-amber-500 font-black text-base not-italic">...</span>"
-            </p>
-            <button onclick="closeCaidaModal()" class="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all">
-                Find The Next Deal <i class="fa-solid fa-arrow-right ml-1"></i>
-            </button>
-        </div>
-    </div>
-
-
-                <!-- BOTTOM NAVIGATION -->
+    <!-- BOTTOM NAVIGATION -->
     <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t py-4 px-6 flex justify-between items-center text-slate-600 dark:text-slate-400 z-50 shadow-xl pb-6 overflow-x-auto no-scrollbar gap-4">
         <a href="app.html" data-nav="app.html" class="flex flex-col items-center justify-center min-w-[3rem] text-slate-400 hover:text-[#003DA5] transition-colors relative">
             <i class="fa-solid fa-house mb-1 text-xl hover:scale-110 transition-transform"></i>
@@ -1088,36 +1017,8 @@ function submitFullOkr() {
             <span class="text-[10px] font-bold" data-i18n="navProfile">Profile</span>
         </a>
     </div>
-    <script>
-    (function(){
-        var page = location.pathname.split('/').pop() || 'app.html';
-        var links = document.querySelectorAll('[data-nav]');
-        links.forEach(function(a){
-            if(a.getAttribute('data-nav') === page){
-                a.classList.remove('text-slate-400','text-amber-500');
-                a.classList.add('text-[#003DA5]');
-                var dot = document.createElement('div');
-                dot.className = 'absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full';
-                a.appendChild(dot);
-            }
-        });
-    })();
-    </script>
-    <script>
-    (function(){
-        var page = location.pathname.split('/').pop() || 'app.html';
-        var links = document.querySelectorAll('[data-nav]');
-        links.forEach(function(a){
-            if(a.getAttribute('data-nav') === page){
-                a.classList.remove('text-slate-400','text-amber-500');
-                a.classList.add('text-[#003DA5]');
-                var dot = document.createElement('div');
-                dot.className = 'absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full';
-                a.appendChild(dot);
-            }
-        });
-    })();
-    </script>
+    
+    
 
 
    <script>

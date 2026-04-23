@@ -43,9 +43,9 @@
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 font-sans pb-24 text-slate-800 dark:text-slate-200">
 
-    <nav class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 py-2 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-[60] flex justify-between items-center shadow-sm transition-colors">
+    <nav class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 py-3 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-[60] flex justify-between items-center shadow-sm transition-colors">
         <div>
-            <h1 class="font-black text-base md:text-lg text-[#003DA5] tracking-tighter uppercase italic leading-none">NEXUS - <span class="lang-en">My Profile</span><span class="lang-es hidden">Mi Perfil</span></h1>
+            <h1 class="font-black text-lg md:text-xl text-[#003DA5] tracking-tighter uppercase italic leading-none">NEXUS - <span class="lang-en">My Profile</span><span class="lang-es hidden">Mi Perfil</span></h1>
         </div>
         <div class="flex items-center gap-3">
             <div class="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-full text-[9px] font-black border">
@@ -94,7 +94,7 @@
             <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Oficina</span>
         </a>
         <div class="w-[1px] h-8 bg-amber-500/20 relative z-10"></div>
-        <a href="agent-panel.html" id="nav-business" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group ">
+        <a href="my-business.html" id="nav-business" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group ">
             <i class="fa-solid fa-briefcase-medical mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
             <span class="text-[9px] font-black uppercase tracking-widest lang-en">Business</span>
             <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Negocio</span>
@@ -418,18 +418,6 @@
                 <input type="hidden" id="adminOverrideName" name="reviewer_real_name" value="Alejandra Castro">
 
                 <div>
-                    <label class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-en">Select Agent to Review</label>
-                    <label class="text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-es hidden">Seleccionar Agente a Calificar</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="leaveReviewAgentSearch" placeholder="Name or Office..." required class="w-full p-4 pl-10 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-2xl text-[13px] font-bold outline-none focus:border-indigo-500">
-                        <div id="leaveAgentSuggestionsBlock" class="absolute z-10 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 mt-2 rounded-xl shadow-lg hidden">
-                            <!-- Suggestions will be loaded dynamically -->
-                        </div>
-                    </div>
-                </div>
-
-                <div>
                     <label class="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-en">Star Rating</label>
                     <label class="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest block mb-2 lang-es hidden">Calificación</label>
                     <div class="flex text-amber-400 text-2xl gap-2 cursor-pointer">
@@ -591,25 +579,31 @@
     </div>
     <script>
     (function(){
-        var path = location.pathname.split('/').pop() || 'app';
-        var page = path.replace('.html', '');
+        var page = location.pathname.split('/').pop() || 'app.html';
         var links = document.querySelectorAll('[data-nav]');
         links.forEach(function(a){
-            a.classList.add('py-1', 'rounded-2xl', 'transition-all');
-            var navTarget = a.getAttribute('data-nav').replace('.html', '');
-            if(navTarget === page){
+            if(a.getAttribute('data-nav') === page){
                 a.classList.remove('text-slate-400','text-amber-500');
-                a.classList.add('text-[#003DA5]', 'dark:text-blue-400', 'bg-blue-50', 'dark:bg-blue-900/40', 'px-2');
+                a.classList.add('text-[#003DA5]');
                 var dot = document.createElement('div');
-                dot.className = 'absolute -top-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full shadow-[0_0_8px_rgba(0,61,165,0.6)]';
+                dot.className = 'absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full';
                 a.appendChild(dot);
-            } else {
-                a.classList.add('px-1');
             }
-            
-            // Ensure child text doesn't wrap
-            var span = a.querySelector('span');
-            if (span) span.classList.add('whitespace-nowrap');
+        });
+    })();
+    </script>
+    <script>
+    (function(){
+        var page = location.pathname.split('/').pop() || 'app.html';
+        var links = document.querySelectorAll('[data-nav]');
+        links.forEach(function(a){
+            if(a.getAttribute('data-nav') === page){
+                a.classList.remove('text-slate-400','text-amber-500');
+                a.classList.add('text-[#003DA5]');
+                var dot = document.createElement('div');
+                dot.className = 'absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full';
+                a.appendChild(dot);
+            }
         });
     })();
     </script>
@@ -697,28 +691,16 @@
             document.getElementById('agentSuggestionsBlock').classList.remove('hidden');
         });
 
-        document.getElementById('leaveReviewAgentSearch').addEventListener('focus', function() {
-            document.getElementById('leaveAgentSuggestionsBlock').classList.remove('hidden');
-        });
-
         // Basic out-click hide for suggestion text
         document.addEventListener('click', function(e) {
             if(!document.getElementById('reviewAgentSearch').contains(e.target) && !document.getElementById('agentSuggestionsBlock').contains(e.target)) {
                 document.getElementById('agentSuggestionsBlock').classList.add('hidden');
             }
-            if(!document.getElementById('leaveReviewAgentSearch').contains(e.target) && !document.getElementById('leaveAgentSuggestionsBlock').contains(e.target)) {
-                document.getElementById('leaveAgentSuggestionsBlock').classList.add('hidden');
-            }
         });
 
-        function selectAgentForReview(name, type = 'request') {
-            if (type === 'request') {
-                document.getElementById('reviewAgentSearch').value = name;
-                document.getElementById('agentSuggestionsBlock').classList.add('hidden');
-            } else {
-                document.getElementById('leaveReviewAgentSearch').value = name;
-                document.getElementById('leaveAgentSuggestionsBlock').classList.add('hidden');
-            }
+        function selectAgentForReview(name) {
+            document.getElementById('reviewAgentSearch').value = name;
+            document.getElementById('agentSuggestionsBlock').classList.add('hidden');
         }
 
         function submitReviewRequest() {
@@ -1013,8 +995,8 @@
         function checkAgency(select) { document.getElementById('otherAgencyDiv').classList.toggle('hidden', select.value !== 'Other'); }
 
         // --- LANGUAGE TOGGLE ---
-        function updateProfilePlaceholders() {
-            const lang = localStorage.getItem('nexusLang') || 'en';
+        
+
             // Translate options
             document.querySelectorAll('option[data-en]').forEach(opt => {
                 opt.innerText = lang === 'en' ? opt.getAttribute('data-en') : opt.getAttribute('data-es');
@@ -1035,9 +1017,6 @@
                 if (document.getElementById('otherAgencyDiv')) document.getElementById('otherAgencyDiv').placeholder = "Especificar el Nombre de Agencia";
             }
         }
-        
-        document.addEventListener('languageChanged', updateProfilePlaceholders);
-        document.addEventListener('DOMContentLoaded', updateProfilePlaceholders);
 
         // ===== PROFILE LOAD/SAVE =====
         function populateProfileFields(data) {

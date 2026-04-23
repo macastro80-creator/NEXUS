@@ -18,7 +18,8 @@ const SUPABASE_ANON_KEY = 'sb_publishable_vcgGRA09bHX1suZrkqYcAg_hpumhYHl';
 if (window.supabase && typeof window.supabase.createClient === 'function' && !window.supabaseInstance) {
     window.supabaseInstance = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
-var supabase = window.supabaseInstance || null;
+window.supabase = window.supabaseInstance || window.supabase || null;
+var supabase = window.supabase;
 
 if (!supabase) {
     console.warn('⚠️ Supabase SDK not loaded. Make sure to include the script tag in your HTML.');
@@ -754,6 +755,46 @@ function isSupabaseConfigured() {
 
 // Global Auth Guard
 document.addEventListener('DOMContentLoaded', async () => {
+    
+    // TEMPORARY: Inject Test Login Panel
+    if (!document.getElementById('nexus-test-panel')) {
+        const panel = document.createElement('div');
+        panel.id = 'nexus-test-panel';
+        panel.innerHTML = `
+            <div style="position:fixed; bottom:20px; right:20px; z-index:999999; background:white; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.2); border: 2px solid #003DA5; padding:15px; font-family:sans-serif; width: 280px;">
+                <div style="font-weight:900; font-size:14px; margin-bottom:10px; color:#003DA5; text-align:center;">🧪 NEXUS TEST SWITCHER</div>
+                <button onclick="window.testLogin('external@test.com', 'NexusTest2026!')" style="width:100%; margin-bottom:8px; padding:8px; border-radius:8px; background:#f1f5f9; border:none; cursor:pointer; font-weight:bold; color:#334155;">Tinder/Free Mode (External)</button>
+                <button onclick="window.testLogin('remax@test.com', 'NexusTest2026!')" style="width:100%; margin-bottom:8px; padding:8px; border-radius:8px; background:#e0e7ff; border:none; cursor:pointer; font-weight:bold; color:#4f46e5;">Agent Mode (RE/MAX)</button>
+                <button onclick="window.testLogin('office@test.com', 'NexusTest2026!')" style="width:100%; margin-bottom:8px; padding:8px; border-radius:8px; background:#fce7f3; border:none; cursor:pointer; font-weight:bold; color:#db2777;">Office Mode (Broker)</button>
+                <button onclick="window.testLogin('buyer@test.com', 'NexusTest2026!')" style="width:100%; margin-bottom:8px; padding:8px; border-radius:8px; background:#dcfce7; border:none; cursor:pointer; font-weight:bold; color:#16a34a;">Buyer Mode</button>
+                <button onclick="window.testLogin('admin@test.com', 'NexusTest2026!')" style="width:100%; margin-bottom:8px; padding:8px; border-radius:8px; background:#fee2e2; border:none; cursor:pointer; font-weight:bold; color:#dc2626;">Admin Mode</button>
+                <button onclick="window.testLogout()" style="width:100%; padding:8px; border-radius:8px; background:#1e293b; border:none; cursor:pointer; font-weight:bold; color:white;">Logout</button>
+            </div>
+        `;
+        document.body.appendChild(panel);
+
+        window.testLogin = async (email, password) => {
+            try {
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+                // Get profile to redirect to correct page
+                const { data: { user } } = await supabase.auth.getUser();
+                const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+                
+                if (profile?.role === 'mainadmin') window.location.href = 'admin.html';
+                else if (profile?.role === 'buyer') window.location.href = 'buyer-matches.html';
+                else if (profile?.role === 'broker' || profile?.role === 'officeadmin') window.location.href = 'my-business.html';
+                else window.location.href = 'app.html';
+            } catch (error) {
+                alert('Login failed: ' + error.message + '\\n(Make sure to register this mock user once on the login page)');
+            }
+        };
+        window.testLogout = async () => {
+            await supabase.auth.signOut();
+            window.location.href = 'login.html';
+        };
+    }
+
     const path = window.location.pathname;
     if (path.includes('login.html') || path.includes('client-onboarding.html') || path.includes('test_credentials.md')) {
         return;
@@ -763,13 +804,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const user = await getCurrentUser();
             if (!user) {
-                window.location.href = 'login.html';
+                console.warn('Test mode active: bypassing login redirect');
+                // window.location.href = 'login.html';
             }
         } catch (e) {
-            window.location.href = 'login.html';
+             console.warn('Test mode active: bypassing login redirect');
+            // window.location.href = 'login.html';
         }
     } else if (!localStorage.getItem('userEmail')) {
-        window.location.href = 'login.html';
+         console.warn('Test mode active: bypassing login redirect');
+        // window.location.href = 'login.html';
     }
 });
 

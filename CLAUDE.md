@@ -39,11 +39,12 @@ NEXUS is a real estate agent collaboration platform built for the REMAX Altitud 
 | `notifications` | User notifications |
 
 ### User Roles
-- `agent` — default, external agent
+- `agent` — Independent external agent
 - `remax` — REMAX-branded agent
-- `team_leader` — manages junior agents
-- `mainadmin` — full admin access
-- `buyer` — assigned to an agent via `assigned_agent_id`
+- `broker` — Office Broker / Owner
+- `regional_director` — Regional Administrative Director
+- `mainadmin` — Full platform administrative access
+- `buyer` — Client assigned to an agent via `assigned_agent_id`
 
 ### Row Level Security (RLS)
 - Profiles: everyone reads, only own profile updates
@@ -55,7 +56,7 @@ NEXUS is a real estate agent collaboration platform built for the REMAX Altitud 
 ## Key Pages
 | File | Purpose | Supabase Integration |
 |---|---|---|
-| `login.html` | Auth (sign up/in/reset) | ✅ Real Supabase Auth |
+| `login.html` | Auth (sign up/in/reset), **requires terms acceptance** | ✅ Real Supabase Auth |
 | `index.html` | **Match Board** — search cards | ✅ Reads `searches` table |
 | `my-desk.html` | **My Hub / CRM** — manage searches, matches, invites | ✅ Reads user's searches |
 | `add-search.html` | **Post Search / Invite Client** — agent form | ✅ Writes to `searches` table |
@@ -85,10 +86,13 @@ NEXUS is a real estate agent collaboration platform built for the REMAX Altitud 
 - **4 Tabs**: Tickets, Offices, Agents, Locations
 - **Data source**: Supabase with localStorage fallback
 
-## Premium Feature Locking
-- Market, Office, Business, Resources pages are **locked** for all users at launch
-- Lock messages use neutral "Premium Feature" text (not REMAX-specific branding)
-- Premium locking code runs on `DOMContentLoaded` in each page
+## Premium & Subscription Tiers
+- **Free Tier**: Basic access for individual agents.
+- **B2B Office Plans (Core, Pulse, Omni)**: Unlocks enterprise modules for brokerages.
+- Modules include: **Cuentas Corrientes** (Billing/Expenses), **QyR** (Performance tracking), **Broker ERP**.
+- Market, Office, Business, and Enterprise pages locked for unstructured/free users.
+- Lock messages use neutral "Premium Feature" text (not REMAX-specific branding).
+- Premium locking code runs on `DOMContentLoaded` in each page.
 
 ## Agent Hierarchy — REMAX RECONNECT Integration (Phase 5 — Planned)
 ```

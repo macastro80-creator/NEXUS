@@ -287,9 +287,8 @@
         <div class="flex items-center gap-3 md:gap-4">
             <button onclick="toggleFilter()" class="text-[#003DA5]"><i
                     class="fa-solid fa-bars-staggered text-base md:text-xl"></i></button>
-            <div class="flex flex-col items-start gap-0 cursor-pointer relative top-1" onclick="toggleAdminMode()">
-                <h1 class="text-xl md:text-3xl font-black text-[#003DA5] italic tracking-tighter leading-none">NEXUS</h1>
-                <span class="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest leading-none mt-0.5">Match Board</span>
+            <div class="flex flex-col items-start gap-0 cursor-pointer" onclick="toggleAdminMode()">
+                <h1 class="text-xl md:text-3xl font-black text-[#003DA5] italic tracking-tighter leading-none">NEXUS - MATCH BOARD</h1>
             </div>
         </div>
         <div class="flex items-center gap-3">
@@ -318,24 +317,24 @@
     </nav>
 
                             <!-- PREMIUM TOP NAV -->
-    <div id="premium-top-nav" class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-amber-500/30 flex justify-between items-center mt-1 mb-2 mx-4 rounded-xl overflow-hidden shadow-lg relative shadow-amber-500/10">
+    <div id="premium-top-nav" class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-amber-500/30 flex justify-between items-center mt-2 mb-4 mx-4 rounded-2xl overflow-hidden shadow-2xl relative shadow-amber-500/10">
         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-        <a href="Mi_Oficina.html" id="nav-office" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-1.5 hover:bg-white/5 transition relative z-10 group premium-only">
-            <i class="fa-solid fa-building mb-0.5 text-xs group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
-            <span class="text-[8px] font-black uppercase tracking-widest lang-en">Office</span>
-            <span class="text-[8px] font-black uppercase tracking-widest lang-es hidden">Oficina</span>
+        <a href="Mi_Oficina.html" id="nav-office" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
+            <i class="fa-solid fa-building mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Office</span>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Oficina</span>
         </a>
-        <div class="w-[1px] h-5 bg-amber-500/20 relative z-10"></div>
-        <a href="agent-panel.html" id="nav-business" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-1.5 hover:bg-white/5 transition relative z-10 group ">
-            <i class="fa-solid fa-briefcase-medical mb-0.5 text-xs group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
-            <span class="text-[8px] font-black uppercase tracking-widest lang-en">Business</span>
-            <span class="text-[8px] font-black uppercase tracking-widest lang-es hidden">Negocio</span>
+        <div class="w-[1px] h-8 bg-amber-500/20 relative z-10"></div>
+        <a href="my-business.html" id="nav-business" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group ">
+            <i class="fa-solid fa-briefcase-medical mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Business</span>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Negocio</span>
         </a>
-        <div class="w-[1px] h-5 bg-amber-500/20 relative z-10"></div>
-        <a href="#" id="nav-resources" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-1.5 hover:bg-white/5 transition relative z-10 group premium-only">
-            <i class="fa-solid fa-book-open mb-0.5 text-xs group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
-            <span class="text-[8px] font-black uppercase tracking-widest lang-en">Resources</span>
-            <span class="text-[8px] font-black uppercase tracking-widest lang-es hidden">Recursos</span>
+        <div class="w-[1px] h-8 bg-amber-500/20 relative z-10"></div>
+        <a href="#" id="nav-resources" class="flex-1 flex flex-col items-center justify-center text-amber-500 py-3 hover:bg-white/5 transition relative z-10 group premium-only">
+            <i class="fa-solid fa-book-open mb-1 text-sm group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition"></i>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-en">Resources</span>
+            <span class="text-[9px] font-black uppercase tracking-widest lang-es hidden">Recursos</span>
         </a>
     </div>
 
@@ -401,34 +400,6 @@
                 class="lang-es hidden">Nueva Búsqueda de Cliente</span>
         </a>
 
-        <!-- QUICK SEARCH & SORT BAR -->
-        <div class="bg-white dark:bg-slate-800 p-3 rounded-[20px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row gap-3 relative z-20">
-            <div class="relative flex-1">
-                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                <input type="text" id="feedSearchFilter" oninput="renderFeedSearches()" placeholder="Search client or area..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-[14px] py-2.5 pl-10 pr-4 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-[#003DA5] focus:ring-1 focus:ring-[#003DA5] transition-all">
-            </div>
-            <div class="relative min-w-[150px]">
-                <select id="feedSortOrder" onchange="renderFeedSearches()" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-[14px] py-2.5 pl-4 pr-9 text-xs font-bold text-[#003DA5] dark:text-blue-400 outline-none appearance-none cursor-pointer focus:border-[#003DA5] transition-all">
-                    <option value="newest">Newest First</option>
-                    <option value="oldest">Oldest First</option>
-                    <option value="budget_desc">Highest Budget</option>
-                </select>
-                <i class="fa-solid fa-sort absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] pointer-events-none"></i>
-            </div>
-        </div>
-
-        <!-- ACTIVE FILTER INDICATOR -->
-        <div id="activeFilterDisplay" class="hidden flex items-center justify-between bg-blue-50 dark:bg-blue-900/40 rounded-2xl p-3 border border-blue-100 dark:border-blue-800/50 mb-3 mx-1">
-            <span class="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest flex items-center gap-2">
-                <i class="fa-solid fa-filter text-[#003DA5] dark:text-blue-400 bg-white dark:bg-slate-800 p-1.5 rounded-md shadow-sm"></i>
-                <span class="leading-none flex items-center flex-wrap mt-[2px]"><span class="lang-en mr-1">Viewing:</span><span class="lang-es hidden mr-1">Viendo:</span>
-                <span id="activeFilterText" class="text-[#003DA5] dark:text-blue-400 mt-[1px]"></span></span>
-            </span>
-            <button onclick="clearSidebarFilters()" class="text-[9px] font-black text-red-500 hover:text-red-700 bg-red-50 dark:bg-red-900/30 px-2 flex-shrink-0 py-1 rounded-md uppercase tracking-widest transition">
-                <span class="lang-en">Clear</span><span class="lang-es hidden">Limpiar</span>
-            </button>
-        </div>
-
         <!-- DYNAMIC SUPABASE SEARCHES -->
         <div id="supabaseSearches" class="space-y-4"></div>
 
@@ -477,25 +448,31 @@
     </div>
     <script>
     (function(){
-        var path = location.pathname.split('/').pop() || 'app';
-        var page = path.replace('.html', '');
+        var page = location.pathname.split('/').pop() || 'app.html';
         var links = document.querySelectorAll('[data-nav]');
         links.forEach(function(a){
-            a.classList.add('py-1', 'rounded-2xl', 'transition-all');
-            var navTarget = a.getAttribute('data-nav').replace('.html', '');
-            if(navTarget === page){
+            if(a.getAttribute('data-nav') === page){
                 a.classList.remove('text-slate-400','text-amber-500');
-                a.classList.add('text-[#003DA5]', 'dark:text-blue-400', 'bg-blue-50', 'dark:bg-blue-900/40', 'px-2');
+                a.classList.add('text-[#003DA5]');
                 var dot = document.createElement('div');
-                dot.className = 'absolute -top-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full shadow-[0_0_8px_rgba(0,61,165,0.6)]';
+                dot.className = 'absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full';
                 a.appendChild(dot);
-            } else {
-                a.classList.add('px-1');
             }
-            
-            // Ensure child text doesn't wrap
-            var span = a.querySelector('span');
-            if (span) span.classList.add('whitespace-nowrap');
+        });
+    })();
+    </script>
+    <script>
+    (function(){
+        var page = location.pathname.split('/').pop() || 'app.html';
+        var links = document.querySelectorAll('[data-nav]');
+        links.forEach(function(a){
+            if(a.getAttribute('data-nav') === page){
+                a.classList.remove('text-slate-400','text-amber-500');
+                a.classList.add('text-[#003DA5]');
+                var dot = document.createElement('div');
+                dot.className = 'absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#003DA5] rounded-full';
+                a.appendChild(dot);
+            }
         });
     })();
     </script>
@@ -922,102 +899,39 @@
 
             function applyFilters() {
                 toggleFilter(); // Hide the sidebar
-                renderFeedSearches();
-            }
-
-            function clearSidebarFilters() {
-                filters = [];
-                renderFilters();
-                renderFeedSearches();
-            }
-
-            function renderFeedSearches() {
-                const container = document.getElementById('supabaseSearches');
-                const indicator = document.getElementById('activeFilterDisplay');
-                const indicatorText = document.getElementById('activeFilterText');
                 
-                if (!container || !window.nexusActiveSearches) return;
+                const cards = document.querySelectorAll('.feed-viewport > div, .swipe-card'); // Target Feed posts
                 
-                let filtered = Object.values(window.nexusActiveSearches);
-
-                // 1. Sidebar Chips Filter (Property Type & Location)
-                if (filters.length > 0 && !filters.includes('All Types') && !filters.includes('Todos los Tipos')) {
-                    const typeKeywords = ['house', 'casa', 'home', 'condo', 'apartment', 'condominio', 'apartamento', 'land', 'lot', 'lote', 'commercial', 'comercial'];
-                    const typeFilters = filters.filter(f => typeKeywords.includes(f.toLowerCase().trim()) || f.includes('/'));
-                    const locFilters = filters.filter(f => !typeKeywords.includes(f.toLowerCase().trim()) && !f.includes('/'));
-
-                    filtered = filtered.filter(s => {
-                        const typeText = (s.property_type || '').toLowerCase(); 
-                        const locText = (s.location || '').toLowerCase();
-
-                        let typeMatch = true;
-                        if (typeFilters.length > 0) {
-                            typeMatch = typeFilters.some(f => {
-                                 const term = f.toLowerCase();
-                                 if (term === 'house' || term === 'casa') return typeText.includes('house') || typeText.includes('casa') || typeText.includes('home');
-                                 if (term === 'condo' || term === 'condominio') return typeText.includes('condo') || typeText.includes('apartment') || typeText.includes('condominio') || typeText.includes('apartamento');
-                                 if (term === 'land/lot' || term === 'lote') return typeText.includes('lot') || typeText.includes('lote') || typeText.includes('land');
-                                 if (term === 'commercial' || term === 'comercial') return typeText.includes('commercial') || typeText.includes('comercial');
-                                 return false;
-                            });
-                        }
-
-                        let locMatch = true;
-                        if (locFilters.length > 0) {
-                            locMatch = locFilters.some(f => locText.includes(f.toLowerCase()));
-                        }
-
-                        return typeMatch && locMatch;
-                    });
+                if (filters.length === 0 || filters.includes('All Types') || filters.includes('Todos los Tipos')) {
+                    // Show all
+                    cards.forEach(card => card.style.display = '');
+                    return;
                 }
-
-                // 2. Text Search Filter (Quick Bar)
-                const searchVal = (document.getElementById('feedSearchFilter')?.value || '').toLowerCase();
-                if (searchVal) {
-                    filtered = filtered.filter(s => {
-                        const clientName = (s.client_name || '').toLowerCase();
-                        const location = (s.location || '').toLowerCase();
-                        const types = (s.property_type || '').toLowerCase();
-                        return clientName.includes(searchVal) || location.includes(searchVal) || types.includes(searchVal);
-                    });
-                }
-
-                // 3. Sort Order
-                const sortOrder = document.getElementById('feedSortOrder')?.value || 'newest';
-                filtered.sort((a, b) => {
-                    if (sortOrder === 'oldest') return new Date(a.created_at) - new Date(b.created_at);
-                    if (sortOrder === 'budget_desc') return (b.max_budget || 0) - (a.max_budget || 0);
-                    // newest default
-                    return new Date(b.created_at) - new Date(a.created_at);
-                });
-
-                container.innerHTML = filtered.map(s => renderSearchCard(s)).join('');
-
-                // Update Indicator visibility
-                if (indicator && indicatorText) {
-                    let hasFilters = false;
-                    let displayString = "";
-                    if (filters.length > 0 && !filters.includes('All Types') && !filters.includes('Todos los Tipos')) {
-                        hasFilters = true;
-                        displayString += filters.join(', ');
-                    }
-                    if (searchVal) {
-                        hasFilters = true;
-                        displayString += (displayString ? ' + ' : '') + `"${searchVal}"`;
-                    }
+                
+                // Otherwise, check if the card contains any of the filter keywords
+                cards.forEach(card => {
+                    if (card.id === 'filterSidebar' || card.id === 'overlay') return; // Skip non-cards
                     
-                    if (hasFilters) {
-                        indicator.classList.remove('hidden');
-                        indicatorText.innerText = displayString;
+                    const text = card.innerText.toLowerCase();
+                    const matches = filters.some(f => {
+                        const term = f.toLowerCase();
+                        // Handle Spanish/English equivalents to ensure it works in both UI modes
+                        if (term === 'house' || term === 'casa') return text.includes('house') || text.includes('casa');
+                        if (term === 'condo' || term === 'condominio') return text.includes('condo') || text.includes('apartment') || text.includes('condominio');
+                        if (term === 'finca' || term === 'farm') return text.includes('finca') || text.includes('farm');
+                        if (term === 'land/lot' || term === 'lote') return text.includes('lot') || text.includes('lote') || text.includes('land');
+                        if (term === 'commercial' || term === 'comercial') return text.includes('commercial') || text.includes('comercial');
+                        
+                        // Default general text match
+                        return text.includes(term); 
+                    });
+                    
+                    if (matches) {
+                        card.style.display = '';
                     } else {
-                        indicator.classList.add('hidden');
+                        card.style.display = 'none';
                     }
-                }
-
-                // Re-apply language
-                const lang = localStorage.getItem('nexusLang') || 'en';
-                container.querySelectorAll('.lang-en').forEach(el => lang === 'en' ? el.classList.remove('hidden') : el.classList.add('hidden'));
-                container.querySelectorAll('.lang-es').forEach(el => lang === 'es' ? el.classList.remove('hidden') : el.classList.add('hidden'));
+                });
             }
 
             function toggleFilter() {
@@ -1166,15 +1080,11 @@
             const agentName = s.profiles?.full_name || 'Unknown Agent';
             const initials = agentName.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
             const clientInit = (s.client_name || '?').substring(0,1).toUpperCase();
-            const propType = (s.property_type || 'any').split(',')[0].trim().toLowerCase();
-            const propLabelEn = propType.charAt(0).toUpperCase() + propType.slice(1);
-            const propTypesEs = { 'house': 'casa', 'home': 'casa', 'condo': 'condominio', 'apartment': 'apartamento', 'land': 'terreno', 'lot': 'lote', 'commercial': 'comercial', 'any': 'propiedad' };
-            const propLabelEs = (propTypesEs[propType] || propType);
+            const propType = (s.property_type || 'any').split(',')[0].trim();
+            const propLabel = propType.charAt(0).toUpperCase() + propType.slice(1);
             const budgetMin = s.budget_min ? formatBudget(s.budget_min) : '—';
             const budgetMax = s.budget_max ? formatBudget(s.budget_max) : '—';
             const timing = s.timing || 'Flexible';
-            const timingEsMap = { 'Flexible': 'Flexible', 'Immediate': 'Inmediato', '30 Days': '30 Días', '60 Days': '60 Días', '90+ Days': '90+ Días' };
-            const timingEs = timingEsMap[timing] || timing;
             const payment = s.payment_method || 'Unknown';
             const daysSince = Math.floor((Date.now() - new Date(s.created_at).getTime()) / 86400000);
             const isNew = daysSince <= 7;
@@ -1188,15 +1098,6 @@
             };
             const payIcon = paymentIcons[payment] || paymentIcons['Unknown'];
 
-            const paymentEsMap = {
-                'Cash': 'Efectivo',
-                'Mortgage Approved': 'Hipoteca Aprobada',
-                'Needs Seller Financing': 'Req. Financiamiento',
-                'Unknown': 'Desconocido'
-            };
-            const paymentEn = payment;
-            const paymentEs = paymentEsMap[payment] || payment;
-
             const staleClass = isStale ? 'opacity-75 grayscale-[0.3]' : '';
             const badgeColor = isNew ? 'bg-blue-600 text-white' : isStale ? 'bg-slate-300 text-slate-600' : 'bg-green-500 text-white';
             const badgeText = isNew ? 'NEW' : isStale ? 'OLD' : `${daysSince}d`;
@@ -1205,64 +1106,64 @@
             const searchTypeEs = s.search_type === 'rent' ? 'ALQUILER' : 'VENTA';
             const searchTypeColor = s.search_type === 'rent' ? 'bg-purple-600' : 'bg-emerald-500';
 
-            const locationText = (s.location || 'Any Region').split('>').pop().trim();
-            
             return `
             <div class="swipe-card relative transition-transform duration-300 ${staleClass}">
                 <div class="bg-white/80 dark:bg-slate-800/40 backdrop-blur-xl rounded-[32px] p-5 border border-white/60 dark:border-slate-700/50 shadow-2xl space-y-4">
-                    <div class="flex flex-col">
-                        <div>
-                            <div class="flex items-center gap-2 mb-2">
+                    <div class="flex justify-between items-start gap-3">
+                        <div class="relative">
+                            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-[#003DA5] font-black text-lg ring-2 ${isStale?'ring-slate-300':'ring-green-500'} ring-offset-2">
+                                <i class="fa-solid fa-user-tie text-xl"></i>
+                            </div>
+                            ${!isStale ? '<div class="absolute -bottom-2 -right-2 bg-yellow-400 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm"><i class="fa-solid fa-star text-[8px] text-white"></i></div>' : ''}
+                        </div>
+
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
                                 <span class="${searchTypeColor} text-white text-[10px] font-black px-2 py-1 rounded-lg uppercase shadow-sm tracking-widest border border-white/20">
                                     <span class="lang-en">${searchType}</span><span class="lang-es hidden">${searchTypeEs}</span>
                                 </span>
                                 <span class="${badgeColor} text-[8px] font-black px-2 py-0.5 rounded uppercase">${badgeText}</span>
-                                ${s.matches && s.matches.length > 0 ? `<div class="px-1.5 py-0.5 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800 flex items-center gap-1 shadow-sm"><i class="fa-solid fa-fire text-[8px]"></i><span class="text-[7px] font-black uppercase tracking-widest"><span class="lang-en">${s.matches.length} SUGGESTION${s.matches.length !== 1 ? 'S' : ''}</span><span class="lang-es hidden">${s.matches.length} SUGERENCIA${s.matches.length !== 1 ? 'S' : ''}</span></span></div>` : ''}
+                                <span class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">• ${propLabel}</span>
                             </div>
-                            
-                            <h3 class="text-lg font-bold text-slate-600 dark:text-slate-400 leading-tight">
-                                <span class="lang-en"><span class="text-slate-900 dark:text-white font-black">${agentName}</span> is looking for a <span class="text-slate-900 dark:text-white font-black">${propLabelEn.toLowerCase()}</span> in <span class="text-[#003DA5] dark:text-blue-400 font-black italic whitespace-nowrap"><i class="fa-solid fa-location-dot"></i> ${locationText}</span> for <span class="text-slate-900 dark:text-white font-black">${s.client_name || 'their client'}</span></span>
-                                <span class="lang-es hidden"><span class="text-slate-900 dark:text-white font-black">${agentName}</span> busca un(a) <span class="text-slate-900 dark:text-white font-black">${propLabelEs.toLowerCase()}</span> en <span class="text-[#003DA5] dark:text-blue-400 font-black italic whitespace-nowrap"><i class="fa-solid fa-location-dot"></i> ${locationText}</span> para <span class="text-slate-900 dark:text-white font-black">${s.client_name || 'su cliente'}</span></span>
-                            </h3>
+                            <div class="flex items-center gap-2 mb-1">
+                                <p class="text-[8px] font-black text-[#003DA5] dark:text-blue-400 uppercase tracking-widest"><i class="fa-solid fa-user-tag"></i> <span class="lang-en">Buyer</span><span class="lang-es hidden">Cliente</span></p>
+                                ${s.matches && s.matches.length > 0 ? `<div class="px-1.5 py-0.5 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800 flex items-center gap-1 shadow-sm"><i class="fa-solid fa-fire text-[8px]"></i><span class="text-[7px] font-black uppercase tracking-widest">${s.matches.length} SUGGESTIONS</span></div>` : ''}
+                            </div>
+                            <h3 class="font-black text-xl text-slate-900 dark:text-slate-100 italic leading-none mb-2">${s.client_name || 'Private'}</h3>
+                            <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-700/50 p-2 rounded-xl border border-slate-100 dark:border-slate-700">
+                                <div class="w-6 h-6 rounded-full bg-blue-100 text-[#003DA5] flex items-center justify-center text-[9px] font-black"><i class="fa-solid fa-headset"></i></div>
+                                <div>
+                                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none lang-en">Representing Agent</p>
+                                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none lang-es hidden">Agente</p>
+                                    <p class="text-[10px] font-bold text-slate-700 dark:text-slate-200 leading-tight">${agentName}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right flex flex-col items-end">
+                            <div class="flex flex-col items-center">
+                                <i class="fa-solid ${payIcon} text-xl"></i>
+                                <p class="text-[7px] font-black text-slate-600 dark:text-slate-400 uppercase mt-1">${payment}</p>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                    <div class="grid grid-cols-2 gap-2 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md p-4 rounded-2xl border border-white/80 dark:border-slate-700/50 shadow-inner">
                         <div>
-                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 lang-en">Transaction</p>
-                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 lang-es hidden">Transacción</p>
-                            <div class="flex items-center gap-1.5 text-xs font-black text-slate-700 dark:text-slate-300">
-                                <i class="fa-solid ${s.search_type === 'rent' ? 'fa-key text-purple-500' : 'fa-house-chimney text-emerald-500'}"></i>
-                                <span class="lang-en">${searchType}</span><span class="lang-es hidden">${searchTypeEs}</span>
-                            </div>
+                            <p class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase lang-en">Budget</p>
+                            <p class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase lang-es hidden">Presupuesto</p>
+                            <p class="text-xs font-black text-slate-900 dark:text-slate-100">${budgetMin} — ${budgetMax}</p>
                         </div>
-                        <div>
-                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 lang-en">Budget</p>
-                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 lang-es hidden">Presupuesto</p>
-                            <div class="flex items-center gap-1.5 text-xs font-black text-slate-700 dark:text-slate-300">
-                                <i class="fa-solid fa-sack-dollar text-green-500"></i> ${budgetMin} - ${budgetMax}
-                            </div>
-                        </div>
-                        <div>
-                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 lang-en">Timeline</p>
-                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 lang-es hidden">Plazo</p>
-                            <div class="flex items-center gap-1.5 text-xs font-black text-slate-700 dark:text-slate-300">
-                                <i class="fa-regular fa-clock text-blue-500"></i> <span class="lang-en">${timing}</span><span class="lang-es hidden">${timingEs}</span>
-                            </div>
-                        </div>
-                        <div>
-                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 lang-en">Funding</p>
-                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 lang-es hidden">Fondos</p>
-                            <div class="flex items-center gap-1.5 text-xs font-black text-slate-700 dark:text-slate-300">
-                                <i class="fa-solid ${payIcon}"></i> <span class="truncate"><span class="lang-en">${paymentEn}</span><span class="lang-es hidden">${paymentEs}</span></span>
-                            </div>
+                        <div class="text-right">
+                            <p class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase lang-en">Timing</p>
+                            <p class="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase lang-es hidden">Plazo</p>
+                            <p class="text-xs font-black text-blue-600 italic">${timing}</p>
                         </div>
                     </div>
 
                     <div class="flex gap-2">
-                        <button onclick="openSendPropertyModal('${agentName.replace(/'/g, "\\'")}', 'For Buyer: ${(s.client_name||'').replace(/'/g, "\\'")} (${(s.location||'').replace(/'/g, "\\'")} • ${propLabelEn})', '', '', null, '${s.id}')"
+                        <button onclick="openSendPropertyModal('${agentName.replace(/'/g, "\\'")}', 'For Buyer: ${(s.client_name||'').replace(/'/g, "\\'")} (${(s.location||'').replace(/'/g, "\\'")} • ${propLabel})', '', '', null, '${s.id}')"
                             class="flex-1 bg-gradient-to-r from-[#ED1C24] to-red-600 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-lg shadow-red-500/30 dark:shadow-red-500/20 active:scale-95 transition-all outline outline-1 outline-red-400/30 lang-en">Send a Match</button>
-                        <button onclick="openSendPropertyModal('${agentName.replace(/'/g, "\\'")}', 'Comprador: ${(s.client_name||'').replace(/'/g, "\\'")} (${(s.location||'').replace(/'/g, "\\'")} • ${propLabelEs})', '', '', null, '${s.id}')"
+                        <button onclick="openSendPropertyModal('${agentName.replace(/'/g, "\\'")}', 'Comprador: ${(s.client_name||'').replace(/'/g, "\\'")} (${(s.location||'').replace(/'/g, "\\'")} • ${propLabel})', '', '', null, '${s.id}')"
                             class="flex-1 bg-gradient-to-r from-[#ED1C24] to-red-600 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-lg shadow-red-500/30 dark:shadow-red-500/20 active:scale-95 transition-all outline outline-1 outline-red-400/30 lang-es hidden">Enviar Match</button>
                     </div>
                 </div>
