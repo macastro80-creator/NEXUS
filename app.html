@@ -400,6 +400,23 @@
             <i class="fa-solid fa-plus"></i> <span class="lang-en">Post New Client Search</span><span
                 class="lang-es hidden">Nueva Búsqueda de Cliente</span>
         </a>
+        
+        <!-- MARKET INTELLIGENCE WIDGET -->
+        <div id="marketIntellWidget" class="hidden relative overflow-hidden bg-gradient-to-r from-slate-900 to-[#003DA5] dark:from-slate-800 dark:to-blue-900 rounded-[20px] shadow-lg p-4 border border-blue-800/30 text-white z-20">
+            <div class="absolute -right-6 -top-6 w-24 h-24 bg-red-500/20 rounded-full blur-xl animate-pulse"></div>
+            <div class="flex items-center gap-4 relative z-10">
+                <div class="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center text-xl shrink-0 border border-white/20">
+                    <i class="fa-solid fa-chart-pie"></i>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-[10px] font-black uppercase tracking-widest text-blue-200 mb-0.5 flex items-center gap-1.5"><i class="fa-solid fa-satellite-dish animate-pulse"></i> <span class="lang-en">Market Intelligence</span><span class="lang-es hidden">Inteligencia de Mercado</span></h3>
+                    <p class="text-sm font-black leading-tight">
+                        <span class="lang-en">Network Demand: <span id="miDemandCount" class="text-amber-400 text-lg">0</span> buyers vs <span id="miSupplyCount" class="text-green-400 text-lg">0</span> properties listed.</span>
+                        <span class="lang-es hidden">Demanda Red: <span id="miDemandCountEs" class="text-amber-400 text-lg">0</span> compradores vs <span id="miSupplyCountEs" class="text-green-400 text-lg">0</span> captaciones.</span>
+                    </p>
+                </div>
+            </div>
+        </div>
 
         <!-- QUICK SEARCH & SORT BAR -->
         <div class="bg-white dark:bg-slate-800 p-3 rounded-[20px] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row gap-3 relative z-20">
@@ -1139,6 +1156,19 @@
 
                 if (error) throw error;
                 if (!data || data.length === 0) return;
+                
+                // Populate Market Intelligence Widget
+                try {
+                    const { count: supplyCount } = await supabase.from('properties').select('*', { count: 'exact', head: true });
+                    const widget = document.getElementById('marketIntellWidget');
+                    if (widget) {
+                        widget.classList.remove('hidden');
+                        document.getElementById('miDemandCount').innerText = data.length;
+                        document.getElementById('miDemandCountEs').innerText = data.length;
+                        document.getElementById('miSupplyCount').innerText = supplyCount || 0;
+                        document.getElementById('miSupplyCountEs').innerText = supplyCount || 0;
+                    }
+                } catch(e) { console.warn('Silently failed to load Market Gap counts', e); }
 
                 const container = document.getElementById('supabaseSearches');
                 if (!container) return;
